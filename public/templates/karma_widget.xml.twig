@@ -1,0 +1,42 @@
+<manialink id="91103">
+    <frame posn="{{ pos_x }} {{ pos_y }} 10">
+        <quad posn="0 0 0.02" sizen="15.76 10.75"
+            style="{{ background_style }}"
+            substyle="{{ background_substyle }}" />
+
+        {% if gamemode != 'score' %}
+            <quad posn="-0.3 -7.4 0.05" sizen="3.5 3.5" image="http://maniacdn.net/undef.de/xaseco1/mania-karma/edge-open-ld-dark.png" />
+        {% endif %}
+
+        <frame posn="0 0 0">
+            <quad posn="0.4 -0.3 3" sizen="14.96 2"
+                url="http://www.mania-karma.com/goto?uid={{ uid }}&amp;env={{ env }}&amp;game={{ game }}"
+                style="{{ background_style }}"
+                substyle="{{ background_substyle }}" />
+
+            {% if pos_x > 0 %}
+                <quad posn="0.6 -0.15 3.1" sizen="2.3 2.3" style="{{ icon_style }}" substyle="{{ icon_substyle }}" />
+                <label posn="3.2 -0.6 3.2" sizen="10 0" halign="left" textsize="1" text="{{ title }}" />
+            {% else %}
+                <quad posn="13.1 -0.15 3.1" sizen="2.3 2.3" style="{{ icon_style }}" substyle="{{ icon_substyle }}" />
+                <label posn="12.86 -0.6 3.2" sizen="10 0" halign="right" textsize="1" text="{{ title }}" />
+            {% endif %}
+
+            <frame posn="1.83 -8.3 1">
+                <quad posn="0.2 -0.08 0.1" sizen="11.8 1.4" action="91118" bgcolor="0000" />
+            </frame>
+            
+            {% for button in vote_buttons %}
+                {% set is_positive = '+' in button.label %}
+                {% set bg_def = is_positive ? 'DFDF' : 'FDDF' %}
+                {% set txt_color = is_positive ? '070F' : '700F' %}
+                <frame posn="1.83 -8.5 1">
+                    <label posn="0.2 -0.08 0.2" sizen="1.8 1.4" action="911{{ button.id }}"
+                    focusareacolor1="{{ bg_def }}" focusareacolor2="FFFF" text=" " />
+                    <label posn="1.12 -0.25 0.4" sizen="1.8 0" textsize="1" scale="0.8"
+                    halign="center" textcolor="{{ txt_color }}" text="{{ button.label }}" />
+                </frame>
+            {% endfor %}
+        </frame>
+    </frame>
+</manialink>

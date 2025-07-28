@@ -1,0 +1,38 @@
+<manialink id='91103'>
+	<frame posn='49.2 32.86 10'>
+		<quad posn="0 0 0.02" sizen="15.76 10.75" action="91102" style="%widget_style%" substyle="%widget_sub%"/>
+		<quad posn="-0.3 -7.4 0.05" sizen="3.5 3.5" image="http://maniacdn.net/undef.de/xaseco1/mania-karma/edge-open-ld-dark.png"/>
+		<frame posn="0 0 0">
+			<quad posn="0.4 -0.3 3" sizen="14.96 2" url="http://www.mania-karma.com/goto?uid=CYkFq3soHtblhQyBM2KC8SNTpB6&amp;env=Stadium&amp;game=TmForever" style="" substyle="widget_sub"/>
+			<quad posn='0.6 -0.15 3.1' sizen='2.3 2.3' style='' substyle=''/>
+			<label posn="3.2 -0.6 3.2" sizen="10 0" halign="left" textsize="1" text=""/>
+			<frame posn="1.83 -8.3 1">
+				<quad posn="0.2 -0.08 0.1" sizen="11.8 1.4" action="91118" bgcolor="0000"/>
+			</frame>
+			<frame posn="1.83 -8.5 1">
+				<label posn="0.2 -0.08 0.2" sizen="1.8 1.4" action="91112" focusareacolor1="DFDF" focusareacolor2="FFFF" text=" "/>
+				<label posn="1.12 -0.25 0.4" sizen="1.8 0" textsize="1" scale="0.8" halign="center" textcolor="070F" text="+++"/>
+			</frame>
+			<frame posn="1.83 -8.5 1">
+				<label posn="0.2 -0.08 0.2" sizen="1.8 1.4" action="91111" focusareacolor1="DFDF" focusareacolor2="FFFF" text=" "/>
+				<label posn="1.12 -0.25 0.4" sizen="1.8 0" textsize="1" scale="0.8" halign="center" textcolor="070F" text="++"/>
+			</frame>
+			<frame posn="1.83 -8.5 1">
+				<label posn="0.2 -0.08 0.2" sizen="1.8 1.4" action="91110" focusareacolor1="DFDF" focusareacolor2="FFFF" text=" "/>
+				<label posn="1.12 -0.25 0.4" sizen="1.8 0" textsize="1" scale="0.8" halign="center" textcolor="070F" text="+"/>
+			</frame>
+			<frame posn="1.83 -8.5 1">
+				<label posn="0.2 -0.08 0.2" sizen="1.8 1.4" action="91114" focusareacolor1="FDDF" focusareacolor2="FFFF" text=" "/>
+				<label posn="1.12 -0.25 0.4" sizen="1.8 0" textsize="1" scale="0.8" halign="center" textcolor="700F" text="-"/>
+			</frame>
+			<frame posn="1.83 -8.5 1">
+				<label posn="0.2 -0.08 0.2" sizen="1.8 1.4" action="91115" focusareacolor1="FDDF" focusareacolor2="FFFF" text=" "/>
+				<label posn="1.12 -0.25 0.4" sizen="1.8 0" textsize="1" scale="0.8" halign="center" textcolor="700F" text="--"/>
+			</frame>
+			<frame posn="1.83 -8.5 1">
+				<label posn="0.2 -0.08 0.2" sizen="1.8 1.4" action="91116" focusareacolor1="FDDF" focusareacolor2="FFFF" text=" "/>
+				<label posn="1.12 -0.25 0.4" sizen="1.8 0" textsize="1" scale="0.8" halign="center" textcolor="700F" text="---"/>
+			</frame>
+		</frame>
+	</frame>
+</manialink>

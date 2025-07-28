@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<methodCall>
+<methodName>system.multicall</methodName>
+<params>
+<param>
+<value><array><data><value><struct>
+<member><name>methodName</name><value><string>dedimania.Authenticate</string></value></member>
+<member><name>params</name>
+<value><array><data><value><struct>
+<member><name>Game</name><value><string>%Game%</string></value></member>
+<member><name>Login</name><value><string>%Login%</string></value></member>
+<member><name>Password</name><value><string>%Password%</string></value></member>
+<member><name>Tool</name><value><string>%Tool%</string></value></member>
+<member><name>Version</name><value><string>%Version%</string></value></member>
+<member><name>Nation</name><value><string>%Nation%</string></value></member>
+<member><name>Packmask</name><value><string>%Packmask%</string></value></member>
+</struct></value></data></array></value></member></struct></value>
+<value><struct>
+<member><name>methodName</name><value><string>dedimania.ValidateAccount</string></value></member>
+<member><name>params</name><value><array><data></data></array></value></member></struct></value>
+<value><struct><member><name>methodName</name><value><string>dedimania.WarningsAndTTR</string></value></member>
+<member><name>params</name><value><array><data></data></array>
+</value></member></struct></value>
+</data></array></value>
+</param>
+</params>
+</methodCall>

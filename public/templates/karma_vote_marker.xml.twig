@@ -1,0 +1,14 @@
+<manialink id="91104">
+    <frame posn="{{ pos_x }} {{ pos_y }} 10">
+        {% for vote in votes %}
+            {% if vote.bgcolor != '0000' %}
+                <frame posn="{{ vote.pos_x }} -8.5 1">
+                    <quad posn="0.2 -0.08 0.3"
+                          sizen="1.8 1.4"
+                          action="911{{ vote.action }}"
+                          bgcolor="{{ vote.bgcolor }}" />
+                </frame>
+            {% endif %}
+        {% endfor %}
+    </frame>
+</manialink>

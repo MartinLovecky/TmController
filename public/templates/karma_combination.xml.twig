@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manialinks>
+{% for widget in widgets %}
+    {% if widget == 'hide_all' %}
+        <manialink id="91102"></manialink>
+        <manialink id="91103"></manialink>
+        <manialink id="91104"></manialink>
+        <manialink id="91105"></manialink>
+        <manialink id="91106"></manialink>
+        <manialink id="91107"></manialink>
+    {% endif %}
+    {# every mode is enabled #}
+    {% if widget == 'hide_window'%}
+        <manialink id="91102"></manialink>
+    {% endif %}
+    {% if widget == 'skeleton_race'%}
+        {{ race }}
+    {% endif %}
+    {% if widget == 'skeleton_score'%}
+        {{ score }}
+    {% endif %}
+    {% if widget == 'cups_values'%}
+        {{ cups }}
+    {% endif %}
+    {% if widget == 'player_marker'%}
+        {{ marker }}
+    {% endif %}
+{% endfor %}
+</manialinks>
+    {# kept for refrence #}
+    {#<manialink id="91103"></manialink>#}
+    {#<manialink id="91104"></manialink>#}
+    {#<manialink id="91105"></manialink>#}

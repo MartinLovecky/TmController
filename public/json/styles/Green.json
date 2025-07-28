@@ -1,0 +1,23 @@
+{
+    "window": {
+        "style": "Bgs1InRace",
+        "substyle": "BgWindow1",
+        "blackcolor": "$ffc"
+    },
+    "header":{
+        "style": "Bgs1InRace",
+        "substyle": "BgTitle3_4",
+        "textsize": 0.07,
+        "textstyle": "TextTitle2"
+    },
+    "body":{
+        "style": "Bgs1InRace",
+        "substyle": "BgList",
+        "textsize": 0.04,
+        "textstyle": "TextTitle3"
+    },
+    "button":{
+        "style": "Bgs1InRace",
+        "substyle": "NavButton"
+    }
+}

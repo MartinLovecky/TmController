@@ -1,0 +1,37 @@
+{
+    "masteradmins": {
+        "tmlogin": "yuhzel_cz"
+    },
+    "colors": {
+        "error": "\\$f00$i",
+        "welcome": "\\$f00",
+        "server": "\\$ff0",
+        "highlite": "\\$fff",
+        "rank": "\\$ff3",
+        "karma": "\\$ff0",
+        "donate": "\\$f0f",
+        "black": "\\$000",
+        "login": "\\$00f"
+    },
+    "welcome_msg_window": false,
+    "log_all_chat": false,
+    "script_timeout": 60,
+    "show_recs_before": 2,
+    "show_recs_after": 2,
+    "show_recs_range": true,
+    "show_tmxrec": 1,
+    "show_playtime": 1,
+    "default_tracklist": "tracklist.txt",
+    "writetracklist_random": true,
+    "lists_colornicks": true,
+    "lists_colortracks": true,
+    "topclans_minplayers": 2,
+    "auto_enable_cps": true,
+    "adminops_file": "adminops",
+    "bannedips_file": "bannedips",
+    "window_style": "DarkBlur",
+    "admin_panel": "AdminBelowChat",
+    "donate_panel": "DonateBelowCPList",
+    "records_panel": "RecordsRightBottom",
+    "vote_panel": "VoteBelowChat"
+}

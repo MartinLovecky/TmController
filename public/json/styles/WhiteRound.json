@@ -1,0 +1,23 @@
+{
+    "window": {
+        "style": "Bgs1InRace",
+        "substyle": "BgButtonBig",
+        "blackcolor": "$000"
+    },
+    "header":{
+        "style": "BgsPlayerCard",
+        "substyle": "BgActivePlayerScore",
+        "textsize": 0.06,
+        "textstyle": "TextButtonSmall"
+    },
+    "body":{
+        "style": "Bgs1InRace",
+        "substyle": "NavButton",
+        "textsize": 0.04,
+        "textstyle": "TextChallengeNameSmall"
+    },
+    "button":{
+        "style": "Bgs1InRace",
+        "substyle": "NavButton"
+    }
+}

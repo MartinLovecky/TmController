@@ -1,0 +1,33 @@
+{
+    "name": "yuhzel/tm-controller",
+    "description": "Trackmania server controller",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Yuhzel\\TmController\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "MartinLovecky",
+            "email": "respect9888@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "symfony/var-dumper": "7.4.x-dev",
+        "league/container": "5.x-dev",
+        "envms/fluentpdo": "dev-master",
+        "vlucas/phpdotenv": "^5.6@dev",
+        "twig/twig": "4.x-dev"
+    },
+    "scripts": {
+        "fix": "phpcbf --standard=PSR12 src",
+        "test": "phpunit tests"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist"
+    }
+}

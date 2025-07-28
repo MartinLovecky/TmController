@@ -1,0 +1,23 @@
+{
+    "window": {
+        "style": "Bgs1InRace",
+        "substyle": "BgWindow3",
+        "blackcolor": "$ffc"
+    },
+    "header":{
+        "style": "BgsPlayerCard",
+        "substyle": "BgPlayerName",
+        "textsize": 0.07,
+        "textstyle": "TextTitle2"
+    },
+    "body":{
+        "style": "BgsPlayerCard",
+        "substyle": "BgActivePlayerName",
+        "textsize": 0.04,
+        "textstyle": "TextTitle3"
+    },
+    "button":{
+        "style": "Bgs1InRace",
+        "substyle": "NavButton"
+    }
+}

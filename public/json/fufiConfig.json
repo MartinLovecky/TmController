@@ -1,0 +1,61 @@
+{
+	"settings": {
+		"menu_caption": "Menu",
+		"styles": {
+			"menubutton": {
+				"_style": "Bgs1InRace",
+				"_substyle": "NavButton"
+			},
+			"menubackground": {
+				"_style": "Bgs1",
+				"_substyle": "BgTitle3"
+			},
+			"menuicon": {
+				"_style": "Icons128x128_1",
+				"_substyle": "United"
+			},
+			"menuentry": {
+				"_style": "BgsPlayerCard",
+				"_substyle": "BgCardSystem"
+			},
+			"menuentryactive": {
+				"_style": "BgsPlayerCard",
+				"_substyle": "BgMediaTracker"
+			},
+			"menugroupicon": {
+				"_style": "Icons128x128_1",
+				"_substyle": "Browse"
+			},
+			"menuhelpicon": {
+				"_style": "Icons64x64_1",
+				"_substyle": "TrackInfo"
+			},
+			"menuactionicon": {
+				"_style": "Icons64x64_1",
+				"_substyle": "ToolLeague1"
+			},
+			"separator": {
+				"_style": "Bgs1InRace",
+				"_substyle": "NavButton"
+			},
+			"indicatorfalse": {
+				"_style": "Icons64x64_1",
+				"_substyle": "LvlRed"
+			},
+			"indicatortrue": {
+				"_style": "Icons64x64_1",
+				"_substyle": "LvlGreen"
+			},
+			"indicatoronhold": {
+				"_style": "Icons64x64_1",
+				"_substyle": "LvlYellow"
+			}
+		},
+		"size": "8 2.2",
+		"separatorheight": "0.75",
+		"menutimeout": "13000",
+		"position": "-65 47.8",
+		"horizontalorientation": "1",
+		"verticalorientation": "1"
+	}
+}

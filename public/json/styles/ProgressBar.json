@@ -1,0 +1,23 @@
+{
+    "window": {
+        "style": "Bgs1",
+        "substyle": "BgWindow2",
+        "blackcolor": "$fff"
+    },
+    "header":{
+        "style": "Bgs1InRace",
+        "substyle": "ProgressBar",
+        "textsize": 0.065,
+        "textstyle": "TextSubTitle2"
+    },
+    "body":{
+        "style": "Bgs1InRace",
+        "substyle": "NavButtonBlink",
+        "textsize": 0.04,
+        "textstyle": "TextTitle3"
+    },
+    "button":{
+        "style": "BgsPlayerCard",
+        "substyle": "BgCardSystem"
+    }
+}
