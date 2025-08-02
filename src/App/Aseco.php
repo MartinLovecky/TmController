@@ -41,6 +41,20 @@ class Aseco
         return rtrim(dirname(__DIR__, $level), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
     }
 
+    /**
+     * Its 2025 just stop nonsence - Yuha
+     *
+     * @param string $input
+     * @param string $invalidRepl
+     * @return string
+     */
+    public static function validateUTF8(string $input, $invalidRepl = '?'): string
+    {
+        $clean = iconv('UTF-8', 'UTF-8//IGNORE', $input);
+        return ($clean !== false && $clean !== '') ? $clean : $invalidRepl;
+    }
+
+
     public static function isStartup(): bool
     {
         return self::$startupPhase;
@@ -132,6 +146,26 @@ class Aseco
         }
 
         return $formattedTime;
+    }
+
+    public static function formatTimeH(int $MwTime, bool $hsec = true): string
+    {
+        if ($MwTime == -1) {
+            return '???';
+        }
+
+        $totalSeconds = floor($MwTime / 1000);
+        $hundredths = floor(($MwTime % 1000) / 10);
+
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+        $seconds = $totalSeconds % 60;
+
+        if ($hsec) {
+            return sprintf('%02d:%02d:%02d.%02d', $hours, $minutes, $seconds, $hundredths);
+        } else {
+            return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+        }
     }
 
     public static function console(mixed ...$args): void

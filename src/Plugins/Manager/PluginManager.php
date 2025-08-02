@@ -58,6 +58,28 @@ class PluginManager
         return null;
     }
 
+    public function pluginFunctionExists(string $functionName): bool
+    {
+        foreach (get_object_vars($this) as $plugin) {
+            if (is_object($plugin) && method_exists($plugin, $functionName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function callPluginFunction(string $functionName, ...$args): mixed
+    {
+        foreach (get_object_vars($this) as $plugin) {
+            if (is_object($plugin) && method_exists($plugin, $functionName)) {
+                return call_user_func_array([$plugin, $functionName], $args);
+            }
+        }
+
+        return null;
+    }
+
     public function onSync(): void
     {
         foreach (get_object_vars($this) as $plugin) {
@@ -72,6 +94,15 @@ class PluginManager
         foreach (get_object_vars($this) as $plugin) {
             if (is_object($plugin) && method_exists($plugin, 'onPlayerConnect')) {
                 $plugin->onPlayerConnect($player);
+            }
+        }
+    }
+
+    public function onPlayerDisconnect(Container $player): void
+    {
+        foreach (get_object_vars($this) as $plugin) {
+            if (is_object($plugin) && method_exists($plugin, 'onPlayerDisconnect')) {
+                $plugin->onPlayerDisconnect($player);
             }
         }
     }
@@ -109,5 +140,14 @@ class PluginManager
 
     public function onNewChallenge2(ChallMapFetcher $gbx)
     {
+    }
+
+    public function onChat(): void
+    {
+        foreach (get_object_vars($this) as $plugin) {
+            if (is_object($plugin) && method_exists($plugin, 'onChat')) {
+                $plugin->onChat();
+            }
+        }
     }
 }

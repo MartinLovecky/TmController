@@ -9,6 +9,7 @@ use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Database\Table;
 use Yuhzel\TmController\Plugins\Panels;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\Plugins\Styles;
 use Yuhzel\TmController\Repository\RepositoryManager;
 
 class PlayerService
@@ -20,7 +21,8 @@ class PlayerService
         protected Client $client,
         protected Container $container,
         protected Panels $panels,
-        protected RepositoryManager $repository
+        protected RepositoryManager $repository,
+        protected Styles $styles,
     ) {
         $this->syncFromServer();
     }
@@ -36,16 +38,16 @@ class PlayerService
                 ->set('Game', Aseco::getGameName($info['OnlineRights']))
                 ->set('Nation', Aseco::mapCountry($info['Path']))
                 ->set('Donation', [100, 200, 500, 1000, 2000])
-                ->set('panels.admin', $this->panels->adminPanel) //NOTE: after startup
-                ->set('panels.donate', $this->panels->donatePanel)//NOTE: PUT STARTUP INTO __construct
+                ->set('panels.admin', $this->panels->adminPanel)
+                ->set('panels.donate', $this->panels->donatePanel)
                 ->set('panels.records', $this->panels->recordsPanel)
-                ->set('panels.vote', $this->panels->votePanel);
+                ->set('panels.vote', $this->panels->votePanel)
+                ->set('style', $this->styles->style)
+                ->set('created', time());
 
             $this->container->set($login, $info);
             $this->numSpecs = $this->container->get("$login.IsSpectator") === true ? ++$count : $count;
-            //$this->container->set('NumSpecs', $NumSpecs);
-            // this makes our life harder only way is "$login.NumSpecs" but it would lose usage
-            $this->numPlayers = $this->container->count(); // also avaible on getAllPlayers()
+            $this->numPlayers = $this->container->count();
         }
 
         $this->storeAllFromServer();

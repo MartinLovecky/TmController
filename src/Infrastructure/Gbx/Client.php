@@ -8,7 +8,7 @@ use Exception;
 use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Services\Socket;
-use Yuhzel\TmController\Infrastructure\Xml\{Request, Response};
+use Yuhzel\TmController\Infrastructure\Xml\{Parser, Request, Response};
 
 class Client
 {
@@ -65,14 +65,8 @@ class Client
 
     public function readCallBack(float $timeout = 2.0): bool
     {
-        if (empty($this->cb_message)) {
-            return false;
-        }
-
-        dd($this->cb_message);
-
+        $something_received = count($this->cb_message) > 0;
         $contents = '';
-        $contents_length = 0;
 
         $this->socket->setTimeout($timeout);
 
@@ -81,21 +75,13 @@ class Client
         $expect = null;
         $timeoutSeconds = (int) $timeout;
         $timeoutMicroseconds = (int)(($timeout - $timeoutSeconds) * 1_000_000);
-        $numChangedStreams = stream_select(
+        $nb = @stream_select(
             $read,
             $write,
             $expect,
             $timeoutSeconds,
             $timeoutMicroseconds
         );
-
-        dd($numChangedStreams); // this shows 0
-
-        if ($nb) {
-            $nb = count($read);
-        }
-
-        dd($this->socket->socket);
 
         while ($nb !== false &&  $nb > 0) {
             $timeout = 0;
@@ -128,23 +114,24 @@ class Client
 
             $contents = $this->readContents($size);
 
-
             if (!$contents || strlen($contents) < $size) {
                 throw new Exception("transport error - failed to read full response");
             }
 
             if (($recvHandle & 0x80000000) == 0) {
-                $somethingRecived = true;
-                dd('cb', $contents);
+                $this->cb_message[] = $this->response->parseMethodCall($contents);
             }
 
             $read = [$this->socket->socket];
+            $write = null;
+            $except = null;
             $nb = @stream_select($read, $write, $except, 0, $timeout);
-            dd('nb', $nb);
+            if ($nb !== false) {
+                $nb = count($read);
+            }
         }
 
-        dd($somethingRecived, $contents, $nb);
-        return true;
+        return $something_received;
     }
 
     public function getCBResponses(): array
@@ -212,15 +199,8 @@ class Client
                 }
 
                 $contents = $this->readContents($size);
-                if (($recvHandle & 0x80000000) === 0) {
-                    // filer out rpcMessages from result cb_message must only contain Callbacks
-                    $parsed = $this->response->parseResponse($method, $contents, false);
-                    if ($parsed instanceof Container) {
-                        $methodName = $parsed->get('methodName');
-                        if (!in_array($methodName, $this->rpcMessages(), true)) {
-                            $this->cb_message[] = $parsed;
-                        }
-                    }
+                if (($recvHandle & 0x80000000) == 0) {
+                    $this->cb_message[] = $this->response->parseMethodCall($contents);
                 }
             } while ($recvHandle !== $this->reqHandle);
 

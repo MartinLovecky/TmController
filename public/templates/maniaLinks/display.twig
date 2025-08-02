@@ -1,0 +1,141 @@
+{# TMN-style window #}
+{% if not style %}
+<manialink id="1" posx="{{ widths[0] / 2 }}" posy="0.47">
+    <background bgcolor="FFF{{ tsp }}" bgborderx="0.01" bgbordery="0.01"/>
+    <format textsize="3" textcolor="333{{ tsp }}"/>
+    <line>
+        <cell bgcolor="DDD{{ tsp }}" width="{{ widths[0] }}">
+            <text> $o{{ header }}</text>
+        </cell>
+    </line>
+    <format textsize="2" textcolor="333{{ tsp }}"/>
+    <line>
+        <cell bgcolor="FFF{{ tsp }}" width="{{ widths[0] }}">
+            <text>$</text>
+        </cell>
+    </line>
+
+    {# Loop through data lines #}
+    {% for line in data %}
+    <line height=".046">
+        {% if line|length > 1 %}
+            {% for i in 0..(widths|length - 2) %}
+                {% if line[i] is iterable %}
+                <cell bgcolor="FFF{{ tsp }}" width="{{ widths[i+1] }}">
+                    <text action="{{ line[i][1] }}">  $o{{ line[i][0] }}</text>
+                </cell>
+                {% else %}
+                <cell bgcolor="FFF{{ tsp }}" width="{{ widths[i+1] }}">
+                    <text>  $o{{ line[i] }}</text>
+                </cell>
+                {% endif %}
+            {% endfor %}
+        {% elseif line|length == 1 %}
+            <cell bgcolor="FFF{{ tsp }}" width="{{ widths[0] }}">
+                <text>  $o{{ line[0] }}</text>
+            </cell>
+        {% else %}
+            <cell bgcolor="FFF{{ tsp }}" width="{{ widths[0] }}">
+                <text>$</text>
+            </cell>
+        {% endif %}
+    </line>
+    {% endfor %}
+
+    <line>
+        <cell bgcolor="FFF{{ tsp }}" width="{{ widths[0] }}">
+            <text>$</text>
+        </cell>
+    </line>
+    <line height=".046">
+        <cell bgcolor="FFF{{ tsp }}" width="{{ widths[0] }}">
+            <text halign="center" action="0">$o{{ button }}</text>
+        </cell>
+    </line>
+</manialink>
+{% else %}
+{# TMF-style window #}
+<manialink id="1">
+<frame pos="{{ widths[0] / 2 }} 0.47 0">
+    <quad size="{{ widths[0] }} {{ 0.11 + hsize + (data|length) * bsize }}"
+          style="{{ style.get('window.style') }}"
+          substyle="{{ style.get('window.substyle') }}"/>
+
+    <quad pos="-{{ widths[0] / 2 }} -0.01 -0.1"
+          size="{{ widths[0] - 0.02 }} {{ hsize }}"
+          halign="center"
+          style="{{ style.get('header.style') }}"
+          substyle="{{ style.get('header.substyle') }}"/>
+
+    {% if icon is iterable %}
+        <quad pos="-0.055 -0.045 -0.2"
+              size="{{ hsize + (icon[2]|default(0)) }} {{ hsize + (icon[2]|default(0)) }}"
+              halign="center" valign="center"
+              style="{{ icon[0] }}" substyle="{{ icon[1] }}"/>
+        <label pos="-0.10 -0.025 -0.2"
+               size="{{ widths[0] - 0.12 }} {{ hsize }}"
+               halign="left"
+               style="{{ style.get('header.textstyle') }}"
+               text="{{ header }}"/>
+    {% else %}
+        <label pos="-0.03 -0.025 -0.2"
+               size="{{ widths[0] - 0.05 }} {{ hsize }}"
+               halign="left"
+               style="{{ style.get('header.textstyle') }}"
+               text="{{ header }}"/>
+    {% endif %}
+
+    <quad pos="-{{ widths[0] / 2 }} -{{ 0.02 + hsize }} -0.1"
+          size="{{ widths[0] - 0.02 }} {{ 0.02 + (data|length) * bsize }}"
+          halign="center"
+          style="{{ style.get('body.style') }}"
+          substyle="{{ style.get('body.substyle') }}"/>
+
+    <format style="{{ style.get('body.textstyle') }}"/>
+    {% for line in data %}
+        {% set cnt = loop.index %}
+        {% if line is iterable %}
+            {% if line|length > 1 %}
+                {% for i in 0..(widths|length - 2) %}
+                    {% if line[i] is iterable %}
+                        <quad pos="-{{ 0.015 + widths[1:i+1]|sum }}" 
+                              -{{ hsize - 0.013 + cnt * bsize }} -0.15"
+                              size="{{ widths[i+1] - 0.03 }} {{ bsize + 0.005 }}"
+                              halign="left"
+                              style="{{ style.get('button.style') }}"
+                              substyle="{{ style.get('button.substyle') }}"
+                              action="{{ line[i][1] }}"/>
+                        <label pos="-{{ 0.025 + widths[1:i+1]|sum }}"
+                               -{{ hsize - 0.008 + cnt * bsize }} -0.2"
+                               size="{{ widths[i+1] - 0.05 }} {{ 0.02 + bsize }}"
+                               halign="left"
+                               style="{{ style.get('body.textstyle') }}"
+                               text="{{ line[i][0] }}"/>
+                    {% else %}
+                        <label pos="-{{ 0.025 + widths[1:i+1]|sum }}"
+                               -{{ hsize - 0.008 + cnt * bsize }} -0.2"
+                               size="{{ widths[i+1] - 0.05 }} {{ 0.02 + bsize }}"
+                               halign="left"
+                               style="{{ style.get('body.textstyle') }}"
+                               text="{{ line[i] }}"/>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <label pos="-0.025 -{{ hsize - 0.008 + cnt * bsize }} -0.2"
+                       size="{{ widths[0] - 0.04 }} {{ 0.02 + bsize }}"
+                       halign="left"
+                       style="{{ style.get('body.textstyle') }}"
+                       text="{{ line[0] }}"/>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    <quad pos="-{{ widths[0] / 2 }} -{{ 0.04 + hsize + (data|length) * bsize }} -0.2"
+          size="0.06 0.06"
+          halign="center"
+          style="Icons64x64_1"
+          substyle="Close"
+          action="0"/>
+</frame>
+</manialink>
+{% endif %}

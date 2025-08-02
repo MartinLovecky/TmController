@@ -148,6 +148,7 @@ class TmController
 
     private function playerConnect(Container $player)
     {
+        dd($player);
         if (!$this->bannedIps->isEmpty()) {
             foreach ($this->bannedIps as $_ => $ip) {
                 if ($ip === $player->get('IPAddress')) {
@@ -182,6 +183,20 @@ class TmController
         //$chatCmd = $this->pluginManager->getPlugin('ChatCmd');
         //dd($chatCmd->trackrecs($player));
         $this->pluginManager->onPlayerConnect($player);
+    }
+
+    private function playerDisconnect(Container $player)
+    {
+        //NOTE: we cant rly remove from $player
+        $playTime = time() - $player->get('created');
+        Aseco::console(
+            '>> player {1} left the game [{2} : {3}]',
+            $player->get('Login'),
+            $player->get('NickName'),
+            Aseco::formatTimeH($playTime * 1000, false)
+        );
+
+        $this->pluginManager->onPlayerDisconnect($player);
     }
 
     private function sendHeader(): void
@@ -227,15 +242,8 @@ class TmController
 
     private function newChallenge(Container $challenge): void
     {
-        if (Aseco::$restarting === 0) {
-            Aseco::console('Begin Challenge');
-        } elseif (Aseco::$restarting === 2) {
-            Aseco::$restarting = 0;
-        } else {
-            Aseco::$restarting = 0;
-            $this->pluginManager->onRestartChallenge($this->challengeService->getGBX());
-            return;
-        }
+        //this should happen only /restart
+        //$this->pluginManager->onRestartChallenge($this->challengeService->getGBX());
 
         $this->pluginManager->onNewChallenge($this->challengeService);
 
@@ -281,12 +289,9 @@ class TmController
         //$chatCmd->trackrecs();
     }
 
-    //NOTE: This stll need to be done
-    private function executeCallbacks()
+    private function executeCallbacks(): void
     {
-        if ($this->client->readCallBack() === false) {
-            return;
-        }
+        $this->client->readCallBack();
 
         $calls = $this->client->getCBResponses();
 
@@ -294,22 +299,74 @@ class TmController
             return;
         }
 
-        dd('cb-calls', $calls);
-
         while ($call = array_shift($calls)) {
-            switch ($call) {
+            $player = $this->playerService->getPlayerByLogin($call['2']);
+            switch ($call->get('methodName')) {
                 case 'TrackMania.PlayerConnect':
-                    null;
-                    $this->playerConnect($call);
+                    $this->playerConnect($player);
                     break;
+                case 'TrackMania.PlayerDisconnect':
+                    $this->playerDisconnect($player);
+                    break;
+                case 'TrackMania.PlayerChat':
+                    $this->playerChat($call);
+                    $this->pluginManager->onChat($call);
+                    break;
+                case 'TrackMania.PlayerServerMessageAnswer':
+                    dd($call); // $this->pluginManager->onPlayerServerMessageAnswer()
+                    break;
+                case 'TrackMania.PlayerCheckpoint':
+                    dd($call); // $this->pluginManager->onCheckpoint()
+                    break;
+                default:
             }
         }
     }
 
-    //REVIEW. We should resolve any addCall imidiatly
-    // private function executeCalls()
-    // {
-    //     $result = $this->client->query('system.multicall', $this->client->calls);
-    //     dd($result);
-    // }
+    private function playerChat(Container $call): void
+    {
+        $command = $call->get('2');
+        $login = $call->get('1');
+        $isAdmin = $call->get('3');
+
+        if ($command == '' || $command == '???') {
+            Aseco::console(
+                '{1} attempted to use chat command "{2}"',
+                $call->get('1'),
+                $command
+            );
+        } elseif (str_starts_with($command, '/')) {
+            $cmd = substr($command, 1);
+            $params = explode(' ', $cmd, 2);
+            $name = str_replace(['+', '-'], ['plus', 'dash'], $params[0]);
+
+            if ($this->pluginManager->pluginFunctionExists("chat_{$name}")) {
+                $params[1] = isset($params[1]) ? trim($params[1]) : '';
+                $auth = $this->playerService->getPlayerByLogin($login);
+
+                if ($auth instanceof Container) {
+                    Aseco::console(
+                        'player {1} used chat command "/{2} {3}"',
+                        $login,
+                        $params[0],
+                        $params[1]
+                    );
+
+                    $cmdCommand = ['author' => $auth, 'params' => $params[1]];
+
+                    $this->pluginManager->callPluginFunction("chat_{$name}", $cmdCommand);
+                } else {
+                    Aseco::console(
+                        'player {1} attempted to use chat command "/{2} {3}"',
+                        $login,
+                        $params[0],
+                        $params[1]
+                    );
+                    trigger_error("Player object for {$login} not found", E_USER_WARNING);
+                }
+            } else {
+                Aseco::console('player {1} used built-in command "/{2}"', $login, $cmd);
+            }
+        }
+    }
 }

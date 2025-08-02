@@ -16,15 +16,17 @@ class RecordService
         protected RepositoryManager $repository,
         protected ChallengeService $challengeService
     ) {
-        $this->uid = $this->challengeService->getGBX()->UId;
+        $this->uid = $this->challengeService->getUid();
     }
 
-    //NOTE: checkpoints not sure how get info from server
     public function updateLeaderboard(
         string $challengeId,
         string $playerId,
         int $newTime
     ): void {
+        if (!$this->exists($challengeId)) {
+            return;
+        }
 
         $times = $this->repository->get(Table::RECORDS, 'ChallengeId', $challengeId);
 
@@ -35,7 +37,7 @@ class RecordService
         if (count($times) >= 30) {
             $maxTime = max(array_column($times, 'time'));
 
-            // If new time is worse than the worst in top 30, skip
+            // If new time is worse than the worst in top 30
             if ($newTime >= $maxTime) {
                 return;
             }
@@ -44,7 +46,7 @@ class RecordService
         // Add the new or improved time
         $times[] = ['playerId' => $playerId, 'time' => $newTime];
 
-        // Sort and keep only top 30
+        // keep only top 30
         usort($times, fn ($a, $b) => $a['time'] <=> $b['time']);
         $times = array_slice($times, 0, 30);
 
@@ -53,20 +55,15 @@ class RecordService
             'Times' => $times
         ]);
 
-        if ($this->repository->exists(Table::RECORDS, 'ChallengeId', $challengeId)) {
-            $this->repository->update(Table::RECORDS, $record);
-        } else {
-            $this->repository->insert(Table::RECORDS, $record);
-        }
+        $this->repository->update(Table::RECORDS, $record);
     }
 
     public function getRecord(?string $challengeId = null): Container
     {
-        //REVIEW: this is bit hack-ish since -> getRecord for id thats not in db but we saying
-        // not found not problem here is readonly Container without any Times could be used for "empty creation"
-        // but I dont know if I want "pre-insert / create" empty record for sake just to use upate later
-        // if we try "update" record that doesnt exist it will thow error we need have valid "challengeId" record in DB
-        if (!$this->exists($challengeId)) {
+        $uid = $challengeId ?? $this->uid;
+
+        if (!$this->exists($uid)) {
+            // try create empty in db
             return Container::fromArray([
                 'Times' => []
             ], true);
@@ -78,19 +75,15 @@ class RecordService
         return Container::fromJsonString($records);
     }
 
-    public function createRecord()
+    public function createRecord(string $challengeId, Container $records): void
     {
-        // we could 1st insert empty record for challengeId if no times driven to be able to update them
-        if (!$this->exists()) {
-            $record = $this->getRecord($this->uid);
-        } else {
-            //We want basicly do  updateLeaderboard but insert not update
-            //$this->updateLeaderboard();
+        if (!$this->exists($challengeId)) {
+            $this->repository->insert(Table::RECORDS, $records);
         }
     }
 
-    private function exists(?string $challengeId = null): bool
+    private function exists(string $challengeId): bool
     {
-        return $this->repository->exists(Table::RECORDS, 'ChallengeId', $challengeId ?? $this->uid);
+        return $this->repository->exists(Table::RECORDS, 'ChallengeId', $challengeId);
     }
 }

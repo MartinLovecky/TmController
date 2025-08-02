@@ -74,6 +74,49 @@ class Response
     }
 
     /**
+     * Parses an XML-RPC method call into a Container structure.
+     *
+     * @param string $xml XML string representing the method call
+     * @return Container Parsed container with methodName and params
+     * @throws \Exception If parsing fails
+     */
+    public function parseMethodCall(string $xml): Container
+    {
+        if (!$this->dom->loadXML($xml, LIBXML_NOCDATA | LIBXML_NOWARNING)) {
+            throw new \Exception("Failed to parse XML method call.");
+        }
+
+        $container = new Container();
+
+        $root = $this->dom->documentElement;
+        if ($root->tagName !== 'methodCall') {
+            throw new \Exception("Expected <methodCall> root element.");
+        }
+
+        $methodNameElement = $this->getFirstDirectChild($root, 'methodName');
+        if (!$methodNameElement) {
+            throw new \Exception("Missing <methodName> element in method call.");
+        }
+
+        $methodName = trim($methodNameElement->textContent ?? '');
+        $container->set('methodName', $methodName);
+
+        $paramsElement = $this->getFirstDirectChild($root, 'params');
+
+        if ($paramsElement) {
+            $paramElements = $this->getDirectChildren($paramsElement, 'param');
+
+            foreach ($paramElements as $index => $param) {
+                $valueElement = $this->getFirstDirectChild($param, 'value');
+                $container->set((string)$index, $this->processValue($valueElement?->firstChild));
+            }
+        }
+
+        return $container;
+    }
+
+
+    /**
      * Processes a fault response and extracts faultCode and faultString.
      *
      * @param DOMElement $fault The <fault> element
