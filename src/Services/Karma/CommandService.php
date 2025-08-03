@@ -108,7 +108,7 @@ class CommandService
 
     private function uptodateCheck(Container $player): void
     {
-        $response = $this->httpClient->post('www.mania-karma.com/api/plugin-releases.xml');
+        $response = $this->httpClient->post('www.mania-karma.com/api/plugin-releaseska');
         $output = Parser::fromXMLString($response);
 
         if (version_compare($output->get('xaseco1xx'), '2.0.1', '>')) {
