@@ -1,0 +1,10 @@
+<manialink id="7">
+    <frame posn="-49 43.5 0">
+        <quad sizen="93 {{ 1.5 + msgs|length * 2.5 }}" style="Bgs1" substyle="NavButton"/>
+        {% set pos = -1 %}
+        {% for msg in msgs %}
+            <label posn="1 {{ pos }} 1" sizen="91 1" style="TextRaceChat" text="{{ msg|e('html_attr') }}"/>
+            {% set pos = pos - 2.5 %}
+        {% endfor %}
+    </frame>
+</manialink>

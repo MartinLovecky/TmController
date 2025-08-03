@@ -148,7 +148,6 @@ class TmController
 
     private function playerConnect(Container $player)
     {
-        dd($player);
         if (!$this->bannedIps->isEmpty()) {
             foreach ($this->bannedIps as $_ => $ip) {
                 if ($ip === $player->get('IPAddress')) {
@@ -266,7 +265,6 @@ class TmController
                 Aseco::stripColors('') // $cur_record->player->nickname
             );
         } else {
-            $score = '   --.--';
             Aseco::console(
                 'currently no record on {1}',
                 Aseco::stripColors($challenge->get('Name'), false)
@@ -276,8 +274,6 @@ class TmController
                 Aseco::stripColors($challenge->get('Name'))
             );
         }
-
-        //setRecordsPanel => $this->ml_records['local'] = $score
 
         if (($this->config->get('show_recs_before') & 1) === 1) {
             $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
