@@ -162,10 +162,10 @@ class RepositoryManager
     {
         return [
         'data' => [
-            'ChallengeId' => $c->get('Challengeid', ''),
+            'ChallengeId' => $c->get('ChallengeId', ''),
             'Times'       => json_encode($c->get('Times', [])),
             'Date'        => date('Y-m-d H:i:s'),
-            'Checkpoints' => $c->get('Checkpoints', null),
+            'Checkpoints' => json_encode($c->get('Checkpoints', [])),
         ],
         'check' => [
             'column' => 'ChallengeId',

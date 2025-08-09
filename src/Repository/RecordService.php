@@ -17,6 +17,8 @@ class RecordService
         protected ChallengeService $challengeService
     ) {
         $this->uid = $this->challengeService->getUid();
+        // creates empty record if uid not exist for update
+        $this->createRecord($this->uid, Container::fromArray(['ChallengeId' => $this->uid]));
     }
 
     public function updateLeaderboard(
@@ -63,7 +65,6 @@ class RecordService
         $uid = $challengeId ?? $this->uid;
 
         if (!$this->exists($uid)) {
-            // try create empty in db
             return Container::fromArray([
                 'Times' => []
             ], true);

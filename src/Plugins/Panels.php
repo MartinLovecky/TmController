@@ -27,19 +27,19 @@ class Panels
         ];
         Command::register($this->commands, 'Panels');
         //Admin panel
-        $adminFile = "{$folder}{$_ENV['admin_panel']}.xml.twig";
+        $adminFile = "{$folder}{$_ENV['admin_panel']}";
         Aseco::console('Default admin panel [{1}]', $_ENV['admin_panel']);
         $this->adminPanel = $this->widgetBuilder->render($adminFile);
         //Donate panel
-        $donateFile = "{$folder}{$_ENV['donate_panel']}.xml.twig";
+        $donateFile = "{$folder}{$_ENV['donate_panel']}";
         Aseco::console('Default donnate panel [{1}]', $_ENV['donate_panel']);
         $this->donatePanel = $this->widgetBuilder->render($donateFile);
         //Records panel
-        $recordsFile = "{$folder}{$_ENV['records_panel']}.xml.twig";
+        $recordsFile = "{$folder}{$_ENV['records_panel']}";
         Aseco::console('Default records panel [{1}]', $_ENV['records_panel']);
         $this->recordsPanel = $this->widgetBuilder->render($recordsFile);
         //Vote panel
-        $voteFile = "{$folder}{$_ENV['vote_panel']}.xml.twig";
+        $voteFile = "{$folder}{$_ENV['vote_panel']}";
         Aseco::console('Default vote panel [{1}]', $_ENV['vote_panel']);
         $this->votePanel = Aseco::safeFileGetContents($voteFile);
     }

@@ -16,6 +16,9 @@ class TmController
     public ?Container $bannedIps = null;
     private int $prevsecond = 0;
     private int $currsecond = 0;
+    private int $pevStatus  = 0;
+    private int $currStatus = 0;
+    private bool $warmupPhase = false;
 
     public function __construct(
         protected Client $client,
@@ -37,13 +40,17 @@ class TmController
         $this->connect();
         $this->serverSync();
         $this->sendHeader();
-        $this->beginRace(false);
-        Aseco::$startupPhase = false;
 
+        if ($this->currStatus === 100) {
+            Aseco::console('Waiting for the server to start a challenge');
+        } else {
+            $this->beginRace(false);
+        }
+
+        Aseco::$startupPhase = false;
         while (true) {
             $starttime = microtime(true);
             $this->executeCallbacks();
-            //$this->executeCalls();
             $this->pluginManager->onMainLoop();
 
             $this->currsecond = time();
@@ -133,23 +140,29 @@ class TmController
 
     private function serverSync(): void
     {
-        $this->client->query('SendHideManialinkPage');
-        $this->server->setServerInfo($this->playerService->first());
+        $serverLogin = $this->client->query('GetSystemInfo')->get('ServerLogin');
+        $this->server->setServerInfo($this->client->query('GetDetailedPlayerInfo', [$serverLogin]));
         $this->server->setVersion($this->client->query('GetVersion'));
         $this->server->setLadder($this->client->query('GetLadderServerLimits'));
+        $this->server->setPackMask($this->client->query('GetServerPackMask')->get('value'));
         $this->server->setOptions($this->client->query('GetServerOptions'));
 
+        $this->client->query('SendHideManialinkPage');
+
+        $this->currStatus = $this->client->query('GetStatus')->get('Code');
+
+        $this->playerService->syncFromServer();
         $this->pluginManager->onSync();
 
-        foreach ($this->playerService->getAllPlayers() as $_ => $player) {
+        $this->playerService->eachPlayer(function (Container $player) {
             $this->playerConnect($player);
-        }
+        });
     }
 
     private function playerConnect(Container $player)
     {
         if (!$this->bannedIps->isEmpty()) {
-            foreach ($this->bannedIps as $_ => $ip) {
+            foreach ($this->bannedIps->getIterator() as $_ => $ip) {
                 if ($ip === $player->get('IPAddress')) {
                     return;
                 }
@@ -184,7 +197,7 @@ class TmController
         $this->pluginManager->onPlayerConnect($player);
     }
 
-    private function playerDisconnect(Container $player)
+    private function disconnect(Container $player)
     {
         //NOTE: we cant rly remove from $player
         $playTime = time() - $player->get('created');
@@ -233,6 +246,11 @@ class TmController
     private function beginRace(bool|Container $challenge)
     {
         if (!$challenge) {
+            // Wierd AF
+            /**
+             * GetCurrentChallengeInfo , [], 0 -> addCall -> DONT GET RESULT
+             *
+             */
             $this->newChallenge($this->challengeService->getCurrentChallengeInfo());
         } else {
             $this->newChallenge($challenge);
@@ -246,7 +264,7 @@ class TmController
 
         $this->pluginManager->onNewChallenge($this->challengeService);
 
-        $curRecord = $this->recordService->getRecord($this->challengeService->getGBX()->UId)->get('Times');
+        $curRecord = $this->recordService->getRecord($this->challengeService->getUid());
         $message = '';
 
         if (!$curRecord->isEmpty()) {
@@ -285,10 +303,14 @@ class TmController
         //$chatCmd->trackrecs();
     }
 
+    private function endRace($race)
+    {
+        dd($race);
+    }
+
     private function executeCallbacks(): void
     {
         $this->client->readCallBack();
-
         $calls = $this->client->getCBResponses();
 
         if (empty($calls)) {
@@ -296,31 +318,36 @@ class TmController
         }
 
         while ($call = array_shift($calls)) {
-            $player = $this->playerService->getPlayerByLogin($call['2']);
-            switch ($call->get('methodName')) {
-                case 'TrackMania.PlayerConnect':
-                    $this->playerConnect($player);
-                    break;
-                case 'TrackMania.PlayerDisconnect':
-                    $this->playerDisconnect($player);
-                    break;
-                case 'TrackMania.PlayerChat':
-                    $this->playerChat($call);
-                    $this->pluginManager->onChat($call);
-                    break;
-                case 'TrackMania.PlayerServerMessageAnswer':
-                    dd($call); // $this->pluginManager->onPlayerServerMessageAnswer()
-                    break;
-                case 'TrackMania.PlayerCheckpoint':
-                    dd($call); // $this->pluginManager->onCheckpoint()
-                    break;
-                default:
-            }
+            match ($call->get('methodName')) {
+                'TrackMania.PlayerConnect' => $this->playerConnect($this->playerService->getPlayerByLogin($call['2'])),
+                'TrackMania.PlayerDisconnect' => $this->disconnect($this->playerService->getPlayerByLogin($call['2'])),
+                'TrackMania.PlayerChat' => $this->playerChat($call),
+                'TrackMania.PlayerServerMessageAnswer' => dd($call), // onPlayerServerMessageAnswer()
+                'TrackMania.PlayerCheckpoint' => dd($call), // onCheckpoint
+                'TrackMania.PlayerFinish' => dd($call), // playerFinish
+                'TrackMania.BeginRound' => $this->beginRound(),
+                'TrackMania.StatusChanged' => $this->statusChanged(),
+                'TrackMania.EndRound' => $this->endRound(),
+                'TrackMania.BeginChallenge' => dd($call), // beginRace
+                'TrackMania.EndChallenge' => $this->endRace($call),
+                'TrackMania.PlayerManialinkPageAnswer' => dd($call), // onPlayerManialinkPageAnswer
+                'TrackMania.BillUpdated' => dd($call), // onBillUpdated
+                'TrackMania.ChallengeListModified' => dd($call), // onChallengeListModified
+                'TrackMania.PlayerInfoChanged' => dd($call), // this->playerInfoChanged
+                'TrackMania.PlayerIncoherence' => dd($call), // onPlayerIncoherence
+                'TrackMania.TunnelDataReceived' => dd($call), // onPlayerIncoherence
+                'TrackMania.Echo' => dd($call), // onEcho
+                'TrackMania.ManualFlowControlTransition' => dd($call), // onMfct
+                'TrackMania.VoteUpdated' => dd($call), // onVoteUpdated
+                default => dd("Handle:? {$call->get('methodName')}")
+            };
         }
     }
 
     private function playerChat(Container $call): void
     {
+        $this->pluginManager->onChat($call);
+
         $command = $call->get('2');
         $login = $call->get('1');
         $isAdmin = $call->get('3');
@@ -364,5 +391,38 @@ class TmController
                 Aseco::console('player {1} used built-in command "/{2}"', $login, $cmd);
             }
         }
+    }
+
+    private function beginRound(): void
+    {
+        Aseco::console('Begin Round');
+        $this->pluginManager->onBeginRound();
+    }
+
+    private function endRound(): void
+    {
+        Aseco::console('End Round');
+        $this->pluginManager->onEndRound();
+    }
+
+    private function statusChanged(): void
+    {
+        $this->pevStatus = $this->currStatus;
+
+        if ($this->currStatus === 3 || $this->currStatus === 5) {
+            dd($this->client->query('GetWarmUp'));
+        }
+
+        if ($this->currStatus === 4) {
+            $this->runningPlay();
+        }
+
+        $this->pluginManager->onStatusChangeTo($this->currStatus);
+    }
+
+    private function runningPlay(): void
+    {
+        // request information about the new challenge
+        // ... and callback to function newChallenge()
     }
 }

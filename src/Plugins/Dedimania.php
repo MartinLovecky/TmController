@@ -114,7 +114,7 @@ class Dedimania
             [
                 'methodName' => 'dedimania.PlayerArrive',
                 'params' => [
-                    'Game' => $player->get('Game'),
+                    'Game' => 'TMF',
                     'Login' => $player->get('Login'),
                     'Nickname' => $player->get('NickName'),
                     'Nation' => $player->get('Nation'),

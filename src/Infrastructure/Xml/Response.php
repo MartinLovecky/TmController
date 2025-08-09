@@ -115,7 +115,6 @@ class Response
         return $container;
     }
 
-
     /**
      * Processes a fault response and extracts faultCode and faultString.
      *

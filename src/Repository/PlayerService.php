@@ -24,7 +24,6 @@ class PlayerService
         protected RepositoryManager $repository,
         protected Styles $styles,
     ) {
-        $this->syncFromServer();
     }
 
     public function syncFromServer(): void
@@ -35,7 +34,6 @@ class PlayerService
             $info = $this->getDetailedPlayerInfo($login);
             // Game = TMU|TMF, Nation = XXX formant example CZE
             $info
-                ->set('Game', Aseco::getGameName($info['OnlineRights']))
                 ->set('Nation', Aseco::mapCountry($info['Path']))
                 ->set('Donation', [100, 200, 500, 1000, 2000])
                 ->set('panels.admin', $this->panels->adminPanel)
@@ -64,12 +62,12 @@ class PlayerService
         }
     }
 
-    public function delete(Container $player): void
+    public function delete(string $playerID): void
     {
-        foreach ($player->getIterator() as $login => $_) {
-            $this->container->delete($login);
-            $this->repository->delete(Table::PLAYERS, 'playerID', $login);
-            $this->repository->delete(Table::PLAYERS_EXTRA, 'playerID', $login);
+        if (in_array($playerID, $this->getAllLogins())) {
+            $this->container->delete($playerID);
+            $this->repository->delete(Table::PLAYERS, 'playerID', $playerID);
+            $this->repository->delete(Table::PLAYERS_EXTRA, 'playerID', $playerID);
         }
     }
 
@@ -88,11 +86,6 @@ class PlayerService
         foreach ($this->container as $player) {
             $callback($player);
         }
-    }
-
-    public function getAllPlayers(): Container
-    {
-        return $this->container;
     }
 
     public function getPlayerByLogin(string $login): ?Container

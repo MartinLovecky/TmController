@@ -167,8 +167,8 @@ class Request
             'double'   => $this->dom->createElement('double', number_format($value, 1, '.', '')),
             'array'    => $this->buildArrayElement($value),
             'object'   => $this->structToXmlElement($value),
-            'NULL'     => $this->dom->createElement('nil'),//$this->dom->createElement('string', 'null'),
-            default    => $this->dom->createElement('nil')//$this->dom->createElement('string', 'null')
+            'NULL'     => $this->dom->createElement('nil'),
+            default    => $this->dom->createElement('nil')
         };
     }
 

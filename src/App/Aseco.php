@@ -426,11 +426,6 @@ class Aseco
         return str_replace("\0", $for_tm ? '$$' : '$', $input);
     }
 
-    public static function getGameName(int $info): string
-    {
-        return $info === 3 ? 'TMU' : 'TMF';
-    }
-
     public static function getChatMessage(string $message, string $jsonFile = 'messages'): ?string
     {
         $file = self::safeFileGetContents(self::jsonFolderPath() . "{$jsonFile}.json");

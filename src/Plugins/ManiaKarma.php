@@ -12,6 +12,7 @@ use Yuhzel\TmController\Services\Karma\{
     StateService,
     WidgetService
 };
+use Yuhzel\TmController\Services\Server;
 
 class ManiaKarma
 {
@@ -32,8 +33,11 @@ class ManiaKarma
         $this->widgetService->sendInitialWidgets();
     }
 
-    public function onChat(array $chat): void
+    public function onChat(Container $chat): void
     {
+        if ($chat->get('0') === Server::$id) {
+            return;
+        }
         $this->commandService->handleChatCommand($chat);
     }
 

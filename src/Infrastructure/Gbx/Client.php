@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Infrastructure\Gbx;
 
+use Deprecated;
 use Exception;
 use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Services\Socket;
-use Yuhzel\TmController\Infrastructure\Xml\{Parser, Request, Response};
+use Yuhzel\TmController\Infrastructure\Xml\{Request, Response};
 
 class Client
 {
+    public string $methodName = '';
+    private int $reqHandle = 0x80000000;
     private const int MAX_REQ_SIZE = 512 * 1024 - 8;
     private const int MAX_RES_SIZE = 4096 * 1024;
     private const float TIMEOUT = 20.0;
-    private int $reqHandle = 0x80000000;
-    private int $protocol = 0;
     /** @var Container[] */
     private array $cb_message = [];
-    public string $methodName = '';
     public array $calls = [];
 
     public function __construct(
@@ -53,6 +53,7 @@ class Client
         return $result;
     }
 
+    #[Deprecated('kept for refrence')]
     public function addCall(string $methodName, array $args): int
     {
         $this->methodName = $methodName;
@@ -65,56 +66,47 @@ class Client
 
     public function readCallBack(float $timeout = 2.0): bool
     {
-        $something_received = count($this->cb_message) > 0;
-        $contents = '';
+        $somethingReceived = !empty($this->cb_message);
 
         $this->socket->setTimeout($timeout);
 
         $read = [$this->socket->socket];
         $write = null;
         $expect = null;
-        $timeoutSeconds = (int) $timeout;
-        $timeoutMicroseconds = (int)(($timeout - $timeoutSeconds) * 1_000_000);
-        $nb = @stream_select(
+
+        $timeoutSeconds = (int)$timeout;
+        $timeoutUsec = (int)(($timeout - $timeoutSeconds) * 1_000_000);
+
+        $available = @stream_select(
             $read,
             $write,
             $expect,
             $timeoutSeconds,
-            $timeoutMicroseconds
+            $timeoutUsec
         );
 
-        while ($nb !== false &&  $nb > 0) {
-            $timeout = 0;
+        while ($available !== false && $available > 0) {
             $size = 0;
             $recvHandle = 0;
-            $contents = $this->readContents(8);
 
-            if ($this->protocol === 1) {
-                $contents = $this->readContents(4);
-                if (strlen($contents) > 0) {
-                    $size = $this->bigEdianUnpack('Vsize', $contents)['size'];
-                    $recvHandle = $this->reqHandle;
-                }
-            } elseif ($this->protocol === 2) {
-                $contents =  $this->readContents(8);
-                if (strlen($contents) > 0) {
-                    $result = unpack('Vsize/Vhandle', $contents);
-                    $size = $result['size'];
-                    $recvHandle = $this->convertHandle($result['handle']);
-                }
+            $contents = $this->readContents(8);
+            if (strlen($contents) > 0) {
+                $data = unpack('Vsize/Vhandle', $contents);
+                $size = $data['size'];
+                $recvHandle = $this->convertHandle($data['handle']);
             }
 
             if ($recvHandle == 0 || $size == 0) {
                 throw new Exception("transport error - connection interrupted");
             }
 
-            if ($size > 4096 * 1024) {
+            if ($size > self::MAX_RES_SIZE) {
                 throw new Exception("transport error - response too large");
             }
 
             $contents = $this->readContents($size);
 
-            if (!$contents || strlen($contents) < $size) {
+            if (strlen($contents) < $size) {
                 throw new Exception("transport error - failed to read full response");
             }
 
@@ -123,15 +115,10 @@ class Client
             }
 
             $read = [$this->socket->socket];
-            $write = null;
-            $except = null;
-            $nb = @stream_select($read, $write, $except, 0, $timeout);
-            if ($nb !== false) {
-                $nb = count($read);
-            }
+            $available = @stream_select($read, $write, $except, 0, 0);
         }
 
-        return $something_received;
+        return $somethingReceived;
     }
 
     public function getCBResponses(): array
@@ -153,9 +140,7 @@ class Client
         $this->socket->setTimeout(self::TIMEOUT);
         $this->reqHandle++;
 
-        $bytes = $this->protocol === 2
-        ? pack('VVA*', strlen($xml), $this->reqHandle, $xml)
-        : pack('Va*', strlen($xml), $xml);
+        $bytes = pack('VVA*', strlen($xml), $this->reqHandle, $xml);
 
         return $this->socket->write($bytes) !== 0;
     }
@@ -169,26 +154,18 @@ class Client
                 $size = 0;
                 $recvHandle = 0;
                 $this->socket->setTimeout(self::TIMEOUT);
+                $contents = $this->socket->read(8);
 
-                if ($this->protocol === 1) {
-                    $contents = $this->socket->read(4);
-                    if (strlen($contents) === 0) {
-                        throw new Exception('Transport error - cannot read size');
-                    }
-                    $size = $this->bigEdianUnpack('Vsize', $contents)['size'];
-                    $recvHandle = $this->reqHandle;
-                } elseif ($this->protocol === 2) {
-                    $contents = $this->socket->read(8);
-                    if ($contents === false) {
-                        throw new Exception('Transport error - cannot read socket');
-                    }
-                    if (strlen($contents) === 0) {
-                        throw new Exception('Transport error - cannot read size');
-                    }
-                    $result = unpack('Vsize/Vhandle', $contents);
-                    $size = $result['size'];
-                    $recvHandle = $this->convertHandle($result['handle']);
+                if ($contents === false) {
+                    throw new Exception('Transport error - cannot read socket');
                 }
+                if (strlen($contents) === 0) {
+                    throw new Exception('Transport error - cannot read size');
+                }
+
+                $result = unpack('Vsize/Vhandle', $contents);
+                $size = $result['size'];
+                $recvHandle = $this->convertHandle($result['handle']);
 
                 if ($recvHandle === 0 || $size === 0) {
                     throw new Exception('Transport error - connection interrupted');
@@ -234,59 +211,37 @@ class Client
         return $contents;
     }
 
-    protected function setProtocolVersion(): void
-    {
-        $littleEdian = pack('V', 1);
-        $nativeEdian = unpack('L', $littleEdian)[1];
-        $this->protocol = ($nativeEdian === 1) ? 2 : 1;
-    }
-
     protected function init(): void
     {
         $handshake = '';
 
         if (is_resource($this->socket->socket)) {
-            $this->setProtocolVersion();
-
             $header = $this->socket->read(4);
 
-            $size = $this->protocol === 2
-            ? unpack('Vsize', $header)['size']
-            : $this->bigEdianUnpack('Vsize', $header)['size'];
+            if ($header === false || strlen($header) !== 4) {
+                throw new Exception('Transport error - failed to read protocol header');
+            }
+
+            $unpacked = @unpack('Vsize', $header);
+            if ($unpacked === false || !isset($unpacked['size'])) {
+                throw new Exception('Transport error - failed to unpack protocol header');
+            }
+
+            $size = $unpacked['size'];
 
             if ($size > 64) {
                 throw new Exception('Transport error - wrong low-level protocol header');
             }
 
             $handshake = $this->socket->read($size);
-        }
-        $handshake === 'GBXRemote 1' ? $this->protocol = 1 : $this->protocol = 2;
-    }
-
-    protected function bigEdianUnpack(string $format, string $data): array
-    {
-        $ar = unpack($format, $data);
-        $vals = array_values($ar);
-        $formats = explode('/', $format);
-        $i = 0;
-
-        foreach ($formats as $formatPart) {
-            $repeater = (int) substr($formatPart, 1) ?: 1;
-            if (isset($formatPart[1]) && $formatPart[1] === '*') {
-                $repeater = count($ar) - $i;
+            if ($handshake === false || strlen($handshake) !== $size) {
+                throw new Exception('Transport error - failed to read handshake');
             }
-            if ($formatPart[0] !== 'd') {
-                $i += $repeater;
-                continue;
-            }
-            for ($a = $i; $a < $i + $repeater; ++$a) {
-                $p = strrev(pack('d', $vals[$i]));
-                $vals[$i] = unpack('d1d', $p)['d'];
-                ++$i;
+
+            if (trim($handshake) !== 'GBXRemote 2') {
+                throw new Exception("Unsupported protocol: '{$handshake}'. Only GBXRemote 2 is supported.");
             }
         }
-
-        return array_combine(array_keys($ar), array_values($vals));
     }
 
     protected function rpcMessages(): array

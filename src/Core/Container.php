@@ -179,7 +179,7 @@ class Container extends ArrayObject implements ContainerInterface
      * @param bool $readonly
      * @return static
      */
-    public static function fromArray(array $data, bool $readonly = false): static
+    public static function fromArray(array $data = [], bool $readonly = false): static
     {
         $container = new static();
 

@@ -25,10 +25,6 @@ class BaseFetcher
     public const int USEC_IN_SEC           = 1000000; // 1 million microseconds
     public bool $parseXml = false;
     public string $xml = '';
-    /**
-     *
-     * @var array<string, mixed> $xmlParsed
-     */
     public array $xmlParsed = [];
     public int $authorVer = 0;
     public string $authorLogin = '';

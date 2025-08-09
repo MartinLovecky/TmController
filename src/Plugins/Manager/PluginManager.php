@@ -15,7 +15,9 @@ use Yuhzel\TmController\Plugins\{
     ChatCmd,
     ChatDedimania,
     Checkpoints,
+    Cpll,
     ManiaKarma,
+    ManiaLinks,
     Panels,
     Rasp,
     RaspJukebox,
@@ -29,6 +31,7 @@ class PluginManager
 {
     public function __construct(
         private CpLiveAdvanced $cpLiveAdvanced,
+        private Cpll $cpll,
         private Dedimania $dedimania,
         private FufiMenu $fufiMenu,
         private ChatAdmin $chatAdmin,
@@ -36,6 +39,7 @@ class PluginManager
         private ChatDedimania $chatDedimania,
         private Checkpoints $checkpoints,
         private ManiaKarma $maniaKarma,
+        private ManiaLinks $maniaLinks,
         private Panels $panels,
         private Rasp $rasp,
         private RaspJukebox $raspJukebox,
@@ -142,11 +146,38 @@ class PluginManager
     {
     }
 
-    public function onChat(): void
+    public function onChat($call): void
     {
         foreach (get_object_vars($this) as $plugin) {
             if (is_object($plugin) && method_exists($plugin, 'onChat')) {
-                $plugin->onChat();
+                $plugin->onChat($call);
+            }
+        }
+    }
+
+    public function onBeginRound(): void
+    {
+        foreach (get_object_vars($this) as $plugin) {
+            if (is_object($plugin) && method_exists($plugin, 'onBeginRound')) {
+                $plugin->onBeginRound();
+            }
+        }
+    }
+
+    public function onEndRound(): void
+    {
+        foreach (get_object_vars($this) as $plugin) {
+            if (is_object($plugin) && method_exists($plugin, 'onEndRound')) {
+                $plugin->onEndRound();
+            }
+        }
+    }
+
+    public function onStatusChangeTo(): void
+    {
+        foreach (get_object_vars($this) as $plugin) {
+            if (is_object($plugin) && method_exists($plugin, 'onStatusChangeTo')) {
+                $plugin->onStatusChangeTo();
             }
         }
     }

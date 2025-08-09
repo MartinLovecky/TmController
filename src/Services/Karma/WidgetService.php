@@ -44,9 +44,9 @@ class WidgetService
 
         $this->sendWidgetCombination([$widgetKey, 'cups_values']);
 
-        foreach ($this->playerService->getAllPlayers() as $player) {
+        $this->playerService->eachPlayer(function (Container $player) {
             $this->sendWidgetCombination(['player_marker'], $player);
-        }
+        });
 
         $this->sendConnectionStatus(true, 'rounds');
     }
@@ -91,9 +91,9 @@ class WidgetService
                 ]);
             }
         } else {
-            foreach ($this->playerService->getAllPlayers() as $player) {
+            $this->playerService->eachPlayer(function (Container $player) {
                 $player->set('ManiaKarma.ReminderWindow', false);
-            }
+            });
             $this->client->query('SendDisplayManialinkPage', [$xml, 0, false]);
         }
     }

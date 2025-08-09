@@ -1,0 +1,108 @@
+<manialink id="{{ id }}">
+  <frame pos="{{ widths[0] / 2 }} 0.47 0">
+    <quad
+      size="{{ widths[0] }} {{ 0.11 + hsize + linesCount * bsize }}"
+      style="{{ style.get('window.style') }}"
+      substyle="{{ style.get('window.substyle') }}"
+    />
+
+    <quad
+      pos="-{{ widths[0] / 2 }} -0.01 -0.1"
+      size="{{ widths[0] - 0.02 }} {{ hsize }}"
+      halign="center"
+      style="{{ style.get('header.style') }}"
+      substyle="{{ style.get('header.substyle') }}"
+    />
+
+    {% if icon is iterable %}
+      {% set isize = hsize + (icon[2] ?? 0) %}
+      <quad pos="-0.055 -0.045 -0.2" size="{{ isize }} {{ isize }}"
+            halign="center" valign="center"
+            style="{{ icon[0] }}" substyle="{{ icon[1] }}"/>
+      <label pos="-0.10 -0.025 -0.2" size="{{ widths[0] - 0.25 }} {{ hsize }}"
+             halign="left" style="{{ style.get('header.textstyle') }}"
+             text="{{ header }}"/>
+    {% else %}
+      <label pos="-0.03 -0.025 -0.2" size="{{ widths[0] - 0.18 }} {{ hsize }}"
+             halign="left" style="{{ style.get('header.textstyle') }}"
+             text="{{ header }}"/>
+    {% endif %}
+
+    <label pos="-{{ widths[0] - 0.02 }} -0.025 -0.2" size="0.12 {{ hsize }}"
+           halign="right" style="{{ style.get('header.textstyle') }}"
+           text="\$n({{ ptr }}/{{ tot }})"/>
+
+    <quad pos="-{{ widths[0] / 2 }} -{{ 0.02 + hsize }} -0.1"
+          size="{{ widths[0] - 0.02 }} {{ 0.02 + linesCount * bsize }}"
+          halign="center"
+          style="{{ style.get('body.style') }}"
+          substyle="{{ style.get('body.substyle') }}"/>
+    <format style="{{ style.get('body.textstyle') }}"/>
+
+    {% for line in lines %}
+      {% if line %}
+        {% if line|length > 1 %}
+          {% set offset = 0 %}
+          {% for cell in line %}
+            {% set width = widths[loop.index] ?? 0 %}
+            {% set offset = offset + width %}
+            {% if cell is iterable %}
+              <quad pos="-{{ (offset - width) + 0.015 }} -{{ hsize - 0.013 + loop.index * bsize }} -0.15"
+                    size="{{ width - 0.03 }} {{ bsize + 0.005 }}"
+                    halign="left"
+                    style="{{ style.get('button.style') }}"
+                    substyle="{{ style.get('button.substyle') }}"
+                    action="{{ cell[1] }}"/>
+              <label pos="-{{ (offset - width) + 0.025 }} -{{ hsize - 0.008 + loop.index * bsize }} -0.2"
+                     size="{{ width - 0.05 }} {{ 0.02 + bsize }}"
+                     halign="left"
+                     style="{{ style.get('body.textstyle') }}"
+                     text="{{ cell[0]|e }}"/>
+            {% else %}
+              <label pos="-{{ (offset - width) + 0.025 }} -{{ hsize - 0.008 + loop.index * bsize }} -0.2"
+                     size="{{ width - 0.05 }} {{ 0.02 + bsize }}"
+                     halign="left"
+                     style="{{ style.get('body.textstyle') }}"
+                     text="{{ cell|e }}"/>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <label pos="-0.025 -{{ hsize - 0.008 + loop.index * bsize }} -0.2"
+                 size="{{ widths[0] - 0.04 }} {{ 0.02 + bsize }}"
+                 halign="left"
+                 style="{{ style.get('body.textstyle') }}"
+                 text="{{ line[0]|e }}"/>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+
+    {% set y = 0.045 + hsize + linesCount * bsize %}
+    {% set half = widths[0] / 2 %}
+
+    <quad pos="-0.04 -{{ y }} -0.2" size="0.055 0.055"
+          halign="center" style="Icons64x64_1"
+          substyle="{{ hasPrev ? '"ArrowFirst" action="-4"' : '"StarGold"' }}"/>
+    {% if add5 %}
+      <quad pos="-0.095 -{{ y }} -0.2" size="0.055 0.055"
+            halign="center" style="Icons64x64_1"
+            substyle="{{ hasPrev ? '"ArrowFastPrev" action="-3"' : '"StarGold"' }}"/>
+    {% endif %}
+    <quad pos="-{{ half * 0.25 }} -{{ y }} -0.2" size="0.055 0.055"
+          halign="center" style="Icons64x64_1"
+          substyle="{{ hasPrev ? '"ArrowPrev" action="-2"' : '"StarGold"' }}"/>
+    <quad pos="-{{ half }} -{{ y - 0.005 }} -0.2" size="0.06 0.06"
+          halign="center" style="Icons64x64_1"
+          substyle="Close" action="0"/>
+    <quad pos="-{{ half * 0.75 }} -{{ y }} -0.2" size="0.055 0.055"
+          halign="center" style="Icons64x64_1"
+          substyle="{{ hasNext ? '"ArrowNext" action="2"' : '"StarGold"' }}"/>
+    {% if add5 %}
+      <quad pos="-{{ widths[0] - 0.095 }} -{{ y }} -0.2" size="0.055 0.055"
+            halign="center" style="Icons64x64_1"
+            substyle="{{ hasNext ? '"ArrowFastNext" action="3"' : '"StarGold"' }}"/>
+    {% endif %}
+    <quad pos="-{{ widths[0] - 0.04 }} -{{ y }} -0.2" size="0.055 0.055"
+          halign="center" style="Icons64x64_1"
+          substyle="{{ hasNext ? '"ArrowLast" action="4"' : '"StarGold"' }}"/>
+  </frame>
+</manialink>
