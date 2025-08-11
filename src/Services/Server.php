@@ -16,6 +16,7 @@ class Server
     public static string $pass = '';
     public static string $serverLogin = '';
     public static string $game = 'TMF';
+    public static string $gameState = 'race';
     public static string $version = '2.11.26';
     public static string $build = '';
     public static string $nickName = '';
@@ -37,6 +38,7 @@ class Server
     public static float $callVoteRatio = 0.0;
     public static string $gamePath = '';
     public static string $zone = '';
+    public static array $muteList = [];
 
     public function __construct()
     {

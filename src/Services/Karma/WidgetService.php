@@ -21,7 +21,7 @@ class WidgetService
         ['label' => '--',  'id' => 15],
         ['label' => '---', 'id' => 16]
     ];
-
+    private string $file = '';
     private const CUP_OFFSETS = [0.8, 0.85, 0.85, 0.875, 0.90, 0.925, 0.95, 0.975, 1.0, 1.025];
     private const TOTAL_CUPS = 10;
 
@@ -31,11 +31,12 @@ class WidgetService
         protected StateService $stateService,
         protected WidgetBuilder $widgetBuilder,
     ) {
+        $this->file = 'karma' . DIRECTORY_SEPARATOR;
     }
 
     public function getTemplate(): string
     {
-        return $this->widgetBuilder->render('karma_template');
+        return $this->widgetBuilder->render("{$this->file}template");
     }
 
     public function sendInitialWidgets(): void
@@ -78,7 +79,7 @@ class WidgetService
 
     public function closeReminderWindow(?Container $player = null): void
     {
-        $xml = $this->widgetBuilder->render('karma_manialink');
+        $xml = $this->widgetBuilder->render("{$this->file}manialink");
 
         if ($player) {
             if ($player->get('ManiaKarma.ReminderWindow')) {
@@ -105,7 +106,7 @@ class WidgetService
 
     private function buildKarmaWidget(string $gameMode): string
     {
-        return $this->widgetBuilder->render('karma_widget', array_merge(
+        return $this->widgetBuilder->render("{$this->file}widget", array_merge(
             $this->getWidgetConfig($gameMode),
             [
                 'uid' => $this->stateService->getKarmaState()['data']['uid'] ?? '',
@@ -123,7 +124,7 @@ class WidgetService
         $votes = $karmaState;
         $goldCups = $this->calculateGoldCupAmount($votes);
 
-        return $this->widgetBuilder->render('karma_cups', array_merge(
+        return $this->widgetBuilder->render("{$this->file}cups", array_merge(
             $this->getWidgetConfig($gameMode),
             [
                 'cups' => $this->buildCupsArray($goldCups),
@@ -224,7 +225,7 @@ class WidgetService
             $xOffset += 2;
         }
 
-        return $this->widgetBuilder->render('karma_vote_marker', array_merge(
+        return $this->widgetBuilder->render("{$this->file}vote_marker", array_merge(
             $this->getWidgetConfig($gameMode),
             ['votes' => $presets]
         ));
@@ -250,7 +251,7 @@ class WidgetService
         $gameMode = $this->stateService->getGameMode();
         $playerMarker = $player ? $this->buildPlayerVoteMarker($player, $gameMode) : '';
 
-        $xml = $this->widgetBuilder->render('karma_combination', [
+        $xml = $this->widgetBuilder->render("{$this->file}combination", [
             'widgets' => $widgets,
             'race' => $this->buildKarmaWidget($gameMode),
             'score' => $this->buildKarmaWidget('score'),
@@ -272,7 +273,7 @@ class WidgetService
 
     public function sendConnectionStatus(bool $status, string $gameMode): void
     {
-        $xml = $this->widgetBuilder->render('karma_connection', array_merge(
+        $xml = $this->widgetBuilder->render("{$this->file}connection", array_merge(
             $this->getWidgetConfig($gameMode),
             ['status' => $status]
         ));
@@ -286,7 +287,7 @@ class WidgetService
 
     private function sendLoadingIndicator(bool $status, string $gameMode): void
     {
-        $xml = $this->widgetBuilder->render('karma_loading_indicator', array_merge(
+        $xml = $this->widgetBuilder->render("{$this->file}loading_indicator", array_merge(
             $this->getWidgetConfig($gameMode),
             ['status' => $status]
         ));

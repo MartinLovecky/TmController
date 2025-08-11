@@ -118,6 +118,6 @@ class PlayerService
 
     private function getPlayerList(): array
     {
-        return $this->client->query('GetPlayerList', [30, 0, 2], true)->get('value');
+        return $this->client->query('GetPlayerList', [30, 0, 2], false)->get('value');
     }
 }

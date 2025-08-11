@@ -8,6 +8,7 @@ use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Services\Server;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Plugins\Manager\PluginManager;
+use Yuhzel\TmController\Plugins\Manager\pm;
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService, RecordService};
 
 class TmController
@@ -25,7 +26,7 @@ class TmController
         protected ChallengeService $challengeService,
         protected PlayerService $playerService,
         protected RecordService $recordService,
-        protected PluginManager $pluginManager,
+        protected PluginManager $pm,
         protected Server $server,
     ) {
         $this->prevsecond = time();
@@ -51,12 +52,12 @@ class TmController
         while (true) {
             $starttime = microtime(true);
             $this->executeCallbacks();
-            $this->pluginManager->onMainLoop();
+            $this->pm->callFunctions('onMainLoop');
 
             $this->currsecond = time();
             if ($this->prevsecond !== $this->currsecond) {
                 $this->prevsecond = $this->currsecond;
-                $this->pluginManager->onEverySecond();
+                $this->pm->callFunctions('onEverySecond');
             }
 
             $endtime = microtime(true);
@@ -152,7 +153,7 @@ class TmController
         $this->currStatus = $this->client->query('GetStatus')->get('Code');
 
         $this->playerService->syncFromServer();
-        $this->pluginManager->onSync();
+        $this->pm->callFunctions('onSync');
 
         $this->playerService->eachPlayer(function (Container $player) {
             $this->playerConnect($player);
@@ -192,9 +193,8 @@ class TmController
 
         $this->client->query('ChatSendServerMessageToLogin', [$message, $player->get('Login')]);
 
-        //$chatCmd = $this->pluginManager->getPlugin('ChatCmd');
-        //dd($chatCmd->trackrecs($player));
-        $this->pluginManager->onPlayerConnect($player);
+        $this->pm->callPluginFunction('chatCmd', 'trackrecs', $player);
+        $this->pm->callFunctions('onPlayerConnect', $player);
     }
 
     private function disconnect(Container $player)
@@ -208,7 +208,7 @@ class TmController
             Aseco::formatTimeH($playTime * 1000, false)
         );
 
-        $this->pluginManager->onPlayerDisconnect($player);
+        $this->pm->callFunctions('onPlayerDisconnect', $player);
     }
 
     private function sendHeader(): void
@@ -260,9 +260,9 @@ class TmController
     private function newChallenge(Container $challenge): void
     {
         //this should happen only /restart
-        //$this->pluginManager->onRestartChallenge($this->challengeService->getGBX());
+        //$this->pm->onRestartChallenge($this->challengeService->getGBX());
 
-        $this->pluginManager->onNewChallenge($this->challengeService);
+        $this->pm->callFunctions('onNewChallenge', $this->challengeService);
 
         $curRecord = $this->recordService->getRecord($this->challengeService->getUid());
         $message = '';
@@ -297,10 +297,8 @@ class TmController
             $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
         }
 
-        $this->pluginManager->onNewChallenge2($this->challengeService->getGBX());
-
-        //$chatCmd = $this->pluginManager->getPlugin('chatCmd');
-        //$chatCmd->trackrecs();
+        $this->pm->callFunctions('onNewChallenge2', $this->challengeService->getGBX());
+        $this->pm->callPluginFunction('chatCmd', 'trackrecs');
     }
 
     private function endRace($race)
@@ -316,21 +314,21 @@ class TmController
         if (empty($calls)) {
             return;
         }
-
+        /** @var ?Container $call*/
         while ($call = array_shift($calls)) {
             match ($call->get('methodName')) {
                 'TrackMania.PlayerConnect' => $this->playerConnect($this->playerService->getPlayerByLogin($call['2'])),
                 'TrackMania.PlayerDisconnect' => $this->disconnect($this->playerService->getPlayerByLogin($call['2'])),
                 'TrackMania.PlayerChat' => $this->playerChat($call),
-                'TrackMania.PlayerServerMessageAnswer' => dd($call), // onPlayerServerMessageAnswer()
-                'TrackMania.PlayerCheckpoint' => dd($call), // onCheckpoint
-                'TrackMania.PlayerFinish' => dd($call), // playerFinish
+                'TrackMania.PlayerServerMessageAnswer' => $this->pm->callPluginFunction('rasp', 'messageAnswer', $call),
+                'TrackMania.PlayerCheckpoint' => $this->pm->callFunctions('onCheckpoint', $call),
+                'TrackMania.PlayerFinish' => $this->playerFinish($call),
                 'TrackMania.BeginRound' => $this->beginRound(),
                 'TrackMania.StatusChanged' => $this->statusChanged(),
                 'TrackMania.EndRound' => $this->endRound(),
                 'TrackMania.BeginChallenge' => dd($call), // beginRace
                 'TrackMania.EndChallenge' => $this->endRace($call),
-                'TrackMania.PlayerManialinkPageAnswer' => dd($call), // onPlayerManialinkPageAnswer
+                'TrackMania.PlayerManialinkPageAnswer' => $this->pm->callFunctions('onPlayerLink', $call),
                 'TrackMania.BillUpdated' => dd($call), // onBillUpdated
                 'TrackMania.ChallengeListModified' => dd($call), // onChallengeListModified
                 'TrackMania.PlayerInfoChanged' => dd($call), // this->playerInfoChanged
@@ -344,9 +342,11 @@ class TmController
         }
     }
 
+    //NOTE: We dont register commnad for tmf
     private function playerChat(Container $call): void
     {
-        $this->pluginManager->onChat($call);
+        dd($call);
+        $this->pm->onChat($call);
 
         $command = $call->get('2');
         $login = $call->get('1');
@@ -361,9 +361,9 @@ class TmController
         } elseif (str_starts_with($command, '/')) {
             $cmd = substr($command, 1);
             $params = explode(' ', $cmd, 2);
-            $name = str_replace(['+', '-'], ['plus', 'dash'], $params[0]);
+            $name = ucfirst(str_replace(['+', '-'], ['plus', 'dash'], $params[0]));
 
-            if ($this->pluginManager->pluginFunctionExists("chat_{$name}")) {
+            if ($this->pm->pluginFunctionExists("chat{$name}")) {
                 $params[1] = isset($params[1]) ? trim($params[1]) : '';
                 $auth = $this->playerService->getPlayerByLogin($login);
 
@@ -377,7 +377,7 @@ class TmController
 
                     $cmdCommand = ['author' => $auth, 'params' => $params[1]];
 
-                    $this->pluginManager->callPluginFunction("chat_{$name}", $cmdCommand);
+                    $this->pm->callFunctions("chat{$name}", $cmdCommand);
                 } else {
                     Aseco::console(
                         'player {1} attempted to use chat command "/{2} {3}"',
@@ -396,13 +396,13 @@ class TmController
     private function beginRound(): void
     {
         Aseco::console('Begin Round');
-        $this->pluginManager->onBeginRound();
+        $this->pm->callFunctions('onBeginRound');
     }
 
     private function endRound(): void
     {
         Aseco::console('End Round');
-        $this->pluginManager->onEndRound();
+        $this->pm->callFunctions('onEndRound');
     }
 
     private function statusChanged(): void
@@ -417,7 +417,11 @@ class TmController
             $this->runningPlay();
         }
 
-        $this->pluginManager->onStatusChangeTo($this->currStatus);
+        $this->pm->callFunctions('onStatusChangeTo', $this->currStatus);
+    }
+
+    private function playerFinish(Container $finish)
+    {
     }
 
     private function runningPlay(): void

@@ -1,0 +1,59 @@
+{
+    "menu_caption" : "   Menu",
+    "styles" : {
+        "menubutton": {
+            "style" : "Bgs1InRace",
+            "substyle" : "NavButton"
+        },
+        "menubackground": {
+            "style" : "Bgs1",
+            "substyle" : "BgTitle3"
+        },
+        "menuicon": {
+            "style" : "Icons128x128_1",
+            "substyle" : "United"
+        },
+        "menuentry": {
+            "style" : "BgsPlayerCard",
+            "substyle" : "BgCardSystem"
+        },
+        "menuentryactive": {
+            "style" : "BgsPlayerCard",
+            "substyle" : "BgMediaTracker"
+        },
+        "menugroupicon": {
+            "style" : "Icons128x128_1",
+            "substyle" : "Browse"
+        },
+        "menuhelpicon": {
+            "style" : "Icons64x64_1",
+            "substyle" : "TrackInfo"
+        },
+        "menuactionicon": {
+            "style" : "Icons64x64_1",
+            "substyle" : "ToolLeague1"
+        },
+        "separator": {
+            "style" : "Bgs1InRace",
+            "substyle" : "NavButton"
+        },
+        "indicatorfalse": {
+            "style" : "Icons64x64_1",
+            "substyle" : "LvlRed"
+        },
+        "indicatortrue": {
+            "style" : "Icons64x64_1",
+            "substyle" : "LvlGreen"
+        },
+        "indicatoronhold": {
+            "style" : "Icons64x64_1",
+            "substyle" : "LvlYellow"
+        }
+    },
+    "size" : "8 2.2",
+    "separatorheight" : 0.75,
+    "menutimeout" : 13000,
+    "position" : "-65 47.8",
+    "horizontalorientation" : 1,
+    "verticalorientation" : 1
+}

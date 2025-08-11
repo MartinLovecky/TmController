@@ -149,11 +149,16 @@ class Request
         }
 
         if (is_resource($value)) {
-            return $this->dom->createElement('base64', base64_encode(stream_get_contents($value)));
+            $contents = stream_get_contents($value);
+            return $this->dom->createElement('base64', base64_encode($contents));
         }
 
-        if (is_string($value) && Aseco::isBase64($value)) {
-            return $this->dom->createElement('base64', base64_encode($value));
+        if (is_string($value)) {
+            if (Aseco::isBase64($value)) {
+                return $this->dom->createElement('base64', $value);
+            } elseif (!preg_match('//u', $value)) {
+                return $this->dom->createElement('base64', base64_encode($value));
+            }
         }
 
         if ($type === 'array' && Arr::isAssoc($value)) {

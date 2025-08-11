@@ -3,16 +3,14 @@
     <quad
       size="{{ widths[0] }} {{ 0.11 + hsize + linesCount * bsize }}"
       style="{{ style.get('window.style') }}"
-      substyle="{{ style.get('window.substyle') }}"
-    />
+      substyle="{{ style.get('window.substyle') }}"/>
 
     <quad
       pos="-{{ widths[0] / 2 }} -0.01 -0.1"
       size="{{ widths[0] - 0.02 }} {{ hsize }}"
       halign="center"
       style="{{ style.get('header.style') }}"
-      substyle="{{ style.get('header.substyle') }}"
-    />
+      substyle="{{ style.get('header.substyle') }}"/>
 
     {% if icon is iterable %}
       {% set isize = hsize + (icon[2] ?? 0) %}

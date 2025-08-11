@@ -1,67 +1,44 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <settings>
-	<menu_caption>   Menu</menu_caption>
-	<styles>
-		<menubutton style='Bgs1InRace' substyle='NavButton'/>
-		<menubackground style='Bgs1' substyle='BgTitle3'/>
-		<menuicon style='Icons128x128_1' substyle='United'/>
-		<menuentry style='BgsPlayerCard' substyle='BgCardSystem'/>
-		<menuentryactive style='BgsPlayerCard' substyle='BgMediaTracker'/>
-		<menugroupicon style='Icons128x128_1' substyle='Browse'/>
-		<menuhelpicon style='Icons64x64_1' substyle='TrackInfo'/>
-		<menuactionicon style='Icons64x64_1' substyle='ToolLeague1'/>
-		<separator style='Bgs1InRace' substyle='NavButton'/>
-		<indicatorfalse style='Icons64x64_1' substyle='LvlRed'/>
-		<indicatortrue style='Icons64x64_1' substyle='LvlGreen'/>
-		<indicatoronhold style='Icons64x64_1' substyle='LvlYellow'/>
-	</styles>
-	<size>8 2.2</size>
-	<separatorheight>0.75</separatorheight>
-	<menutimeout>13000</menutimeout> 
-		<position>-65 47.8</position>
-		<horizontalorientation>1</horizontalorientation>
-	<verticalorientation>1</verticalorientation> 
-
-
 	<entries>
 		<entry caption='Admin' ability='listabilities' unique='adminmenu'>
-			<entry caption='Tracks' unique='admintracks'>
-				<entry caption='Add This Track' chatcmd='/admin addthis' unique='adminaddthis'/>
-				<entry caption='Remove This Track' chatcmd='/admin removethis' unique='adminremovethis'/>
-				<entry caption='Erase This Track' chatcmd='/admin erasethis' unique='adminerasethis'/>
-				<entry caption='Shuffle Tracklist' chatcmd='/admin shuffle' unique='admintlshuffle'/>
-				<entry caption='List Duplicates' chatcmd='/admin listdupes' unique='admindupes'/>
-				<entry caption='Clear Jukebox' chatcmd='/admin cjb' unique='adminclearjb'/>
-				<entry caption='Clear History' chatcmd='/admin clearhist' unique='adminclearhist'/>
-				<entry caption='Read Matchsettings' chatcmd='/admin readtracklist' unique='admintlread'/>
-				<entry caption='Write Matchsettings' chatcmd='/admin writetracklist' unique='admintlwrite'/>
-			</entry>
+		<entry caption='Tracks' unique='admintracks'>
+		<entry caption='Add This Track' chatcmd='/admin addthis' unique='adminaddthis'/>
+		<entry caption='Remove This Track' chatcmd='/admin removethis' unique='adminremovethis'/>
+		<entry caption='Erase This Track' chatcmd='/admin erasethis' unique='adminerasethis'/>
+		<entry caption='Shuffle Tracklist' chatcmd='/admin shuffle' unique='admintlshuffle'/>
+		<entry caption='List Duplicates' chatcmd='/admin listdupes' unique='admindupes'/>
+		<entry caption='Clear Jukebox' chatcmd='/admin cjb' unique='adminclearjb'/>
+		<entry caption='Clear History' chatcmd='/admin clearhist' unique='adminclearhist'/>
+		<entry caption='Read Matchsettings' chatcmd='/admin readtracklist' unique='admintlread'/>
+		<entry caption='Write Matchsettings' chatcmd='/admin writetracklist' unique='admintlwrite'/>
+		</entry>
 			<entry caption='Players' unique='adminplayers'>
-				<entry caption='All' chatcmd='/admin players' unique='adminplayerslist'/>
-				<entry caption='Live' chatcmd='/admin players live' unique='adminplayerslive'/>
-				<entry caption='Ignores' chatcmd='/admin ignorelist' unique='adminignorelist'/>
-					<entry caption='...Clean' chatcmd='/admin cleanignores' unique='admincleanignores'/>
-				<entry caption='Bans' chatcmd='/admin listbans' unique='adminbanlist'/>
-					<entry caption='...Clean' chatcmd='/admin cleanbanlist' unique='admincleanbanlist'/>
-				<entry caption='Banned IPs' chatcmd='/admin listips' unique='adminbanipsshow'/>
-					<entry caption='...Read' chatcmd='/admin readiplist' unique='adminipread'/>
-					<entry caption='...Write' chatcmd='/admin writeiplist' unique='adminipwrite'/>
-					<entry caption='...Clean' chatcmd='/admin cleaniplist' unique='admincleaniplist'/>
+			<entry caption='All' chatcmd='/admin players' unique='adminplayerslist'/>
+			<entry caption='Live' chatcmd='/admin players live' unique='adminplayerslive'/>
+			<entry caption='Ignores' chatcmd='/admin ignorelist' unique='adminignorelist'/>
+			<entry caption='...Clean' chatcmd='/admin cleanignores' unique='admincleanignores'/>
+			<entry caption='Bans' chatcmd='/admin listbans' unique='adminbanlist'/>
+			<entry caption='...Clean' chatcmd='/admin cleanbanlist' unique='admincleanbanlist'/>
+			<entry caption='Banned IPs' chatcmd='/admin listips' unique='adminbanipsshow'/>
+			<entry caption='...Read' chatcmd='/admin readiplist' unique='adminipread'/>
+				<entry caption='...Write' chatcmd='/admin writeiplist' unique='adminipwrite'/>
+				<entry caption='...Clean' chatcmd='/admin cleaniplist' unique='admincleaniplist'/>
 				<entry caption='Blacklists' chatcmd='/admin listblacks' unique='adminblshow'/>
-					<entry caption='...Read' chatcmd='/admin readblacklist' unique='adminblread'/>
-					<entry caption='...Write' chatcmd='/admin writeblacklist' unique='adminblwrite'/>
-					<entry caption='...Clean' chatcmd='/admin cleanblacklist' unique='admincleanblacklist'/>
+				<entry caption='...Read' chatcmd='/admin readblacklist' unique='adminblread'/>
+				<entry caption='...Write' chatcmd='/admin writeblacklist' unique='adminblwrite'/>
+				<entry caption='...Clean' chatcmd='/admin cleanblacklist' unique='admincleanblacklist'/>
 				<entry caption='Guests' chatcmd='/admin listguests' unique='adminglshow'/>
-					<entry caption='...Read' chatcmd='/admin readguestlist' unique='adminglload'/>
-					<entry caption='...Write' chatcmd='/admin writeguestlist' unique='adminglwrite'/>
-					<entry caption='...Clean' chatcmd='/admin cleanguestlist' unique='admincleanguestlist'/>
+				<entry caption='...Read' chatcmd='/admin readguestlist' unique='adminglload'/>
+				<entry caption='...Write' chatcmd='/admin writeguestlist' unique='adminglwrite'/>
+				<entry caption='...Clean' chatcmd='/admin cleanguestlist' unique='admincleanguestlist'/>
 				<entry caption='Merge Global BL' chatcmd='/admin mergegbl' unique='adminmergegbl'/>
 				<entry caption='Access Control' dependencies='plugin.access.php' unique='adminaccess'>
-					<entry caption='List' chatcmd='/admin access list' unique='adminacclist'/>
-					<entry caption='Reload' chatcmd='/admin access reload' unique='adminaccreload'/>
-					<entry type='separator' unique='accesssep1'/>
-					<entry caption='Help' chatcmd='/admin access help' unique='adminacchelp'/>
-				</entry>
+				<entry caption='List' chatcmd='/admin access list' unique='adminacclist'/>
+				<entry caption='Reload' chatcmd='/admin access reload' unique='adminaccreload'/>
+				<entry type='separator' unique='accesssep1'/>
+				<entry caption='Help' chatcmd='/admin access help' unique='adminacchelp'/>
+			</entry>
 			</entry>
 			<entry caption='Admins' unique='adminadmins'>
 				<entry caption='Masteradmins' chatcmd='/admin listmasters' unique='adminmasters'/>

@@ -1,54 +1,3 @@
-{% if not style %}
-<manialink id="1" posx="{{ widths[0] / 2 }}" posy="0.47">
-  <background bgcolor="FFF0" bgborderx="0.01" bgbordery="0.01"/>
-  <format textsize="3" textcolor="333B"/>
-  <line>
-    <cell bgcolor="DDDB" width="{{ widths[0] }}">
-      <text> $o{{ header|e }}</text>
-    </cell>
-  </line>
-  <format textsize="2" textcolor="333B"/>
-  <line><cell bgcolor="FFFB" width="{{ widths[0] }}"><text>$</text></cell></line>
-  <line>
-    <cell bgcolor="FFFB" width="{{ widths[0] }}">
-      <icon width="0.4" height="{{ square ? '0.4' : '0.3' }}" halign="center">{{ links[0]|e }}</icon>
-    </cell>
-  </line>
-  <line><cell bgcolor="FFFB" width="{{ widths[0] }}"><text>$</text></cell></line>
-
-  {% for line in data %}
-    <line height=".046">
-      {% if line %}
-        {% for i in 1..(widths|length - 1) %}
-          <cell bgcolor="FFFB" width="{{ widths[i] }}">
-            <text>  $o{{ line[i-1]|e }}</text>
-          </cell>
-        {% endfor %}
-      {% else %}
-        <cell bgcolor="FFFB" width="{{ widths[0] }}"><text>$</text></cell>
-      {% endif %}
-    </line>
-  {% endfor %}
-
-  <line><cell bgcolor="FFFB" width="{{ widths[0] }}"><text>$</text></cell></line>
-  <format textsize="3" textcolor="333B"/>
-  <line>
-    <cell bgcolor="FFFB" width="{{ widths[0] / 2 }}">
-      <text halign="center">$o{{ links[2]|e }}</text>
-    </cell>
-    <cell bgcolor="FFFB" width="{{ widths[0] / 2 }}">
-      <text halign="center">$o{{ links[3]|e }}</text>
-    </cell>
-  </line>
-  <format textsize="2" textcolor="333B"/>
-  <line><cell bgcolor="FFFB" width="{{ widths[0] }}"><text>$</text></cell></line>
-  <line height=".046">
-    <cell bgcolor="FFFB" width="{{ widths[0] }}">
-      <text halign="center" action="0">$o{{ button|e }}</text>
-    </cell>
-  </line>
-</manialink>
-{% else %}
 <manialink id="1">
   <frame pos="{{ widths[0] / 2 }} 0.47 0">
     <quad size="{{ widths[0] }} {{ 0.42 + (square ? 0.1 : 0) + 2 * hsize + lines * bsize }}"
@@ -73,37 +22,33 @@
     <quad pos="-{{ widths[0] / 2 }} -{{ 0.02 + hsize }} -0.2" size="0.4 {{ square ? '0.4' : '0.3' }}"
           halign="center" image="{{ links[0]|e }}"/>
 
-    <quad pos="-{{ widths[0] / 2 }} -{{ 0.33 + (square ? 0.1 : 0) + hsize }}"
-          -0.1" size="{{ widths[0] - 0.02 }} {{ 0.02 + hsize + lines * bsize }}"
-          halign="center" style="{{ style.BODY[0].STYLE[0] }}"
+    <quad pos="-{{ widths[0] / 2 }} -{{ 0.33 + (square ? 0.1 : 0) + hsize }} -0.1" 
+          size="{{ widths[0] - 0.02 }} {{ 0.02 + hsize + lines * bsize }}"
+          halign="center" style="{{ style.get('body.style') }}"
           substyle="{{ style.get('body.substyle') }}"/>
 
     <format style="{{ style.get('body.textstyle') }}"/>
     {% for line, idx in data|enumerate(start=1) %}
       {% if line %}
         {% for i in 1..(widths|length - 1) %}
-          <label pos="-{{ 0.025 + widths[1:i]|sum }}" 
-                 -{{ 0.305 + (square ? 0.1 : 0) + hsize + idx * bsize }} -0.2"
+          <label pos="-{{ 0.025 + widths[1:i]|sum }} -{{ 0.305 + (square ? 0.1 : 0) + hsize + idx * bsize }} -0.2"
                  size="{{ widths[i] }} {{ 0.02 + bsize }}"
                  halign="left" style="{{ style.get('body.textstyle') }}"
                  text="{{ line[i-1]|e }}"/>
         {% endfor %}
       {% endif %}
     {% endfor %}
-
     <format style="{{ style.get('header.textstyle') }}"/>
-    <label pos="-{{ widths[0] * 0.25 }} -{{ 0.36 + (square ? 0.1 : 0) + hsize + lines * bsize }}"
-           -0.2" size="{{ widths[0] / 2 }} {{ hsize }}"
+    <label pos="-{{ widths[0] * 0.25 }} -{{ 0.36 + (square ? 0.1 : 0) + hsize + lines * bsize }} -0.2" 
+           size="{{ widths[0] / 2 }} {{ hsize }}"
            halign="center" style="{{ style.get('header.textstyle') }}"
            text="{{ links[2]|e }}"/>
-    <label pos="-{{ widths[0] * 0.75 }} -{{ 0.36 + (square ? 0.1 : 0) + hsize + lines * bsize }}"
-           -0.2" size="{{ widths[0] / 2 }} {{ hsize }}"
+    <label pos="-{{ widths[0] * 0.75 }} -{{ 0.36 + (square ? 0.1 : 0) + hsize + lines * bsize }} -0.2" 
+           size="{{ widths[0] / 2 }} {{ hsize }}"
            halign="center" style="{{ style.get('header.textstyle') }}"
            text="{{ links[3]|e }}"/>
-
-    <quad pos="-{{ widths[0] / 2 }} -{{ 0.35 + (square ? 0.1 : 0) + 2 * hsize + lines * bsize }}"
-          -0.2" size="0.06 0.06" halign="center"
+    <quad pos="-{{ widths[0] / 2 }} -{{ 0.35 + (square ? 0.1 : 0) + 2 * hsize + lines * bsize }} -0.2" 
+          size="0.06 0.06" halign="center"
           style="Icons64x64_1" substyle="Close" action="0"/>
   </frame>
 </manialink>
-{% endif %}

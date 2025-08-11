@@ -5,25 +5,12 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Plugins;
 
 use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\App\Command;
 use Yuhzel\TmController\Repository\ChallengeService;
 use Yuhzel\TmController\Services\HttpClient;
 
 class Tmxv
 {
     public array $videos = [];
-    private array $commands = [];
-
-    public function __construct()
-    {
-        $this->commands = [
-            ['videos',  [$this, 'videos'], 'Sets up the tmx videos command environment'],
-            ['video',  [$this, 'video'], 'Gives latest video in chat'],
-            ['gps',  [$this, 'gps'], 'Gives latest video in chat']
-        ];
-        Aseco::console('Plugin TMX Video initialized.');
-        Command::register($this->commands, 'Tmxv');
-    }
 
     public function onNewChallenge(ChallengeService $challengeService): void
     {

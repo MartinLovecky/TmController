@@ -80,7 +80,7 @@ class ManiaKarma
     {
     }
 
-    public function onPlayerManialinkPageAnswer(array $answer): void
+    public function onPlayerLink(array $answer): void
     {
         $this->voteService->handleVoteResponse($answer);
     }

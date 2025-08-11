@@ -34,7 +34,7 @@ class ChallengeService
 
         $this->gbx->setXml(true);
         $this->gbx->processFile($file);
-        $this->tmx->setData($this->gbx->UId, true);
+        $this->tmx->setData($this->getUid(), true);
         $this->createChallengeInDb();
     }
 

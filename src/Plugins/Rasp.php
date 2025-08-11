@@ -4,21 +4,14 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Command;
-
 class Rasp
 {
-    private array $commands = [];
-
-    public function __construct()
-    {
-        $this->commands = [
-            ['rank', [$this, 'rank'], 'Shows your current server rank'],
-            ['top10', [$this, 'top10'], 'Displays top 10 best ranked players'],
-            ['top100', [$this, 'top100'], 'Displays top 100 best ranked players'],
-            ['topwins', [$this, 'topwins'], 'Displays top 100 victorious players'],
-            ['active', [$this, 'active'], 'Displays top 100 most active players']
-        ];
-        Command::register($this->commands, 'Rasp');
-    }
+    public array $chatvote = [];
+    public array $plrvotes = [];
+    public array $tmxadd = [];
+    public array $jukebox = [];
+    public bool $allow_spec_voting = false;
+    public bool $ladder_fast_restart = true;
+    public bool $feature_votes = true;
+    public bool $feature_tmxadd = false;
 }

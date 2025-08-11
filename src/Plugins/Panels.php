@@ -5,27 +5,18 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Plugins;
 
 use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\App\Command;
 use Yuhzel\TmController\App\WidgetBuilder;
 
 class Panels
 {
-    private array $commands = [];
     public ?string $adminPanel = null;
     public ?string $donatePanel = null;
     public ?string $recordsPanel = null;
     public ?string $votePanel = null;
 
-
     public function __construct(protected WidgetBuilder $widgetBuilder)
     {
         $folder = 'panels' . DIRECTORY_SEPARATOR;
-        $this->commands = [
-            ['donpanel',  [$this, 'donpanel'],  'Selects donate panel (see: /donpanel help)'],
-            ['recpanel',  [$this, 'recpanel'],  'Selects records panel (see: /recpanel help)'],
-            ['votepanel', [$this, 'votepanel'], 'Selects vote panel (see: /votepanel help)']
-        ];
-        Command::register($this->commands, 'Panels');
         //Admin panel
         $adminFile = "{$folder}{$_ENV['admin_panel']}";
         Aseco::console('Default admin panel [{1}]', $_ENV['admin_panel']);

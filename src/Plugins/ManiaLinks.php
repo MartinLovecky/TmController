@@ -20,7 +20,7 @@ class ManiaLinks
     ) {
     }
 
-    public function onPlayerManialinkPageAnswer()
+    public function onPlayerLink()
     {
         $this->eventManiaLink([]);
     }
@@ -28,7 +28,6 @@ class ManiaLinks
     public function onNewChallenge(): void
     {
         $this->scorePanelOff();
-        //stats panel is removed
     }
 
     public function onEndRace(): void

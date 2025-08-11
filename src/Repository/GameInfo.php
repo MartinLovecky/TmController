@@ -6,7 +6,6 @@ namespace Yuhzel\TmController\Repository;
 
 use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\Services\Server;
 
 class GameInfo
 {
@@ -16,8 +15,6 @@ class GameInfo
 
     public function getCurrentGameInfo(): Container
     {
-        return $this->client->query('GetCurrentGameInfo', [
-            (Server::$game === 'TMF' ? 1 : 0)
-        ], true);
+        return $this->client->query('GetCurrentGameInfo', [1], true);
     }
 }
