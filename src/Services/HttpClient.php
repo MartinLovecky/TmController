@@ -144,14 +144,14 @@ class HttpClient
         $response = curl_exec($this->ch);
 
         if (curl_errno($this->ch)) {
-            Aseco::console($endpoint . 'curl error' . curl_error($this->ch));
+            Aseco::console($endpoint . ' curl error ' . curl_error($this->ch));
             return false;
         }
 
         $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
 
         if ($httpCode !== 200) {
-            Aseco::console($endpoint . 'HTTP error: ' . $httpCode);
+            Aseco::console($endpoint . ' HTTP error: ' . $httpCode);
             return false;
         }
 

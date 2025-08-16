@@ -6,20 +6,22 @@ namespace Yuhzel\TmController\App;
 
 use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\Core\Enums\RestartMode;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Plugins\Manager\PluginManager;
-use Yuhzel\TmController\Plugins\Manager\pm;
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService, RecordService};
 
 class TmController
 {
-    public readonly Container $config;
+    public Container $config;
     public ?Container $bannedIps = null;
+    private RestartMode $restarting = RestartMode::NONE;
     private int $prevsecond = 0;
     private int $currsecond = 0;
     private int $pevStatus  = 0;
     private int $currStatus = 0;
     private bool $warmupPhase = false;
+    private bool $changingmode = false;
 
     public function __construct(
         protected Client $client,
@@ -43,7 +45,7 @@ class TmController
         $this->sendHeader();
 
         if ($this->currStatus === 100) {
-            Aseco::console('Waiting for the server to start a challenge');
+            Aseco::consoleText('Waiting for the server to start a challenge');
         } else {
             $this->beginRace(false);
         }
@@ -52,7 +54,7 @@ class TmController
         while (true) {
             $starttime = microtime(true);
             $this->executeCallbacks();
-            $this->pm->callFunctions('onMainLoop');
+            //$this->pm->callFunctions('onMainLoop');
 
             $this->currsecond = time();
             if ($this->prevsecond !== $this->currsecond) {
@@ -75,14 +77,14 @@ class TmController
     private function readConfig(): void
     {
         $conf = Aseco::jsonFolderPath() . 'config.json';
-        Aseco::console('[X8seco] Load settings from [{1}]', $conf);
+        Aseco::consoleText('[X8seco] Load settings from [{1}]', $conf);
         $this->config = Container::fromJsonFile($conf, true);
     }
 
     private function readAdminOps(): void
     {
         $ops = Aseco::jsonFolderPath() . 'adminops.json';
-        Aseco::console('[X8seco] Load admin/ops lists [{1}]', $ops);
+        Aseco::consoleText('[X8seco] Load admin/ops lists [{1}]', $ops);
         Aseco::$adminOps = Container::fromJsonFile($ops);
     }
 
@@ -92,7 +94,7 @@ class TmController
         $bannedIps = Container::fromJsonFile($ipsFile);
 
         if (!$bannedIps->get('ban_list')->isEmpty()) {
-            Aseco::console('[X8seco] Load banned IPs list [{1}]', $ipsFile);
+            Aseco::consoleText('[X8seco] Load banned IPs list [{1}]', $ipsFile);
             $this->bannedIps = $bannedIps;
         } else {
             unset($bannedIps);
@@ -193,7 +195,7 @@ class TmController
 
         $this->client->query('ChatSendServerMessageToLogin', [$message, $player->get('Login')]);
 
-        $this->pm->callPluginFunction('chatCmd', 'trackrecs', $player);
+        $this->pm->callPluginFunction('chatCmd', 'trackrecs', $player->get('Login'), 'before');
         $this->pm->callFunctions('onPlayerConnect', $player);
     }
 
@@ -213,25 +215,25 @@ class TmController
 
     private function sendHeader(): void
     {
-        Aseco::console('###############################################################################');
-        Aseco::console('  XASECO v 2.11.26 running on {1}:{2}', Server::$ip, Server::$port);
-        Aseco::console(
+        Aseco::consoleText('###############################################################################');
+        Aseco::consoleText('  XASECO v 2.11.26 running on {1}:{2}', Server::$ip, Server::$port);
+        Aseco::consoleText(
             '  Name   : {1} - {2}',
             Aseco::stripColors(Server::$name, false),
             Server::$serverLogin
         );
-        Aseco::console(
+        Aseco::consoleText(
             '  Game   : {1} {2} - {3} - {4}',
             Server::$game,
             'United',
             Server::$packmask,
             'TimeAttack'
         );
-        Aseco::console('  Version: {1} / {2}', Server::$version, Server::$build);
-        Aseco::console('  Authors: Florian Schnell & Assembler Maniac');
-        Aseco::console('  Re-Authored: Xymph');
-        Aseco::console('  Remake: Yuhzel');
-        Aseco::console('###############################################################################');
+        Aseco::consoleText('  Version: {1} / {2}', Server::$version, Server::$build);
+        Aseco::consoleText('  Authors: Florian Schnell & Assembler Maniac');
+        Aseco::consoleText('  Re-Authored: Xymph');
+        Aseco::consoleText('  Remake: Yuhzel');
+        Aseco::consoleText('###############################################################################');
 
         $startupMsg = Aseco::formatText(
             Aseco::getChatMessage('startup'),
@@ -246,11 +248,6 @@ class TmController
     private function beginRace(bool|Container $challenge)
     {
         if (!$challenge) {
-            // Wierd AF
-            /**
-             * GetCurrentChallengeInfo , [], 0 -> addCall -> DONT GET RESULT
-             *
-             */
             $this->newChallenge($this->challengeService->getCurrentChallengeInfo());
         } else {
             $this->newChallenge($challenge);
@@ -259,46 +256,96 @@ class TmController
 
     private function newChallenge(Container $challenge): void
     {
-        //this should happen only /restart
-        //$this->pm->onRestartChallenge($this->challengeService->getGBX());
+        $this->changingmode = false;
+
+        if ($this->restarting === RestartMode::NONE) {
+            Aseco::consoleText('Begin Challenge');
+        }
+
+        if ($this->handleRestartState()) {
+            return;
+        }
 
         $this->pm->callFunctions('onNewChallenge', $this->challengeService);
+        $message = $this->buildRecordMessage($challenge);
+        $this->sendRecordMessage($message);
 
-        $curRecord = $this->recordService->getRecord($this->challengeService->getUid());
-        $message = '';
+        $this->pm->callFunctions('onNewChallenge2', $this->challengeService->getGBX());
+        $this->pm->callPluginFunction('chatCmd', 'trackrecs', null, 'before');
+    }
 
-        if (!$curRecord->isEmpty()) {
-            dd($curRecord);
+    private function handleRestartState(): bool
+    {
+        if ($this->restarting !== RestartMode::NONE) {
+            if ($this->restarting === RestartMode::FULL) {
+                $this->restarting = RestartMode::NONE;
+            } else { // QUICK
+                $this->restarting = RestartMode::NONE;
+                $this->pm->callFunctions(
+                    'onRestartChallenge2',
+                    $this->challengeService->getChallenge()
+                );
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function buildRecordMessage(Container $challenge): string
+    {
+        $curRecordContainer = $this->recordService
+        ->getRecord($this->challengeService->getUid())
+        ->get('Times');
+
+        $gbx = $this->challengeService->getGBX();
+
+        if (!$curRecordContainer->isEmpty()) {
+            $firstRecord = $curRecordContainer->first();
+            $score = $this->formatScore($firstRecord->score);
+            $playerName = $firstRecord->player->nickname ?? 'Unknown';
+
             Aseco::console(
                 'current record on {1} is {2} and held by {3}',
                 Aseco::stripColors($gbx->name, false),
-                trim('none'), // Aseco::formatTime($score)
-                Aseco::stripColors('', false) // We need player Name
+                $score,
+                Aseco::stripColors($playerName, false)
             );
 
-            $message = Aseco::formatText(
+            return Aseco::formatText(
                 Aseco::getChatMessage('record_current'),
                 Aseco::stripColors($gbx->name),
-                trim(''), //$score
-                Aseco::stripColors('') // $cur_record->player->nickname
-            );
-        } else {
-            Aseco::console(
-                'currently no record on {1}',
-                Aseco::stripColors($challenge->get('Name'), false)
-            );
-            $message = Aseco::formatText(
-                Aseco::getChatMessage('record_none'),
-                Aseco::stripColors($challenge->get('Name'))
+                $score,
+                Aseco::stripColors($playerName)
             );
         }
 
+        Aseco::console(
+            'currently no record on {1}',
+            Aseco::stripColors($challenge->get('Name'), false)
+        );
+
+        return Aseco::formatText(
+            Aseco::getChatMessage('record_none'),
+            Aseco::stripColors($challenge->get('Name'))
+        );
+    }
+
+    private function sendRecordMessage(string $message): void
+    {
         if (($this->config->get('show_recs_before') & 1) === 1) {
             $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
         }
+    }
 
-        $this->pm->callFunctions('onNewChallenge2', $this->challengeService->getGBX());
-        $this->pm->callPluginFunction('chatCmd', 'trackrecs');
+    private function formatScore(int $score): string
+    {
+        $mode = $this->challengeService->getGameMode();
+
+        if ($mode === 'stunts') {
+            return str_pad((string)$score, 5, ' ', STR_PAD_LEFT);
+        }
+
+        return Aseco::formatTime($score);
     }
 
     private function endRace($race)
@@ -314,11 +361,12 @@ class TmController
         if (empty($calls)) {
             return;
         }
+        $ps = $this->playerService;
         /** @var ?Container $call*/
         while ($call = array_shift($calls)) {
             match ($call->get('methodName')) {
-                'TrackMania.PlayerConnect' => $this->playerConnect($this->playerService->getPlayerByLogin($call['2'])),
-                'TrackMania.PlayerDisconnect' => $this->disconnect($this->playerService->getPlayerByLogin($call['2'])),
+                'TrackMania.PlayerConnect' => $this->playerConnect($ps->getPlayerByLogin($call['login'])),
+                'TrackMania.PlayerDisconnect' => $this->disconnect($ps->getPlayerByLogin($call['login'])),
                 'TrackMania.PlayerChat' => $this->playerChat($call),
                 'TrackMania.PlayerServerMessageAnswer' => $this->pm->callPluginFunction('rasp', 'messageAnswer', $call),
                 'TrackMania.PlayerCheckpoint' => $this->pm->callFunctions('onCheckpoint', $call),
@@ -345,12 +393,10 @@ class TmController
     //NOTE: We dont register commnad for tmf
     private function playerChat(Container $call): void
     {
-        dd($call);
-        $this->pm->onChat($call);
+        $login = $call['login'];
+        $command = $call['message'];
 
-        $command = $call->get('2');
-        $login = $call->get('1');
-        $isAdmin = $call->get('3');
+        $this->pm->callFunctions('onChat', $call);
 
         if ($command == '' || $command == '???') {
             Aseco::console(
@@ -363,45 +409,41 @@ class TmController
             $params = explode(' ', $cmd, 2);
             $name = ucfirst(str_replace(['+', '-'], ['plus', 'dash'], $params[0]));
 
-            if ($this->pm->pluginFunctionExists("chat{$name}")) {
-                $params[1] = isset($params[1]) ? trim($params[1]) : '';
-                $auth = $this->playerService->getPlayerByLogin($login);
+            $params[1] = isset($params[1]) ? trim($params[1]) : '';
+            $auth = $this->playerService->getPlayerByLogin($login);
 
-                if ($auth instanceof Container) {
-                    Aseco::console(
-                        'player {1} used chat command "/{2} {3}"',
-                        $login,
-                        $params[0],
-                        $params[1]
-                    );
+            if ($auth instanceof Container) {
+                Aseco::console(
+                    'player {1} used chat command "/{2} {3}"',
+                    $login,
+                    $params[0],
+                    $params[1]
+                );
 
-                    $cmdCommand = ['author' => $auth, 'params' => $params[1]];
+                $cmdCommand = ['author' => $auth, 'params' => $params[1]];
 
-                    $this->pm->callFunctions("chat{$name}", $cmdCommand);
-                } else {
-                    Aseco::console(
-                        'player {1} attempted to use chat command "/{2} {3}"',
-                        $login,
-                        $params[0],
-                        $params[1]
-                    );
-                    trigger_error("Player object for {$login} not found", E_USER_WARNING);
-                }
+                $this->pm->callFunctions("chat{$name}", $cmdCommand);
             } else {
-                Aseco::console('player {1} used built-in command "/{2}"', $login, $cmd);
+                Aseco::console(
+                    'player {1} attempted to use chat command "/{2} {3}"',
+                    $login,
+                    $params[0],
+                    $params[1]
+                );
+                trigger_error("Player object for {$login} not found", E_USER_WARNING);
             }
         }
     }
 
     private function beginRound(): void
     {
-        Aseco::console('Begin Round');
+        Aseco::consoleText('Begin Round');
         $this->pm->callFunctions('onBeginRound');
     }
 
     private function endRound(): void
     {
-        Aseco::console('End Round');
+        Aseco::consoleText('End Round');
         $this->pm->callFunctions('onEndRound');
     }
 
@@ -420,8 +462,17 @@ class TmController
         $this->pm->callFunctions('onStatusChangeTo', $this->currStatus);
     }
 
-    private function playerFinish(Container $finish)
+    private function playerFinish(Container $finish): void
     {
+        dd($finish);
+        $date = date('Y/m/d;H:i:s');
+        $uid = $finish['0']; // $this->challengeService->getUid()
+        $login = $finish['login'];
+        $score = $finish['2'];
+        $new = false;
+
+        $this->pm->callFunctions('onPlayerFinish1', $uid, $login, $date, $score, $new);
+        $this->pm->callFunctions('onPlayerFinish', $uid, $login, $date, $score, $new);
     }
 
     private function runningPlay(): void

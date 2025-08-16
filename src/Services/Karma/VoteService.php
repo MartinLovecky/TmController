@@ -77,12 +77,12 @@ class VoteService
 
     private function getAuthorTime(ChallMapFetcher $gbx): int
     {
-        return ($this->stateService->getGameMode() === 'stunts') ? 0 : $gbx->authorTime;
+        return ($this->challengeService->getGameMode() === 'stunts') ? 0 : $gbx->authorTime;
     }
 
     private function getAuthorScore(ChallMapFetcher $gbx): int
     {
-        return ($this->stateService->getGameMode() === 'stunts') ? $gbx->authorScore : 0;
+        return ($this->challengeService->getGameMode() === 'stunts') ? $gbx->authorScore : 0;
     }
 
     private function formatVotesForApi(): array

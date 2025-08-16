@@ -23,9 +23,8 @@ class CommandService
 
     public function handleChatCommand(Container $chat): void
     {
-        dd('handleChatCommand', $chat);
         $login = $chat['login'];
-        $text = trim($chat['text']);
+        $text = trim($chat['message']);
         $player = $this->playerService->getPlayerByLogin($login);
 
         if (strpos($text, '/karma') === 0 && Aseco::isAnyAdmin($login)) {

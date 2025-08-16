@@ -16,22 +16,37 @@ class ChatCmd
         protected RecordService $recordService
     ) {
     }
-
-    public function trackrecs()
+    //TODO : this is mess in old code
+    public function trackrecs(?string $login = null, string $mode): void
     {
-        $records = $this->recordService->getRecord()->get('Times');
         $tmxUrl = $this->challengeService->getTMX()->pageurl;
         $challName = $this->challengeService->getGBX()->name;
         $name = '$l[' . $tmxUrl . ']' . Aseco::stripColors($challName) . '$l';
 
-        if ($records->isEmpty()) {
+        if (!isset($login)) {
+            $message = Aseco::formatText(
+                Aseco::getChatMessage('ranking'),
+                $name,
+                $mode
+            );
+            $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
+            return;
+        }
+
+        $records = $this->recordService->getRecordForPlayer(
+            $this->challengeService->getUid(),
+            $login
+        );
+
+        if (empty($records)) {
             $message = Aseco::formatText(
                 Aseco::getChatMessage('ranking_none'),
                 $name,
                 'before'
             );
             $this->client->query('ChatSendServerMessageToLogin', [
-                Aseco::formatColors($message), //$player->get('Login')
+                Aseco::formatColors($message),
+                $login
             ]);
             Aseco::console($message);
             return;

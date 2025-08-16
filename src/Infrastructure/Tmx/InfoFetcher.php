@@ -190,7 +190,7 @@ class InfoFetcher
     {
         return array_map(function ($value) {
             if ($value === "1" || $value === "0") {
-                return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                return filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
             } elseif (is_numeric($value) && ctype_digit($value)) {
                 return (int) $value;
             }

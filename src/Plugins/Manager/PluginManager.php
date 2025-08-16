@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Manager;
 
-use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Plugins\{
     CpLiveAdvanced,
     Dedimania,
@@ -26,6 +25,8 @@ use Yuhzel\TmController\Plugins\{
 
 class PluginManager
 {
+    /** @var object[] $plugins*/
+    private array $plugins = [];
     public function __construct(
         private CpLiveAdvanced $cpLiveAdvanced,
         private Cpll $cpll,
@@ -44,49 +45,60 @@ class PluginManager
         private Tmxv $tmxv,
         private Track $track
     ) {
-    }
-
-    public function getPlugin(string $pluginName): ?object
-    {
-        if (property_exists($this, lcfirst($pluginName))) {
-            $plugin = lcfirst($pluginName);
-            if (is_object($this->{$plugin})) {
-                return $this->{$plugin};
+        foreach (get_object_vars($this) as $propertyName => $pluginInstance) {
+            if ($propertyName === 'plugins') {
+                continue;
+            }
+            if (is_object($pluginInstance)) {
+                $this->plugins[$propertyName] = $pluginInstance;
             }
         }
-
-        Aseco::console("Plugin {$pluginName} not found in PluginManager constructor.");
-        return null;
     }
 
-    public function pluginFunctionExists(string $functionName): bool
-    {
-        foreach (get_object_vars($this) as $plugin) {
-            if (is_object($plugin) && method_exists($plugin, $functionName)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public function callFunctions(string $functionName, ...$args): mixed
-    {
-        foreach (get_object_vars($this) as $plugin) {
-            if (is_object($plugin) && method_exists($plugin, $functionName)) {
-                return call_user_func_array([$plugin, $functionName], $args);
-            }
-        }
-
-        return null;
-    }
-
+    /**
+     * Calls a method on a specific plugin if it exists.
+     *
+     * @param string $pluginName Plugin property name in camelCase
+     * @param string $functionName camelCase method name to call
+     * @param mixed ...$args Arguments to pass to the method
+     *
+     * @return mixed|null Returns the method result or null
+     */
     public function callPluginFunction(string $pluginName, string $functionName, ...$args): mixed
     {
-        if (method_exists($this->getPlugin($pluginName), $functionName)) {
-            return call_user_func_array([$this->getPlugin($pluginName), $functionName], $args);
+        $plugin = $this->getPlugin($pluginName);
+        if ($plugin !== null && method_exists($plugin, $functionName)) {
+            return $plugin->$functionName(...$args);
         }
 
         return null;
+    }
+
+    /**
+     * Calls a method on all plugins that implement it.
+     *
+     * @param string $functionName The method name to call
+     * @param mixed ...$args Arguments to pass to the method
+     *
+     * @return void
+     */
+    public function callFunctions(string $functionName, ...$args): void
+    {
+        foreach ($this->plugins as $plugin) {
+            if (method_exists($plugin, $functionName)) {
+                $plugin->$functionName(...$args);
+            }
+        }
+    }
+
+    /**
+     * Retrieves a plugin instance by its camelCase property name.
+     *
+     * @param string $pluginName Plugin property name in camelCase
+     * @return object|null The plugin instance or null if not found
+     */
+    private function getPlugin(string $pluginName): ?object
+    {
+        return $this->plugins[$pluginName] ?? null;
     }
 }

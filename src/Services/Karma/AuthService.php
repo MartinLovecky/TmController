@@ -41,7 +41,7 @@ class AuthService
     {
         $response = $this->httpClient->get($this->api, $this->getAuthParams());
 
-        $output = Parser::fromXMLString($response)->setReadonly();
+        $output = Parser::fromXMLString($response);
 
         if ($output->get('status') !== 200) {
             $this->handleAuthenticationFailure($output);

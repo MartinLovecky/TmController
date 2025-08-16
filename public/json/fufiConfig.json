@@ -56,6 +56,2143 @@
 		"menutimeout": "13000",
 		"position": "-65 47.8",
 		"horizontalorientation": "1",
-		"verticalorientation": "1"
+		"verticalorientation": "1",
+		"entries": {
+			"entry": [
+				{
+					"entry": [
+						{
+							"entry": [
+								{
+									"_caption": "Add This Track",
+									"_chatcmd": "/admin addthis",
+									"_unique": "adminaddthis"
+								},
+								{
+									"_caption": "Remove This Track",
+									"_chatcmd": "/admin removethis",
+									"_unique": "adminremovethis"
+								},
+								{
+									"_caption": "Erase This Track",
+									"_chatcmd": "/admin erasethis",
+									"_unique": "adminerasethis"
+								},
+								{
+									"_caption": "Shuffle Tracklist",
+									"_chatcmd": "/admin shuffle",
+									"_unique": "admintlshuffle"
+								},
+								{
+									"_caption": "List Duplicates",
+									"_chatcmd": "/admin listdupes",
+									"_unique": "admindupes"
+								},
+								{
+									"_caption": "Clear Jukebox",
+									"_chatcmd": "/admin cjb",
+									"_unique": "adminclearjb"
+								},
+								{
+									"_caption": "Clear History",
+									"_chatcmd": "/admin clearhist",
+									"_unique": "adminclearhist"
+								},
+								{
+									"_caption": "Read Matchsettings",
+									"_chatcmd": "/admin readtracklist",
+									"_unique": "admintlread"
+								},
+								{
+									"_caption": "Write Matchsettings",
+									"_chatcmd": "/admin writetracklist",
+									"_unique": "admintlwrite"
+								}
+							],
+							"_caption": "Tracks",
+							"_unique": "admintracks"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "All",
+									"_chatcmd": "/admin players",
+									"_unique": "adminplayerslist"
+								},
+								{
+									"_caption": "Live",
+									"_chatcmd": "/admin players live",
+									"_unique": "adminplayerslive"
+								},
+								{
+									"_caption": "Ignores",
+									"_chatcmd": "/admin ignorelist",
+									"_unique": "adminignorelist"
+								},
+								{
+									"_caption": "...Clean",
+									"_chatcmd": "/admin cleanignores",
+									"_unique": "admincleanignores"
+								},
+								{
+									"_caption": "Bans",
+									"_chatcmd": "/admin listbans",
+									"_unique": "adminbanlist"
+								},
+								{
+									"_caption": "...Clean",
+									"_chatcmd": "/admin cleanbanlist",
+									"_unique": "admincleanbanlist"
+								},
+								{
+									"_caption": "Banned IPs",
+									"_chatcmd": "/admin listips",
+									"_unique": "adminbanipsshow"
+								},
+								{
+									"_caption": "...Read",
+									"_chatcmd": "/admin readiplist",
+									"_unique": "adminipread"
+								},
+								{
+									"_caption": "...Write",
+									"_chatcmd": "/admin writeiplist",
+									"_unique": "adminipwrite"
+								},
+								{
+									"_caption": "...Clean",
+									"_chatcmd": "/admin cleaniplist",
+									"_unique": "admincleaniplist"
+								},
+								{
+									"_caption": "Blacklists",
+									"_chatcmd": "/admin listblacks",
+									"_unique": "adminblshow"
+								},
+								{
+									"_caption": "...Read",
+									"_chatcmd": "/admin readblacklist",
+									"_unique": "adminblread"
+								},
+								{
+									"_caption": "...Write",
+									"_chatcmd": "/admin writeblacklist",
+									"_unique": "adminblwrite"
+								},
+								{
+									"_caption": "...Clean",
+									"_chatcmd": "/admin cleanblacklist",
+									"_unique": "admincleanblacklist"
+								},
+								{
+									"_caption": "Guests",
+									"_chatcmd": "/admin listguests",
+									"_unique": "adminglshow"
+								},
+								{
+									"_caption": "...Read",
+									"_chatcmd": "/admin readguestlist",
+									"_unique": "adminglload"
+								},
+								{
+									"_caption": "...Write",
+									"_chatcmd": "/admin writeguestlist",
+									"_unique": "adminglwrite"
+								},
+								{
+									"_caption": "...Clean",
+									"_chatcmd": "/admin cleanguestlist",
+									"_unique": "admincleanguestlist"
+								},
+								{
+									"_caption": "Merge Global BL",
+									"_chatcmd": "/admin mergegbl",
+									"_unique": "adminmergegbl"
+								},
+								{
+									"entry": [
+										{
+											"_caption": "List",
+											"_chatcmd": "/admin access list",
+											"_unique": "adminacclist"
+										},
+										{
+											"_caption": "Reload",
+											"_chatcmd": "/admin access reload",
+											"_unique": "adminaccreload"
+										},
+										{
+											"_type": "separator",
+											"_unique": "accesssep1"
+										},
+										{
+											"_caption": "Help",
+											"_chatcmd": "/admin access help",
+											"_unique": "adminacchelp"
+										}
+									],
+									"_caption": "Access Control",
+									"_dependencies": "plugin.access.php",
+									"_unique": "adminaccess"
+								}
+							],
+							"_caption": "Players",
+							"_unique": "adminplayers"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "Masteradmins",
+									"_chatcmd": "/admin listmasters",
+									"_unique": "adminmasters"
+								},
+								{
+									"_caption": "...Abilities",
+									"_chatcmd": "/admin listabilities",
+									"_unique": "adminlistabilitiesmaster"
+								},
+								{
+									"_caption": "Admins",
+									"_chatcmd": "/admin listadmins",
+									"_unique": "adminadminslist"
+								},
+								{
+									"_caption": "...Abilities",
+									"_chatcmd": "/admin listabilities admin",
+									"_unique": "adminlistabilitiesadmin"
+								},
+								{
+									"_caption": "Operators",
+									"_chatcmd": "/admin listops",
+									"_unique": "adminops"
+								},
+								{
+									"_caption": "...Abilities",
+									"_chatcmd": "/admin listabilities op",
+									"_unique": "adminlistabilitiesop"
+								},
+								{
+									"_caption": "Read Lists",
+									"_chatcmd": "/admin readabilities",
+									"_unique": "adminabload"
+								},
+								{
+									"_caption": "Write Lists",
+									"_chatcmd": "/admin writeabilities",
+									"_unique": "adminabwrite"
+								}
+							],
+							"_caption": "Admins",
+							"_unique": "adminadmins"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "Rounds",
+									"_indicator": "fufi_getGameModeIndicator",
+									"_params": "0",
+									"_chatcmd": "/admin setgamemode rounds",
+									"_unique": "admingmrounds"
+								},
+								{
+									"_caption": "Time Attack",
+									"_indicator": "fufi_getGameModeIndicator",
+									"_params": "1",
+									"_chatcmd": "/admin setgamemode ta",
+									"_unique": "admingmtimeattack"
+								},
+								{
+									"_caption": "Team",
+									"_indicator": "fufi_getGameModeIndicator",
+									"_params": "2",
+									"_chatcmd": "/admin setgamemode team",
+									"_unique": "admingmteam"
+								},
+								{
+									"_caption": "Laps",
+									"_indicator": "fufi_getGameModeIndicator",
+									"_params": "3",
+									"_chatcmd": "/admin setgamemode laps",
+									"_unique": "admingmlaps"
+								},
+								{
+									"_caption": "Stunts",
+									"_indicator": "fufi_getGameModeIndicator",
+									"_params": "4",
+									"_chatcmd": "/admin setgamemode stunts",
+									"_unique": "admingmstunts"
+								},
+								{
+									"_caption": "Cup",
+									"_indicator": "fufi_getGameModeIndicator",
+									"_params": "5",
+									"_chatcmd": "/admin setgamemode cup",
+									"_unique": "admingmcup"
+								}
+							],
+							"_caption": "Game Mode",
+							"_unique": "admingamemode"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "List Systems",
+									"_chatcmd": "/admin rpoints list",
+									"_unique": "adminrplist"
+								},
+								{
+									"_caption": "Show Current",
+									"_chatcmd": "/admin rpoints show",
+									"_unique": "adminrpshow"
+								},
+								{
+									"entry": [
+										{
+											"_caption": "Formula 1 GP New",
+											"_chatcmd": "/admin rpoints f1new",
+											"_unique": "adminrpf1new"
+										},
+										{
+											"_caption": "Formula 1 GP Old",
+											"_chatcmd": "/admin rpoints f1old",
+											"_unique": "adminrpf1old"
+										},
+										{
+											"_caption": "MotoGP",
+											"_chatcmd": "/admin rpoints motogp",
+											"_unique": "adminrpmotogp"
+										},
+										{
+											"_caption": "MotoGP + 5",
+											"_chatcmd": "/admin rpoints motogp5",
+											"_unique": "adminrpmotogp5"
+										},
+										{
+											"_caption": "Formula ET 1",
+											"_chatcmd": "/admin rpoints fet1",
+											"_unique": "adminrpfet1"
+										},
+										{
+											"_caption": "Formula ET 2",
+											"_chatcmd": "/admin rpoints fet2",
+											"_unique": "adminrpfet2"
+										},
+										{
+											"_caption": "Formula ET 3",
+											"_chatcmd": "/admin rpoints fet3",
+											"_unique": "adminrpfet3"
+										},
+										{
+											"_caption": "Champ Car WS",
+											"_chatcmd": "/admin rpoints champcar",
+											"_unique": "adminrpchampcar"
+										},
+										{
+											"_caption": "Simple 5",
+											"_chatcmd": "/admin rpoints simple5",
+											"_unique": "adminrpsimple5"
+										},
+										{
+											"_caption": "Simple 10",
+											"_chatcmd": "/admin rpoints simple10",
+											"_unique": "adminrpsimple10"
+										}
+									],
+									"_caption": "Set System",
+									"_unique": "adminrpset"
+								},
+								{
+									"_caption": "Off",
+									"_chatcmd": "/admin rpoints off",
+									"_unique": "adminrpoff"
+								},
+								{
+									"_type": "separator",
+									"_unique": "roundspointsep1"
+								},
+								{
+									"_caption": "Help",
+									"_chatcmd": "/admin rpoints help",
+									"_unique": "adminrphelp"
+								}
+							],
+							"_caption": "Rounds Points",
+							"_dependencies": "plugin.rpoints.php",
+							"_unique": "adminroundspoints"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "Server Info",
+									"_chatcmd": "/admin server",
+									"_unique": "adminserverinfo"
+								},
+								{
+									"_caption": "Server Coppers",
+									"_chatcmd": "/admin coppers",
+									"_unique": "admincoppers"
+								},
+								{
+									"_caption": "Relays List/Master",
+									"_chatcmd": "/admin relays",
+									"_unique": "adminrelays"
+								},
+								{
+									"_caption": "Auto Scorepanel",
+									"_indicator": "fufi_getScorePanelIndicator",
+									"_chatcmd": "/admin scorepanel",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "adminscorepanel"
+								},
+								{
+									"_caption": "Rounds Finishpanel",
+									"_indicator": "fufi_getRoundsPanelIndicator",
+									"_chatcmd": "/admin roundsfinish",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "adminroundspanel"
+								},
+								{
+									"_caption": "Respawn Disabled",
+									"_indicator": "fufi_getRespawnDisabledIndicator",
+									"_chatcmd": "/admin disablerespawn",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "adminrespawndisabled"
+								},
+								{
+									"_caption": "Force Show Opponents",
+									"_indicator": "fufi_getForceShowAllIndicator",
+									"_chatcmd": "/admin forceshowall",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "adminforceshowall"
+								},
+								{
+									"_caption": "Challenge Download Allowed",
+									"_indicator": "fufi_getChallengeDownloadIndicator",
+									"_chatcmd": "/admin acdl",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "adminacdl"
+								},
+								{
+									"_caption": "Auto TimeLimit",
+									"_indicator": "fufi_getAutoTimeIndicator",
+									"_chatcmd": "/admin autotime",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "adminautotime"
+								},
+								{
+									"_caption": "Debugmode",
+									"_indicator": "fufi_getDebugModeIndicator",
+									"_chatcmd": "/admin debug",
+									"_unique": "admindebug"
+								},
+								{
+									"entry": [
+										{
+											"_caption": "Top 3",
+											"_indicator": "fufi_getRefModeIndicator",
+											"_params": "0",
+											"_chatcmd": "/admin setrefmode 0",
+											"_unique": "adminref0"
+										},
+										{
+											"_caption": "All",
+											"_indicator": "fufi_getRefModeIndicator",
+											"_params": "1",
+											"_chatcmd": "/admin setrefmode 1",
+											"_unique": "adminref1"
+										}
+									],
+									"_caption": "Referee Mode",
+									"_unique": "adminrefmode"
+								}
+							],
+							"_caption": "Settings",
+							"_unique": "adminserver"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "List",
+									"_chatcmd": "/admin call list",
+									"_unique": "admincalllist"
+								},
+								{
+									"_type": "separator",
+									"_unique": "admincallsep1"
+								},
+								{
+									"_type": "help",
+									"_caption": "Help",
+									"_chatcmd": "/admin call help",
+									"_unique": "admincallhelp1"
+								}
+							],
+							"_caption": "Method Call",
+							"_unique": "adminmethodcall"
+						},
+						{
+							"_caption": "Admin PM Log",
+							"_chatcmd": "/admin pmlog",
+							"_unique": "adminpmlog"
+						},
+						{
+							"_caption": "Shutdown XASECO",
+							"_chatcmd": "/admin shutdown",
+							"_unique": "adminshutdown"
+						},
+						{
+							"_caption": "Shutdown SERVER",
+							"_chatcmd": "/admin shutdownall",
+							"_unique": "adminshutdownall"
+						},
+						{
+							"_type": "separator",
+							"_unique": "adminsep1"
+						},
+						{
+							"_type": "help",
+							"_caption": "Help",
+							"_chatcmd": "/admin helpall",
+							"_unique": "adminhelp1"
+						}
+					],
+					"_caption": "Admin",
+					"_ability": "listabilities",
+					"_unique": "adminmenu"
+				},
+				{
+					"entry": [
+						{
+							"_caption": "UnSpec Vote",
+							"_chatcmd": "/unspec",
+							"_unique": "jfreuunspec"
+						},
+						{
+							"_caption": "Ranklimit",
+							"_chatcmd": "/ranklimit",
+							"_unique": "jfreuranklimit"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "All",
+									"_chatcmd": "/jfreu players",
+									"_unique": "jfreuplayerslist"
+								},
+								{
+									"_caption": "Live",
+									"_chatcmd": "/jfreu players live",
+									"_unique": "jfreuplayerslive"
+								},
+								{
+									"_caption": "Temp Bans",
+									"_chatcmd": "/jfreu listbans",
+									"_unique": "jfreulistbans"
+								},
+								{
+									"_caption": "VIP Players",
+									"_chatcmd": "/jfreu listvips",
+									"_unique": "jfreulistvips"
+								},
+								{
+									"_caption": "VIP Teams",
+									"_chatcmd": "/jfreu listvipteams",
+									"_unique": "jfreulistvipteams"
+								},
+								{
+									"_caption": "Read Lists",
+									"_chatcmd": "/jfreu readlists",
+									"_unique": "jfreureadlists"
+								},
+								{
+									"_caption": "Write Lists",
+									"_chatcmd": "/jfreu writelists",
+									"_unique": "jfreuwritelists"
+								}
+							],
+							"_caption": "Players",
+							"_unique": "jfreuplayers"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "List",
+									"_chatcmd": "/jfreu listlimits",
+									"_unique": "jfreulistlimits"
+								},
+								{
+									"_caption": "Enable Ranklimit",
+									"_indicator": "fufi_getRanklimitIndicator",
+									"_chatcmd": "/jfreu setrank",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "jfreusetrank"
+								},
+								{
+									"_caption": "Enable Autorank",
+									"_indicator": "fufi_getAutoRankIndicator",
+									"_chatcmd": "/jfreu autorank",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "jfreuautorank"
+								},
+								{
+									"_caption": "...Include VIPs",
+									"_indicator": "fufi_getAutoRankVIPIndicator",
+									"_chatcmd": "/jfreu autorankvip",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "jfreuautorankvip"
+								},
+								{
+									"_caption": "Auto Change Servername",
+									"_indicator": "fufi_getAutoChangeNameIndicator",
+									"_chatcmd": "/jfreu autochangename",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "jfreuautochangename"
+								},
+								{
+									"_caption": "Kick High Ranks",
+									"_indicator": "fufi_getKickHiRankIndicator",
+									"_chatcmd": "/jfreu kickhirank",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "jfreukickhirank"
+								}
+							],
+							"_caption": "Rank Limiting",
+							"_unique": "jfreuranklimiting"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "Badwords Bot Enabled",
+									"_indicator": "fufi_getBadwordsBotIndicator",
+									"_chatcmd": "/jfreu badwords",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "jfreubadwordsenabled"
+								},
+								{
+									"_caption": "Ban on Badword",
+									"_indicator": "fufi_getBadwordsBanIndicator",
+									"_chatcmd": "/jfreu badwordsban",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "jfreubadwordsban"
+								},
+								{
+									"_caption": "Unspec Enabled",
+									"_indicator": "fufi_getJFreuUnspecEnabledIndicator",
+									"_chatcmd": "/jfreu unspecvote",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "jfreuunspecenabled"
+								},
+								{
+									"_caption": "CallVotes Disabled",
+									"_indicator": "fufi_getJFreuVotesDisabledIndicator",
+									"_chatcmd": "/jfreu novote",
+									"_chatcmdparams": "OFF/ON",
+									"_unique": "jfreuvotesdisabled"
+								},
+								{
+									"_caption": "Cancel CallVote",
+									"_chatcmd": "/jfreu cancel",
+									"_unique": "jfreucancel"
+								},
+								{
+									"entry": [
+										{
+											"_caption": "Window",
+											"_indicator": "fufi_getJFreuInfosIndicator",
+											"_params": "2",
+											"_chatcmd": "/jfreu infomessages 2",
+											"_unique": "jfreuinfos2"
+										},
+										{
+											"_caption": "Chat",
+											"_indicator": "fufi_getJFreuInfosIndicator",
+											"_params": "1",
+											"_chatcmd": "/jfreu infomessages 1",
+											"_unique": "jfreuinfos1"
+										},
+										{
+											"_caption": "Off",
+											"_indicator": "fufi_getJFreuInfosIndicator",
+											"_params": "0",
+											"_chatcmd": "/jfreu infomessages 0",
+											"_unique": "jfreuinfos0"
+										}
+									],
+									"_caption": "Info Messages",
+									"_unique": "jfreuinfomsg"
+								},
+								{
+									"_caption": "Read Config",
+									"_chatcmd": "/jfreu readconfig",
+									"_unique": "jfreureadconfig"
+								},
+								{
+									"_caption": "Write Config",
+									"_chatcmd": "/jfreu writeconfig",
+									"_unique": "jfreuwriteconfig"
+								}
+							],
+							"_caption": "Settings",
+							"_unique": "jfreusettings"
+						},
+						{
+							"_caption": "Password",
+							"_chatcmd": "/password",
+							"_unique": "jfreupassword"
+						},
+						{
+							"_caption": "Message",
+							"_chatcmd": "/message",
+							"_unique": "jfreumessage"
+						},
+						{
+							"_type": "separator",
+							"_unique": "jfreuhelpsep1"
+						},
+						{
+							"_type": "help",
+							"_caption": "Help",
+							"_chatcmd": "/jfreu helpall",
+							"_unique": "jfreuhelp1"
+						}
+					],
+					"_caption": "JFreu",
+					"_dependencies": "jfreu.plugin.php",
+					"_unique": "jfreu"
+				},
+				{
+					"entry": [
+						{
+							"_caption": "All Tracks",
+							"_chatcmd": "/list",
+							"_unique": "fulllist"
+						},
+						{
+							"_caption": "Not Finished",
+							"_chatcmd": "/list nofinish",
+							"_unique": "nofinish"
+						},
+						{
+							"_caption": "No Rank",
+							"_chatcmd": "/list norank",
+							"_unique": "norank"
+						},
+						{
+							"_caption": "No Goldtime",
+							"_chatcmd": "/list nogold",
+							"_unique": "nogold"
+						},
+						{
+							"_caption": "No Authortime",
+							"_chatcmd": "/list noauthor",
+							"_unique": "noauthor"
+						},
+						{
+							"_caption": "Not Recently Played",
+							"_chatcmd": "/list norecent",
+							"_unique": "norecent"
+						},
+						{
+							"_type": "separator",
+							"_unique": "tracklistsep1"
+						},
+						{
+							"_caption": "Best Records",
+							"_chatcmd": "/list best",
+							"_unique": "best"
+						},
+						{
+							"_caption": "Worst Records",
+							"_chatcmd": "/list worst",
+							"_unique": "worst"
+						},
+						{
+							"_caption": "Longest Tracks",
+							"_chatcmd": "/list longest",
+							"_unique": "longest"
+						},
+						{
+							"_caption": "Shortest Tracks",
+							"_chatcmd": "/list shortest",
+							"_unique": "shortest"
+						},
+						{
+							"_caption": "Newest Tracks",
+							"_chatcmd": "/list newest",
+							"_unique": "newest"
+						},
+						{
+							"_caption": "Oldest Tracks",
+							"_chatcmd": "/list oldest",
+							"_unique": "oldest"
+						},
+						{
+							"_caption": "No Vote",
+							"_chatcmd": "/list novote",
+							"_unique": "novote"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "All Tracks",
+									"_chatcmd": "/xlist",
+									"_unique": "xlist"
+								},
+								{
+									"_caption": "Recent Tracks",
+									"_chatcmd": "/xlist recent",
+									"_unique": "xlistrecent"
+								},
+								{
+									"_type": "separator",
+									"_unique": "xlistsep1"
+								},
+								{
+									"_type": "help",
+									"_caption": "Help",
+									"_chatcmd": "/xlist help",
+									"_unique": "xlisthelp1"
+								}
+							],
+							"_caption": "TMX",
+							"_unique": "xlistmain"
+						},
+						{
+							"_type": "separator",
+							"_unique": "tracklistsep2"
+						},
+						{
+							"_type": "help",
+							"_caption": "Help",
+							"_chatcmd": "/list help",
+							"_unique": "listhelp1"
+						}
+					],
+					"_caption": "Tracks",
+					"_unique": "tracks"
+				},
+				{
+					"entry": [
+						{
+							"_caption": "Not Finished",
+							"_chatcmd": "/autojuke nofinish",
+							"_unique": "ajnofinish"
+						},
+						{
+							"_caption": "No Rank",
+							"_chatcmd": "/autojuke norank",
+							"_unique": "ajnorank"
+						},
+						{
+							"_caption": "No Goldtime",
+							"_chatcmd": "/autojuke nogold",
+							"_unique": "ajnogold"
+						},
+						{
+							"_caption": "No Authortime",
+							"_chatcmd": "/autojuke noauthor",
+							"_unique": "ajnoauthor"
+						},
+						{
+							"_caption": "Not Recently Played",
+							"_chatcmd": "/autojuke norecent",
+							"_unique": "ajnorecent"
+						},
+						{
+							"_type": "separator",
+							"_unique": "autojukesep1"
+						},
+						{
+							"_caption": "Longest Tracks",
+							"_chatcmd": "/autojuke longest",
+							"_unique": "ajlongest"
+						},
+						{
+							"_caption": "Shortest Tracks",
+							"_chatcmd": "/autojuke shortest",
+							"_unique": "ajshortest"
+						},
+						{
+							"_caption": "Newest Tracks",
+							"_chatcmd": "/autojuke newest",
+							"_unique": "ajnewest"
+						},
+						{
+							"_caption": "Oldest Tracks",
+							"_chatcmd": "/autojuke oldest",
+							"_unique": "ajoldest"
+						},
+						{
+							"_caption": "No Vote",
+							"_chatcmd": "/autojuke novote",
+							"_unique": "ajnovote"
+						},
+						{
+							"_type": "separator",
+							"_unique": "autojukesep2"
+						},
+						{
+							"_type": "help",
+							"_caption": "Help",
+							"_chatcmd": "/autojuke help",
+							"_unique": "ajhelp1"
+						}
+					],
+					"_caption": "Autojuke",
+					"_unique": "autojuke"
+				},
+				{
+					"entry": [
+						{
+							"_caption": "List",
+							"_chatcmd": "/jukebox display",
+							"_unique": "jukeboxdisplay"
+						},
+						{
+							"_caption": "History",
+							"_chatcmd": "/history",
+							"_unique": "jukeboxhistory"
+						},
+						{
+							"_type": "separator",
+							"_unique": "jukeboxsep1"
+						},
+						{
+							"_type": "help",
+							"_caption": "Help",
+							"_chatcmd": "/jukebox help",
+							"_unique": "jukeboxhelp1"
+						}
+					],
+					"_caption": "Jukebox",
+					"_globalvariable": "feature_jukebox",
+					"_unique": "jukebox"
+				},
+				{
+					"entry": [
+						{
+							"entry": [
+								{
+									"_caption": "All",
+									"_chatcmd": "/recs",
+									"_unique": "localall"
+								},
+								{
+									"_caption": "Personal Best",
+									"_chatcmd": "/pb",
+									"_unique": "localpb"
+								},
+								{
+									"_caption": "New Records",
+									"_chatcmd": "/newrecs",
+									"_unique": "recnew"
+								},
+								{
+									"_caption": "Live Records",
+									"_chatcmd": "/liverecs",
+									"_unique": "reconline"
+								},
+								{
+									"_caption": "First Record",
+									"_chatcmd": "/firstrec",
+									"_unique": "recfirst"
+								},
+								{
+									"_caption": "Last Record",
+									"_chatcmd": "/lastrec",
+									"_unique": "reclast"
+								},
+								{
+									"_caption": "Next Better",
+									"_chatcmd": "/nextrec",
+									"_unique": "relnext"
+								},
+								{
+									"_caption": "Difference",
+									"_chatcmd": "/diffrec",
+									"_unique": "reldiff"
+								},
+								{
+									"_caption": "Range",
+									"_chatcmd": "/recrange",
+									"_unique": "relrange"
+								},
+								{
+									"_caption": "Sector Times",
+									"_chatcmd": "/sectms",
+									"_dependencies": "plugin.checkpoints.php",
+									"_unique": "sectms"
+								},
+								{
+									"_type": "separator",
+									"_unique": "localrecsep1"
+								},
+								{
+									"_type": "help",
+									"_caption": "Help",
+									"_chatcmd": "/recs help",
+									"_unique": "localrecshelp1"
+								}
+							],
+							"_caption": "Local",
+							"_unique": "localrecords"
+						},
+						{
+							"_caption": "My Best",
+							"_chatcmd": "/best",
+							"_unique": "recbest"
+						},
+						{
+							"_caption": "My Worst",
+							"_chatcmd": "/worst",
+							"_unique": "recworst"
+						},
+						{
+							"_caption": "My Summary",
+							"_chatcmd": "/summary",
+							"_unique": "recsummary"
+						},
+						{
+							"_caption": "Summaries",
+							"_chatcmd": "/topsums",
+							"_unique": "rectopsums"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "All",
+									"_chatcmd": "/dedirecs",
+									"_unique": "dedirecs"
+								},
+								{
+									"_caption": "Personal Best",
+									"_chatcmd": "/dedipb",
+									"_unique": "dedipb"
+								},
+								{
+									"_caption": "New Records",
+									"_chatcmd": "/dedinew",
+									"_unique": "dedinew"
+								},
+								{
+									"_caption": "Live Records",
+									"_chatcmd": "/dedilive",
+									"_unique": "dedilive"
+								},
+								{
+									"_caption": "First Record",
+									"_chatcmd": "/dedifirst",
+									"_unique": "dedifirst"
+								},
+								{
+									"_caption": "Last Record",
+									"_chatcmd": "/dedilast",
+									"_unique": "dedilast"
+								},
+								{
+									"_caption": "Next Better",
+									"_chatcmd": "/dedinext",
+									"_unique": "dedinext"
+								},
+								{
+									"_caption": "Difference",
+									"_chatcmd": "/dedidiff",
+									"_unique": "dedidiff"
+								},
+								{
+									"_caption": "Range",
+									"_chatcmd": "/dedirange",
+									"_unique": "dedirange"
+								},
+								{
+									"_caption": "Sector Times",
+									"_chatcmd": "/dedisectms",
+									"_unique": "dedisectms"
+								},
+								{
+									"_caption": "Stats",
+									"_chatcmd": "/dedistats",
+									"_unique": "dedistats"
+								},
+								{
+									"_type": "separator",
+									"_unique": "dedisep1"
+								},
+								{
+									"_type": "help",
+									"_caption": "Help",
+									"_chatcmd": "/dedirecs help",
+									"_unique": "dedihelp1"
+								}
+							],
+							"_caption": "Dedimania",
+							"_dependencies": "chat.dedimania.php, plugin.dedimania.php",
+							"_unique": "dedimania"
+						},
+						{
+							"_caption": "TMX Records",
+							"_chatcmd": "/tmxrecs",
+							"_dependencies": "plugin.tmxinfo.php",
+							"_unique": "tmxrecords"
+						}
+					],
+					"_caption": "Records",
+					"_dependencies": "chat.records.php, chat.records2.php, chat.recrels.php",
+					"_unique": "records"
+				},
+				{
+					"entry": [
+						{
+							"_caption": "All",
+							"_chatcmd": "/players",
+							"_unique": "onlineplayers"
+						},
+						{
+							"_caption": "Ranks",
+							"_chatcmd": "/ranks",
+							"_unique": "onlineranks"
+						},
+						{
+							"_caption": "Clans",
+							"_chatcmd": "/clans",
+							"_unique": "onlineclans"
+						},
+						{
+							"_caption": "Top 100 Active",
+							"_dependencies": "plugin.rasp.php",
+							"_chatcmd": "/active",
+							"_unique": "raspactive"
+						},
+						{
+							"_caption": "Top 100 Ranks",
+							"_dependencies": "plugin.rasp.php",
+							"_chatcmd": "/top100",
+							"_unique": "rasptop100"
+						},
+						{
+							"_caption": "Top 100 Records",
+							"_dependencies": "chat.records.php, chat.records2.php, chat.recrels.php",
+							"_chatcmd": "/toprecs",
+							"_unique": "rectoprecs"
+						},
+						{
+							"_caption": "Top 100 Winners",
+							"_dependencies": "plugin.rasp.php",
+							"_chatcmd": "/topwins",
+							"_unique": "rasptopwins"
+						},
+						{
+							"_caption": "Top 100 Donators",
+							"_dependencies": "plugin.donate.php",
+							"_chatcmd": "/topdons",
+							"_unique": "topdons"
+						},
+						{
+							"_caption": "Top Clans",
+							"_chatcmd": "/topclans",
+							"_unique": "topclans"
+						},
+						{
+							"_caption": "My Mutes",
+							"_dependencies": "plugin.muting.php",
+							"_chatcmd": "/mutelist",
+							"_unique": "mutelist"
+						}
+					],
+					"_caption": "Players",
+					"_dependencies": "chat.players.php, chat.players2.php",
+					"_unique": "players"
+				},
+				{
+					"entry": [
+						{
+							"_caption": "End Round",
+							"_chatcmd": "/endround",
+							"_unique": "votesendround"
+						},
+						{
+							"_caption": "Ladder Restart",
+							"_chatcmd": "/ladder",
+							"_unique": "votesladder"
+						},
+						{
+							"_caption": "Replay Track",
+							"_chatcmd": "/replay",
+							"_unique": "votesreplay"
+						},
+						{
+							"_caption": "Skip Track",
+							"_chatcmd": "/skip",
+							"_unique": "votesskip"
+						},
+						{
+							"_caption": "Cancel Vote",
+							"_chatcmd": "/cancel",
+							"_unique": "votescancel"
+						},
+						{
+							"_type": "separator",
+							"_unique": "voteshelpsep1"
+						},
+						{
+							"_type": "help",
+							"_caption": "Help",
+							"_chatcmd": "/helpvote",
+							"_unique": "voteshelp1"
+						}
+					],
+					"_caption": "Votes",
+					"_dependencies": "plugin.rasp_votes.php",
+					"_globalvariable": "feature_votes",
+					"_unique": "votes"
+				},
+				{
+					"entry": [
+						{
+							"_caption": "List",
+							"_chatcmd": "/music list",
+							"_unique": "musiclist"
+						},
+						{
+							"_caption": "Jukebox",
+							"_chatcmd": "/music jb",
+							"_unique": "musicjb"
+						},
+						{
+							"_caption": "Drop Song",
+							"_chatcmd": "/music drop",
+							"_unique": "musicdrop"
+						},
+						{
+							"_caption": "Current Song",
+							"_chatcmd": "/music current",
+							"_unique": "musiccurrent"
+						},
+						{
+							"_caption": "Settings",
+							"_chatcmd": "/music settings",
+							"_unique": "musicsettings"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "Reload",
+									"_chatcmd": "/music reload",
+									"_unique": "musicreload"
+								},
+								{
+									"_caption": "Next",
+									"_chatcmd": "/music next",
+									"_unique": "musicnext"
+								},
+								{
+									"_caption": "Sort",
+									"_chatcmd": "/music sort",
+									"_unique": "musicsort"
+								},
+								{
+									"_caption": "Shuffle",
+									"_chatcmd": "/music shuffle",
+									"_unique": "musicshuffle"
+								},
+								{
+									"_type": "separator",
+									"_unique": "musicadminsep1"
+								},
+								{
+									"_caption": "Track Override",
+									"_indicator": "fufi_getMusicOverrideIndicator",
+									"_chatcmd": "/music override",
+									"_chatcmdparams": "off/on",
+									"_unique": "musicoverride"
+								},
+								{
+									"_caption": "AutoNext",
+									"_indicator": "fufi_getMusicAutonextIndicator",
+									"_chatcmd": "/music autonext",
+									"_chatcmdparams": "off/on",
+									"_unique": "musicautonext"
+								},
+								{
+									"_caption": "AutoShuffle",
+									"_indicator": "fufi_getMusicAutoshuffleIndicator",
+									"_chatcmd": "/music autoshuffle",
+									"_chatcmdparams": "off/on",
+									"_unique": "musicautoshuffle"
+								},
+								{
+									"_caption": "Allow Jukebox",
+									"_indicator": "fufi_getMusicJukeboxIndicator",
+									"_chatcmd": "/music allowjb",
+									"_chatcmdparams": "off/on",
+									"_unique": "musicallowjb"
+								},
+								{
+									"_caption": "Strip Subdirs",
+									"_indicator": "fufi_getMusicStripDirsIndicator",
+									"_chatcmd": "/music stripdirs",
+									"_chatcmdparams": "off/on",
+									"_unique": "musicstripdirs"
+								},
+								{
+									"_caption": "Strip Extensions",
+									"_indicator": "fufi_getMusicStripExtsIndicator",
+									"_chatcmd": "/music stripexts",
+									"_chatcmdparams": "off/on",
+									"_unique": "musicstripexts"
+								},
+								{
+									"_caption": "Shutdown Plugin",
+									"_chatcmd": "/music off",
+									"_unique": "musicshutdown"
+								}
+							],
+							"_caption": "Administration",
+							"_ability": "chat_musicadmin",
+							"_unique": "musicadmin"
+						},
+						{
+							"_type": "separator",
+							"_unique": "musicsep1"
+						},
+						{
+							"_type": "help",
+							"_caption": "Help",
+							"_chatcmd": "/music help",
+							"_unique": "musichelp1"
+						}
+					],
+					"_caption": "Music",
+					"_dependencies": "plugin.musicserver.php",
+					"_unique": "music"
+				},
+				{
+					"entry": [
+						{
+							"_caption": "Checkpoint Tracking",
+							"_indicator": "fufi_getCPSIndicator",
+							"_chatcmd": "/cps",
+							"_chatcmdparams": "off/",
+							"_dependencies": "plugin.checkpoints.php",
+							"_unique": "cps"
+						},
+						{
+							"_caption": "Dedimania CP Tracking",
+							"_indicator": "fufi_getDediCPSIndicator",
+							"_chatcmd": "/dedicps",
+							"_chatcmdparams": "off/",
+							"_dependencies": "chat.dedimania.php",
+							"_unique": "dedicps"
+						},
+						{
+							"_caption": "Spectator CP Tracking",
+							"_indicator": "fufi_getCPSSpecIndicator",
+							"_chatcmd": "/cpsspec",
+							"_dependencies": "plugin.checkpoints.php",
+							"_unique": "cpsspec"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "List",
+									"_chatcmd": "/style list",
+									"_unique": "stylelist"
+								},
+								{
+									"_caption": "Default",
+									"_chatcmd": "/style default",
+									"_unique": "styledefault"
+								},
+								{
+									"_caption": "Off",
+									"_chatcmd": "/style off",
+									"_unique": "styleoff"
+								},
+								{
+									"_type": "separator",
+									"_unique": "stylesep1"
+								},
+								{
+									"_type": "help",
+									"_caption": "Help",
+									"_chatcmd": "/style help",
+									"_unique": "stylehelp1"
+								}
+							],
+							"_caption": "Style",
+							"_dependencies": "plugin.style.php",
+							"_unique": "stylemenu"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "List",
+									"_chatcmd": "/recpanel list",
+									"_unique": "recpanellist"
+								},
+								{
+									"_caption": "Default",
+									"_chatcmd": "/recpanel default",
+									"_unique": "recpaneldefault"
+								},
+								{
+									"_caption": "Off",
+									"_chatcmd": "/recpanel off",
+									"_unique": "recpaneloff"
+								},
+								{
+									"_type": "separator",
+									"_unique": "recpanelsep1"
+								},
+								{
+									"_type": "help",
+									"_caption": "Help",
+									"_chatcmd": "/recpanel help",
+									"_unique": "recpanelhelp1"
+								}
+							],
+							"_caption": "Records Panel",
+							"_dependencies": "plugin.panels.php",
+							"_unique": "recpanel"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "List",
+									"_chatcmd": "/votepanel list",
+									"_unique": "votepanellist"
+								},
+								{
+									"_caption": "Default",
+									"_chatcmd": "/votepanel default",
+									"_unique": "votepaneldefault"
+								},
+								{
+									"_caption": "Off",
+									"_chatcmd": "/votepanel off",
+									"_unique": "votepaneloff"
+								},
+								{
+									"_type": "separator",
+									"_unique": "votepanelsep1"
+								},
+								{
+									"_type": "help",
+									"_caption": "Help",
+									"_chatcmd": "/votepanel help",
+									"_unique": "votepanelhelp1"
+								}
+							],
+							"_caption": "Vote Panel",
+							"_dependencies": "plugin.panels.php",
+							"_unique": "votepanel"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "List",
+									"_chatcmd": "/donpanel list",
+									"_unique": "donpanellist"
+								},
+								{
+									"_caption": "Default",
+									"_chatcmd": "/donpanel default",
+									"_unique": "donpaneldefault"
+								},
+								{
+									"_caption": "Off",
+									"_chatcmd": "/donpanel off",
+									"_unique": "donpaneloff"
+								},
+								{
+									"_type": "separator",
+									"_unique": "donpanelsep1"
+								},
+								{
+									"_type": "help",
+									"_caption": "Help",
+									"_chatcmd": "/donpanel help",
+									"_unique": "donpanelhelp1"
+								}
+							],
+							"_caption": "Donate Panel",
+							"_dependencies": "plugin.panels.php",
+							"_rights": "TMUF",
+							"_unique": "donpanel"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "List",
+									"_chatcmd": "/admin panel list",
+									"_unique": "adminpanellist"
+								},
+								{
+									"_caption": "Default",
+									"_chatcmd": "/admin panel default",
+									"_unique": "adminpaneldefault"
+								},
+								{
+									"_caption": "Off",
+									"_chatcmd": "/admin panel off",
+									"_unique": "adminpaneloff"
+								},
+								{
+									"_type": "separator",
+									"_unique": "adminpanelsep1"
+								},
+								{
+									"_type": "help",
+									"_caption": "Help",
+									"_chatcmd": "/admin panel help",
+									"_unique": "adminpanelhelp1"
+								}
+							],
+							"_caption": "Admin Panel",
+							"_dependencies": "plugin.panels.php",
+							"_ability": "panel",
+							"_unique": "adminpanel"
+						}
+					],
+					"_caption": "Customize HUD",
+					"_unique": "custommenu"
+				},
+				{
+					"entry": [
+						{
+							"entry": [
+								{
+									"_caption": "My Stats",
+									"_chatcmd": "/stats",
+									"_dependencies": "chat.stats.php",
+									"_unique": "mystats"
+								},
+								{
+									"_caption": "My Wins",
+									"_chatcmd": "/wins",
+									"_dependencies": "chat.wins.php",
+									"_unique": "mywins"
+								},
+								{
+									"_caption": "My Settings",
+									"_chatcmd": "/settings",
+									"_dependencies": "chat.stats.php",
+									"_unique": "mysettings"
+								},
+								{
+									"_caption": "Current Rank",
+									"_dependencies": "plugin.rasp.php",
+									"_chatcmd": "/rank",
+									"_unique": "rasprank"
+								},
+								{
+									"_caption": "Next Rank",
+									"_chatcmd": "/nextrank",
+									"_dependencies": "plugin.rasp_nextrank",
+									"_unique": "raspnextrank"
+								},
+								{
+									"_caption": "Last Window",
+									"_chatcmd": "/lastwin",
+									"_dependencies": "chat.lastwin.php",
+									"_unique": "lastwin"
+								}
+							],
+							"_caption": "Personal",
+							"_unique": "personalinfo"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "Playtime",
+									"_chatcmd": "/playtime",
+									"_dependencies": "plugin.track.php",
+									"_unique": "playtime"
+								},
+								{
+									"_caption": "Current Track",
+									"_chatcmd": "/track",
+									"_dependencies": "plugin.track.php",
+									"_unique": "currenttrackinfo"
+								},
+								{
+									"_caption": "Next Track",
+									"_chatcmd": "/nextmap",
+									"_dependencies": "plugin.rasp_nextmap.php",
+									"_unique": "shownext"
+								},
+								{
+									"_caption": "TMX Info",
+									"_chatcmd": "/tmxinfo",
+									"_dependencies": "plugin.tmxinfo.php",
+									"_unique": "tmxinfo"
+								},
+								{
+									"_caption": "Track Song",
+									"_chatcmd": "/song url",
+									"_dependencies": "chat.songmod.php",
+									"_unique": "song"
+								},
+								{
+									"_caption": "Track Mod",
+									"_chatcmd": "/mod url",
+									"_dependencies": "chat.songmod.php",
+									"_unique": "mod"
+								},
+								{
+									"_caption": "Track Karma",
+									"_dependencies": "plugin.rasp_karma.php",
+									"_globalvariable": "feature_karma",
+									"_chatcmd": "/karma",
+									"_unique": "karma"
+								}
+							],
+							"_caption": "Track",
+							"_unique": "trackinfo"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "Chat Log",
+									"_chatcmd": "/chatlog",
+									"_dependencies": "plugin.chatlog.php",
+									"_unique": "chatlog"
+								},
+								{
+									"_caption": "Message Log",
+									"_chatcmd": "/msglog",
+									"_dependencies": "plugin.msglog.php",
+									"_unique": "msglog"
+								},
+								{
+									"_caption": "My PM Log",
+									"_chatcmd": "/pmlog",
+									"_dependencies": "plugin.rasp_chat.php",
+									"_unique": "pmlog"
+								}
+							],
+							"_caption": "Logs",
+							"_unique": "logsinfo"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "Details",
+									"_chatcmd": "/server",
+									"_dependencies": "chat.server.php",
+									"_unique": "serverfullinfo"
+								},
+								{
+									"_caption": "Rounds Points",
+									"_chatcmd": "/rpoints",
+									"_dependencies": "plugin.rpoints.php",
+									"_unique": "rpoints"
+								},
+								{
+									"_caption": "XASECO",
+									"_chatcmd": "/xaseco",
+									"_dependencies": "chat.server.php",
+									"_unique": "xaseco"
+								},
+								{
+									"_caption": "Plugins",
+									"_chatcmd": "/plugins",
+									"_dependencies": "chat.server.php",
+									"_unique": "plugins"
+								},
+								{
+									"_caption": "Date/Time",
+									"_chatcmd": "/time",
+									"_dependencies": "plugin.track.php",
+									"_unique": "time"
+								}
+							],
+							"_caption": "Server",
+							"_unique": "serverinfo"
+						},
+						{
+							"_caption": "Nations",
+							"_chatcmd": "/nations",
+							"_dependencies": "chat.server.php",
+							"_unique": "nationsinfo"
+						}
+					],
+					"_caption": "Info",
+					"_unique": "infomenu"
+				},
+				{
+					"entry": [
+						{
+							"_caption": "10 Coppers",
+							"_chatcmd": "/donate 10",
+							"_unique": "don10"
+						},
+						{
+							"_caption": "25 Coppers",
+							"_chatcmd": "/donate 25",
+							"_unique": "don25"
+						},
+						{
+							"_caption": "50 Coppers",
+							"_chatcmd": "/donate 50",
+							"_unique": "don50"
+						},
+						{
+							"_caption": "75 Coppers",
+							"_chatcmd": "/donate 75",
+							"_unique": "don75"
+						},
+						{
+							"_caption": "100 Coppers",
+							"_chatcmd": "/donate 100",
+							"_unique": "don100"
+						},
+						{
+							"_caption": "150 Coppers",
+							"_chatcmd": "/donate 150",
+							"_unique": "don150"
+						},
+						{
+							"_caption": "200 Coppers",
+							"_chatcmd": "/donate 200",
+							"_unique": "don200"
+						},
+						{
+							"_caption": "500 Coppers",
+							"_chatcmd": "/donate 500",
+							"_unique": "don500"
+						},
+						{
+							"_caption": "1000 Coppers",
+							"_chatcmd": "/donate 1000",
+							"_unique": "don1000"
+						},
+						{
+							"_caption": "2000 Coppers",
+							"_chatcmd": "/donate 2000",
+							"_unique": "don2000"
+						}
+					],
+					"_caption": "Donate",
+					"_dependencies": "plugin.donate.php",
+					"_rights": "TMUF",
+					"_unique": "donate"
+				},
+				{
+					"entry": [
+						{
+							"_caption": "Standings",
+							"_chatcmd": "/standings",
+							"_unique": "matchstandings"
+						},
+						{
+							"entry": [
+								{
+									"_caption": "Plugin Enabled",
+									"_indicator": "fufi_getMatchEnabledIndicator",
+									"_chatcmd": "/match",
+									"_chatcmdparams": "off/on",
+									"_unique": "matchenabled"
+								},
+								{
+									"entry": [
+										{
+											"_caption": "Others Score",
+											"_indicator": "fufi_getMatchOthersIndicator",
+											"_chatcmd": "/match others",
+											"_chatcmdparams": "off/on",
+											"_unique": "matchothers"
+										},
+										{
+											"_caption": "Teamforce",
+											"_indicator": "fufi_getMatchTeamforceIndicator",
+											"_chatcmd": "/match force",
+											"_chatcmdparams": "off/on",
+											"_unique": "matchforce"
+										},
+										{
+											"_caption": "Teamchat",
+											"_indicator": "fufi_getMatchTeamchatIndicator",
+											"_chatcmd": "/match tc",
+											"_chatcmdparams": "off/on",
+											"_unique": "matchchat"
+										}
+									],
+									"_caption": "Settings",
+									"_unique": "matchsettings"
+								},
+								{
+									"entry": [
+										{
+											"_caption": "Teams",
+											"_chatcmd": "/match teams",
+											"_unique": "matchteams"
+										},
+										{
+											"_caption": "Players",
+											"_chatcmd": "/match players",
+											"_unique": "matchplayers"
+										},
+										{
+											"_caption": "Playlists",
+											"_chatcmd": "/match list",
+											"_unique": "matchplaylists"
+										}
+									],
+									"_caption": "Lists",
+									"_unique": "matchlists"
+								},
+								{
+									"_type": "separator",
+									"_unique": "matchsep1"
+								},
+								{
+									"entry": [
+										{
+											"entry": [
+												{
+													"_caption": "1 Round",
+													"_chatcmd": "/match start 1",
+													"_unique": "msrounds1"
+												},
+												{
+													"_caption": "2 Rounds",
+													"_chatcmd": "/match start 2",
+													"_unique": "msrounds2"
+												},
+												{
+													"_caption": "3 Rounds",
+													"_chatcmd": "/match start 3",
+													"_unique": "msrounds3"
+												},
+												{
+													"_caption": "4 Rounds",
+													"_chatcmd": "/match start 4",
+													"_unique": "msrounds4"
+												},
+												{
+													"_caption": "5 Rounds",
+													"_chatcmd": "/match start 5",
+													"_unique": "msrounds5"
+												}
+											],
+											"_caption": "Rounds",
+											"_unique": "msrounds"
+										},
+										{
+											"entry": [
+												{
+													"_caption": "12 Points",
+													"_chatcmd": "/match start pl 12",
+													"_unique": "mspoints12"
+												},
+												{
+													"_caption": "22 Points",
+													"_chatcmd": "/match start pl 22",
+													"_unique": "mspoints22"
+												},
+												{
+													"_caption": "32 Points",
+													"_chatcmd": "/match start pl 32",
+													"_unique": "mspoints32"
+												},
+												{
+													"_caption": "42 Points",
+													"_chatcmd": "/match start pl 42",
+													"_unique": "mspoints42"
+												},
+												{
+													"_caption": "52 Points",
+													"_chatcmd": "/match start pl 52",
+													"_unique": "mspoints52"
+												}
+											],
+											"_caption": "Pointlimit",
+											"_unique": "mspoints"
+										}
+									],
+									"_caption": "Start Match",
+									"_unique": "matchstart"
+								},
+								{
+									"entry": [
+										{
+											"entry": [
+												{
+													"_caption": "1 Round",
+													"_chatcmd": "/match auto 1",
+													"_unique": "msarounds1"
+												},
+												{
+													"_caption": "2 Rounds",
+													"_chatcmd": "/match auto 2",
+													"_unique": "msarounds2"
+												},
+												{
+													"_caption": "3 Rounds",
+													"_chatcmd": "/match auto 3",
+													"_unique": "msarounds3"
+												},
+												{
+													"_caption": "4 Rounds",
+													"_chatcmd": "/match auto 4",
+													"_unique": "msarounds4"
+												},
+												{
+													"_caption": "5 Rounds",
+													"_chatcmd": "/match auto 5",
+													"_unique": "msarounds5"
+												}
+											],
+											"_caption": "Rounds",
+											"_unique": "msarounds"
+										},
+										{
+											"entry": [
+												{
+													"_caption": "12 Points",
+													"_chatcmd": "/match auto pl 12",
+													"_unique": "msapoints12"
+												},
+												{
+													"_caption": "22 Points",
+													"_chatcmd": "/match auto pl 22",
+													"_unique": "msapoints22"
+												},
+												{
+													"_caption": "32 Points",
+													"_chatcmd": "/match auto pl 32",
+													"_unique": "msapoints32"
+												},
+												{
+													"_caption": "42 Points",
+													"_chatcmd": "/match auto pl 42",
+													"_unique": "msapoints42"
+												},
+												{
+													"_caption": "52 Points",
+													"_chatcmd": "/match auto pl 52",
+													"_unique": "msapoints52"
+												}
+											],
+											"_caption": "Pointlimit",
+											"_unique": "msapoints"
+										}
+									],
+									"_caption": "Start AutoMatch",
+									"_unique": "matchauto"
+								},
+								{
+									"_caption": "End Match",
+									"_chatcmd": "/match end",
+									"_unique": "matchend"
+								},
+								{
+									"_type": "separator",
+									"_unique": "matchhelpsep2"
+								},
+								{
+									"_type": "help",
+									"_caption": "Help",
+									"_chatcmd": "/match help",
+									"_unique": "mahelp1"
+								}
+							],
+							"_caption": "Administration",
+							"_ability": "chat_match",
+							"_unique": "matchadmin"
+						},
+						{
+							"_type": "separator",
+							"_unique": "matchhelpsep1"
+						},
+						{
+							"_type": "help",
+							"_caption": "Help",
+							"_chatcmd": "/team help",
+							"_unique": "matchhelp1"
+						}
+					],
+					"_caption": "Match",
+					"_dependencies": "plugin.matchsave.php",
+					"_unique": "match"
+				},
+				{
+					"_type": "separator",
+					"_unique": "mainhelpsep"
+				},
+				{
+					"entry": [
+						{
+							"_type": "help",
+							"_caption": "Main",
+							"_chatcmd": "/helpall",
+							"_dependencies": "chat.help.php",
+							"_unique": "mainhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Admin",
+							"_chatcmd": "/admin helpall",
+							"_ability": "helpall",
+							"_unique": "adminhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "JFreu",
+							"_dependencies": "jfreu.chat.php",
+							"_chatcmd": "/jfreu helpall",
+							"_unique": "jfreuhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Tracks",
+							"_chatcmd": "/list help",
+							"_unique": "listhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "TMX Search",
+							"_chatcmd": "/xlist help",
+							"_unique": "xlisthelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Autojuke",
+							"_globalvariable": "feature_jukebox",
+							"_chatcmd": "/autojuke help",
+							"_unique": "ajhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Jukebox",
+							"_globalvariable": "feature_jukebox",
+							"_chatcmd": "/jukebox help",
+							"_unique": "jukeboxhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Local Recs",
+							"_chatcmd": "/recs help",
+							"_unique": "localrecshelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Dedimania Recs",
+							"_chatcmd": "/dedirecs help",
+							"_dependencies": "chat.dedimania.php, plugin.dedimania.php",
+							"_unique": "dedirecshelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Dedimania Info",
+							"_chatcmd": "/helpdedi",
+							"_dependencies": "chat.dedimania.php, plugin.dedimania.php",
+							"_unique": "dedihelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Vote",
+							"_dependencies": "plugin.rasp_votes.php",
+							"_chatcmd": "/helpvote",
+							"_unique": "voteshelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Music",
+							"_dependencies": "plugin.musicserver.php",
+							"_chatcmd": "/music help",
+							"_unique": "musichelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Style",
+							"_chatcmd": "/style help",
+							"_dependencies": "plugin.style.php",
+							"_unique": "stylehelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Records Panel",
+							"_dependencies": "plugin.panels.php",
+							"_chatcmd": "/recpanel help",
+							"_unique": "recpanelhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Vote Panel",
+							"_dependencies": "plugin.panels.php",
+							"_chatcmd": "/votepanel help",
+							"_unique": "votepanelhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Donate Panel",
+							"_dependencies": "plugin.panels.php",
+							"_chatcmd": "/donpanel help",
+							"_unique": "donpanelhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Admin Panel",
+							"_dependencies": "plugin.panels.php",
+							"_ability": "panel",
+							"_chatcmd": "/admin panel help",
+							"_unique": "adminpanelhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Access Control",
+							"_dependencies": "plugin.access.php",
+							"_ability": "access",
+							"_chatcmd": "/admin access help",
+							"_unique": "adminaccesshelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Rounds Points",
+							"_dependencies": "plugin.rpoints.php",
+							"_ability": "rpoints",
+							"_chatcmd": "/admin rpoints help",
+							"_unique": "adminrpointshelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Method Call",
+							"_ability": "call",
+							"_chatcmd": "/admin call help",
+							"_unique": "admincallhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Match",
+							"_dependencies": "plugin.matchsave.php",
+							"_chatcmd": "/team help",
+							"_unique": "matchhelp"
+						},
+						{
+							"_type": "help",
+							"_caption": "Match Admin",
+							"_ability": "chat_match",
+							"_dependencies": "plugin.matchsave.php",
+							"_chatcmd": "/team help",
+							"_unique": "mahelp"
+						},
+						{
+							"_type": "separator",
+							"_unique": "mainhelpsep1"
+						},
+						{
+							"_caption": "Leave Server",
+							"_chatcmd": "/bootme",
+							"_unique": "bootme"
+						}
+					],
+					"_type": "help",
+					"_caption": "Help",
+					"_unique": "helpgroup"
+				}
+			]
+		}
 	}
 }

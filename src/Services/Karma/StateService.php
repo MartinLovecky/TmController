@@ -6,9 +6,9 @@ namespace Yuhzel\TmController\Services\Karma;
 
 use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Core\Container;
-use Yuhzel\TmController\Database\Fluent;
 use Yuhzel\TmController\Repository\ChallengeService;
 use Yuhzel\TmController\Repository\PlayerService;
+use Yuhzel\TmController\Repository\RecordService;
 
 class StateService
 {
@@ -16,22 +16,11 @@ class StateService
     private const VOTE_TYPES = [
         'fantastic', 'beautiful', 'good', 'bad', 'poor', 'waste'
     ];
-    private const GAMEMODE_MAPPING = [
-        0 => 'rounds',
-        1 => 'time_attack',
-        2 => 'team',
-        3 => 'laps',
-        4 => 'stunts',
-        5 => 'cup',
-        7 => 'score'
-    ];
-
-    private const DEFAULT_GAMEMODE = 'time_attack';
 
     public function __construct(
-        protected Fluent $fluent,
         protected ChallengeService $challengeService,
         protected PlayerService $playerService,
+        protected RecordService $recordService,
     ) {
     }
 
@@ -226,14 +215,10 @@ class StateService
         if (!$uid) {
             return;
         }
+        $count = 0;
+        $result = $this->recordService->getRecordForPlayer($uid, $player->get('Login'));
 
-        $result = $this->fluent->query
-            ->from('rs_karma')
-            ->where('ChallengeId', $uid)
-            ->where('playerID', $player->get('Login'))
-            ->fetch();
-
-        if ($result) {
+        if (!empty($result)) {
             // TODO: Initialize player's karma state from records
             dd($result);
         }
@@ -307,11 +292,5 @@ class StateService
     public function getPreviousVote(string $login): ?int
     {
         return $this->karma['global']['players'][$login]['previous'] ?? null;
-    }
-
-    public function getGameMode(): string
-    {
-        $gameMode = $this->challengeService->getChallenge()->get('Options.GameMode');
-        return self::GAMEMODE_MAPPING[$gameMode] ?? self::DEFAULT_GAMEMODE;
     }
 }

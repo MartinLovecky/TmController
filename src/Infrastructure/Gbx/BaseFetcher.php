@@ -301,7 +301,7 @@ class BaseFetcher
 
                     case 'SOME_BOOLEAN_FIELD': // Replace with actual boolean fields
                         // Convert to boolean
-                        $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                        $value = filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
                         break;
 
                         // You can add more cases here as needed for other types

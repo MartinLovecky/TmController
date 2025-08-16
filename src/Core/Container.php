@@ -10,12 +10,11 @@ use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Core\Contracts\ContainerInterface;
 use Yuhzel\TmController\Core\Traits\{
     ArrayForwarderTrait,
-    DotPathTrait,
-    ReadonlyTrait
+    DotPathTrait
 };
 
 /**
- * Recursive container supporting dot-path access, readonly state, and deep merging.
+ * Recursive container supporting dot-path access
  *
  * Implements ArrayAccess<string, mixed> for direct property-style access.
  *
@@ -24,7 +23,6 @@ use Yuhzel\TmController\Core\Traits\{
 class Container extends ArrayObject implements ContainerInterface
 {
     use DotPathTrait;
-    use ReadonlyTrait;
     use ArrayForwarderTrait;
 
     public function __construct()
@@ -38,12 +36,9 @@ class Container extends ArrayObject implements ContainerInterface
      * @param string $path
      * @param mixed $value
      * @return $this
-     * @throws \LogicException if the container is readonly
      */
     public function set(string $path, mixed $value): static
     {
-        $this->assertWritable();
-
         [$parent, $lastKey] = $this->navigateToParent($path, true);
         $parent[$lastKey] = $value;
 
@@ -65,7 +60,35 @@ class Container extends ArrayObject implements ContainerInterface
             return $default;
         }
 
+        if (ctype_digit((string)$lastKey)) {
+            $lastKey = (int)$lastKey;
+        }
+
         return $parent->offsetExists($lastKey) ? $parent[$lastKey] : $default;
+    }
+
+    /**
+     * Get a value at the given dot-path and coerce it to a specific type.
+     *
+     * @param string $path Dot-path to the value.
+     * @param string $type Target type: 'string', 'int', 'float', 'bool', 'array'.
+     * @param mixed $default Default value if path does not exist or coercion fails (non-strict mode).
+     * @param bool $strict Whether to throw an exception if coercion fails.
+     *
+     * @return mixed The value coerced to $type, or $default in non-strict mode.
+     *
+     * @throws \UnexpectedValueException If strict and coercion fails.
+     * @throws \InvalidArgumentException If strict and unknown $type is requested.
+     */
+    public function getTyped(
+        string $path,
+        string $type,
+        mixed $default = null,
+        bool $strict = true
+    ): mixed {
+        $value = $this->get($path, $default);
+
+        return $this->coerceValue($value, $type, $default, $strict);
     }
 
     /**
@@ -80,21 +103,38 @@ class Container extends ArrayObject implements ContainerInterface
         return $parent !== null && $parent->offsetExists($lastKey);
     }
 
+    /**
+     *
+     * @return bool
+     */
     public function isEmpty(): bool
     {
         return $this->count() === 0;
     }
 
+    /**
+     * easy access to count
+     *
+     * @return integer
+     */
     public function count(): int
     {
         return parent::count();
     }
 
+    /**
+     *
+     * @return ArrayIterator
+     */
     public function getIterator(): ArrayIterator
     {
         return new ArrayIterator($this);
     }
 
+    /**
+     *
+     * @return mixed
+     */
     public function first(): mixed
     {
         foreach ($this as $value) {
@@ -108,12 +148,9 @@ class Container extends ArrayObject implements ContainerInterface
      *
      * @param string $path
      * @return static
-     * @throws \LogicException if the container is readonly
      */
     public function delete(string $path): static
     {
-        $this->assertWritable();
-
         [$parent, $lastKey] = $this->navigateToParent($path, false);
         if ($parent?->offsetExists($lastKey)) {
             unset($parent[$lastKey]);
@@ -129,13 +166,10 @@ class Container extends ArrayObject implements ContainerInterface
      *
      * @param ContainerInterface $other
      * @return static
-     * @throws \LogicException If this container is readonly
      * @throws \InvalidArgumentException If $other is not a Container instance
      */
     public function merge(ContainerInterface $other): static
     {
-        $this->assertWritable();
-
         if (!$other instanceof self) {
             throw new \InvalidArgumentException('Can only merge instances of Container');
         }
@@ -176,31 +210,29 @@ class Container extends ArrayObject implements ContainerInterface
      * Create a container recursively from an array.
      *
      * @param array<string, mixed> $data
-     * @param bool $readonly
      * @return static
      */
-    public static function fromArray(array $data = [], bool $readonly = false): static
+    public static function fromArray(array $data = []): static
     {
         $container = new static();
 
         foreach ($data as $k => $v) {
             $container[$k] = is_array($v)
-            ? static::fromArray($v, $readonly)
+            ? static::fromArray($v)
             : $v;
         }
 
-        return $container->setReadonly($readonly);
+        return $container;
     }
 
     /**
      * Decode JSON string and convert to container.
      *
      * @param string $json JSON string to decode
-     * @param bool $readonly Set readonly flag on result
      * @return static
      * @throws \InvalidArgumentException If JSON is invalid
      */
-    public static function fromJsonString(string $json, bool $readonly = false): static
+    public static function fromJsonString(string $json): static
     {
         $data = Aseco::safeJsonDecode($json, true);
 
@@ -208,18 +240,17 @@ class Container extends ArrayObject implements ContainerInterface
             throw new \InvalidArgumentException('Invalid JSON: ' . json_last_error_msg());
         }
 
-        return self::fromArray($data, $readonly);
+        return self::fromArray($data);
     }
 
     /**
      * Load JSON from a file and convert to container.
      *
      * @param string $filePath Path to JSON file
-     * @param bool $readonly Set readonly flag on result
      * @return static
      * @throws \RuntimeException If file cannot be read or contents are invalid
      */
-    public static function fromJsonFile(string $filePath, bool $readonly = false): static
+    public static function fromJsonFile(string $filePath): static
     {
         $json = Aseco::safeFileGetContents($filePath);
 
@@ -227,7 +258,7 @@ class Container extends ArrayObject implements ContainerInterface
             throw new \RuntimeException("Invalid filePath: {$filePath}");
         }
 
-        return self::fromJsonString($json, $readonly);
+        return self::fromJsonString($json);
     }
 
     /**
@@ -258,7 +289,7 @@ class Container extends ArrayObject implements ContainerInterface
      * Return a pretty-printed JSON representation of this container.
      *
      * @return string JSON string or '{}' if encoding fails
-    */
+     */
     public function __toString(): string
     {
         $json = json_encode($this->jsonSerialize(), JSON_PRETTY_PRINT);
@@ -266,20 +297,86 @@ class Container extends ArrayObject implements ContainerInterface
     }
 
     /**
-     * @throws \LogicException if container is readonly
+     * overwrite offsetSet
+     *
+     * @param mixed $key
+     * @param mixed $value
+     * @return void
      */
     public function offsetSet(mixed $key, mixed $value): void
     {
-        $this->assertWritable();
         parent::offsetSet($key, $value);
     }
 
     /**
-     * @throws \LogicException if container is readonly
+     * overwrite offsetUnset
+     *
+     * @param mixed $key
+     * @return void
      */
     public function offsetUnset(mixed $key): void
     {
-        $this->assertWritable();
         parent::offsetUnset($key);
+    }
+
+    /**
+     * Unified type coercion for getters.
+     *
+     * Converts a value to the requested type if possible. Supports strict mode.
+     *
+     * @param mixed $value The value to coerce.
+     * @param string $type The target type: 'string', 'int', 'float', 'bool', 'array'.
+     * @param mixed $default The default value to return if coercion fails in non-strict mode.
+     * @param bool $strict Whether to throw exceptions if coercion fails.
+     *
+     * @return mixed The coerced value or $default if non-strict.
+     *
+     * @throws \UnexpectedValueException If strict and value cannot be coerced.
+     * @throws \InvalidArgumentException If strict and unknown $type is requested.
+     */
+    protected function coerceValue(
+        mixed $value,
+        string $type,
+        mixed $default = null,
+        bool $strict = true
+    ): mixed {
+        if ($value instanceof self && $type === 'array') {
+            return $value->toArray();
+        }
+
+        if ($value === null) {
+            if ($strict) {
+                throw new \UnexpectedValueException("Expected value of type '{$type}', got null");
+            }
+            return $default;
+        }
+
+        return match ($type) {
+            'string' => match (true) {
+                is_string($value) => $value,
+                is_scalar($value) && !(is_bool($value)) => (string)$value,
+                is_object($value) && method_exists($value, '__toString') => (string)$value,
+                default => $strict ? throw new \UnexpectedValueException("Expected string-compatible value") : $default
+            },
+            'int' => match (true) {
+                is_int($value) => $value,
+                is_numeric($value) && (string)(int)$value === (string)$value => (int)$value,
+                default => $strict ? throw new \UnexpectedValueException("Expected int-compatible value") : $default
+            },
+            'float' => match (true) {
+                is_float($value) => $value,
+                is_numeric($value) => (float)$value,
+                default => $strict ? throw new \UnexpectedValueException("Expected float-compatible value") : $default
+            },
+            'bool' => match (true) {
+                is_bool($value) => $value,
+                in_array($value, [0, 1, '0', '1', 'true', 'false'], true)
+                => filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE),
+                default => $strict ? throw new \UnexpectedValueException("Expected bool-compatible value") : $default
+            },
+            'array' => is_array($value) ? $value :
+            ($strict ? throw new \UnexpectedValueException("Expected array") : $default),
+            default => $strict ? throw new \InvalidArgumentException("Unknown type '{$type}'") : $default
+        };
     }
 }

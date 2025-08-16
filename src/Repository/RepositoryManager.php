@@ -163,9 +163,9 @@ class RepositoryManager
         return [
         'data' => [
             'ChallengeId' => $c->get('ChallengeId', ''),
-            'Times'       => json_encode($c->get('Times', [])),
+            'Times'       => $c->has('Times') ? json_encode($c->get('Times')) : '{}',
             'Date'        => date('Y-m-d H:i:s'),
-            'Checkpoints' => json_encode($c->get('Checkpoints', [])),
+            'Checkpoints' => $c->has('Checkpoints') ? json_encode($c->get('Checkpoints')) : '{}',
         ],
         'check' => [
             'column' => 'ChallengeId',

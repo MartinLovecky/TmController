@@ -172,9 +172,16 @@ class Aseco
     {
         $formattedText = self::formatText(...$args);
         $timestamp = date('m/d,H:i:s');
-        $message = "[{$timestamp}] {$formattedText}";
+        $message = "[{$timestamp}] {$formattedText}" . PHP_EOL;
 
-        echo $message . PHP_EOL;
+        echo $message;
+        flush();
+    }
+
+    public static function consoleText(mixed ...$args): void
+    {
+        $formattedText = self::formatText(...$args) . PHP_EOL;
+        echo $formattedText;
         flush();
     }
 

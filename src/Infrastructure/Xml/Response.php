@@ -8,6 +8,7 @@ use DOMNode;
 use DOMElement;
 use DOMDocument;
 use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Services\Arr;
 
 /**
  * This class handles parsing of XML-RPC responses.
@@ -33,62 +34,22 @@ class Response
     }
 
     /**
-     * Parses an XML-RPC response into a Container structure.
-     *
-     * @param string $methodName Name of the method being responded to
-     * @param string $xml XML response content
-     * @param bool $readonly Whether to lock the resulting container for further mutation
-     * @return Container Parsed container object with the response data
-     * @throws \Exception If the XML is malformed or missing required elements
-     */
-    public function parseResponse(string $methodName, string $xml, bool $readonly): Container
-    {
-        $this->methodName = $methodName;
-
-        if (!$this->dom->loadXML($xml, LIBXML_NOCDATA | LIBXML_NOWARNING)) {
-            throw new \Exception("Failed to parse XML response for, {$this->methodName}");
-        }
-
-        $container = new Container();
-        $container->set('methodName', $this->methodName);
-
-        $root = $this->dom->documentElement;
-
-        if ($fault = $this->getFirstDirectChild($root, 'fault')) {
-            $container = $this->processFault($fault, $container);
-        } elseif ($params = $this->getFirstDirectChild($root, 'params')) {
-            if ($this->methodName === 'system.multicall') {
-                $container = $this->processMultiCallParams($params, $container);
-            } else {
-                $container = $this->processParams($params, $container);
-            }
-        } if (!$fault && !$params) {
-            throw new \Exception("Response parsing failed for {$this->methodName}: No recognizable elements found.");
-        }
-
-        if ($readonly) {
-            return $container->setReadonly();
-        }
-
-        return $container;
-    }
-
-    /**
      * Parses an XML-RPC method call into a Container structure.
      *
      * @param string $xml XML string representing the method call
+     * @param bool $multicall set true to procces multiCall
      * @return Container Parsed container with methodName and params
      * @throws \Exception If parsing fails
      */
-    public function parseMethodCall(string $xml): Container
+    public function parseMethodCall(string $xml, bool $multicall = false): Container
     {
         if (!$this->dom->loadXML($xml, LIBXML_NOCDATA | LIBXML_NOWARNING)) {
             throw new \Exception("Failed to parse XML method call.");
         }
 
         $container = new Container();
-
         $root = $this->dom->documentElement;
+
         if ($root->tagName !== 'methodCall') {
             throw new \Exception("Expected <methodCall> root element.");
         }
@@ -100,19 +61,73 @@ class Response
 
         $methodName = trim($methodNameElement->textContent ?? '');
         $container->set('methodName', $methodName);
-
         $paramsElement = $this->getFirstDirectChild($root, 'params');
 
-        if ($paramsElement) {
-            $paramElements = $this->getDirectChildren($paramsElement, 'param');
-
-            foreach ($paramElements as $index => $param) {
-                $valueElement = $this->getFirstDirectChild($param, 'value');
-                $container->set((string)$index, $this->processValue($valueElement?->firstChild));
-            }
+        if (!$paramsElement) {
+            return $container;
         }
 
+        if ($multicall) {
+            return $this->processMultiCallParams($paramsElement, $container);
+        }
+
+        $paramElements = $this->getDirectChildren($paramsElement, 'param');
+
+        foreach ($paramElements as $index => $param) {
+            // index 3 is not usefull at all skip it
+            if ($index === 3) {
+                continue;
+            }
+            $valueElement = $this->getFirstDirectChild($param, 'value');
+            $path = match ($index) {
+                0 => 'chatType',
+                1 => 'login',
+                2 => 'message',
+                default => (string)$index
+            };
+            $container->set($path, $this->processValue($valueElement?->firstChild));
+        }
+
+
         return $container;
+    }
+
+    /**
+     * Parses an XML-RPC response into a Container structure.
+     *
+     * @param string $methodName Name of the method being responded to
+     * @param string $xml XML response content
+     * @param bool $multicall set true to procces multiCallRequest
+     * @return Container Parsed container object with the response data
+     * @throws \Exception If the XML is malformed or missing required elements
+     */
+    public function parseResponse(string $methodName, string $xml, bool $multicall = false): Container
+    {
+        $this->methodName = $methodName;
+
+        if (!$this->dom->loadXML($xml, LIBXML_NOCDATA | LIBXML_NOWARNING)) {
+            throw new \Exception("Failed to parse XML response for, {$this->methodName}");
+        }
+
+        $container = new Container();
+        $container->set('methodName', $this->methodName);
+
+        $root = $this->dom->documentElement;
+        $fault = $this->getFirstDirectChild($root, 'fault');
+
+        if ($fault) {
+            return $this->processFault($fault, $container);
+        }
+
+        $params = $this->getFirstDirectChild($root, 'params');
+
+        if ($params) {
+            return $multicall
+            ? $this->processMultiCallParams($params, $container)
+            : $this->processParams($params, $container);
+        }
+
+        throw new \Exception("Response parsing failed for {$this->methodName}: No recognizable elements found.");
     }
 
     /**
@@ -124,19 +139,19 @@ class Response
      */
     protected function processFault(DOMElement $fault, Container $container): Container
     {
-        if ($valueElement = $this->getFirstDirectChild($fault, 'value')) {
+        $valueElement = $this->getFirstDirectChild($fault, 'value');
+        if ($valueElement) {
             $faultStruct = $this->processValue($valueElement?->firstChild);
-
             if ($faultStruct instanceof Container) {
                 return $container
-                    ->set('#err.faultCode', $faultStruct->get('faultCode', -1))
-                    ->set('#err.faultString', $faultStruct->get('faultString', 'Unknown fault'));
+                ->set('#err.faultCode', $faultStruct->get('faultCode', -1))
+                ->set('#err.faultString', $faultStruct->get('faultString', 'Unknown fault'));
             }
         }
 
         return $container
-            ->set('#err.faultCode', -1)
-            ->set('#err.faultString', 'Invalid fault structure');
+        ->set('#err.faultCode', -1)
+        ->set('#err.faultString', 'Invalid fault structure');
     }
 
     /**
@@ -149,7 +164,6 @@ class Response
     protected function processParams(DOMElement $params, Container $container): Container
     {
         $paramElements = $this->getDirectChildren($params, 'param');
-
         if (count($paramElements) === 1) {
             $valueElement = $this->getFirstDirectChild($paramElements[0], 'value');
             $processedValue = $this->processValue($valueElement?->firstChild);
@@ -205,10 +219,13 @@ class Response
     protected function processArray(DOMElement $element): array
     {
         $data = [];
-        if ($dataElement = $this->getFirstDirectChild($element, 'data')) {
-            foreach ($this->getDirectChildren($dataElement, 'value') as $value) {
-                $data[] = $this->processValue($value?->firstChild);
-            }
+        $dataElement = $this->getFirstDirectChild($element, 'data');
+        if (!$dataElement) {
+            return [];
+        }
+
+        foreach ($this->getDirectChildren($dataElement, 'value') as $value) {
+            $data[] = $this->processValue($value?->firstChild);
         }
 
         return $data;
@@ -228,69 +245,41 @@ class Response
         foreach ($this->getDirectChildren($element, 'member') as $member) {
             $nameNode = $this->getFirstDirectChild($member, 'name');
             $valueNode = $this->getFirstDirectChild($member, 'value');
-
-            if ($nameNode && $valueNode) {
-                $name = trim($nameNode->textContent ?? '');
-                $value = $this->processValue($valueNode->firstChild);
-
-                $fullPath = $parentPath ? $parentPath . '.' . $name : $name;
-
-                if ($value instanceof Container) {
-                    foreach ($value->toArray() as $childKey => $childValue) {
-                        $container->set($fullPath . '.' . $childKey, $childValue);
-                    }
-                } else {
-                    $container->set($fullPath, $value);
-                }
+            if (!$nameNode || !$valueNode) {
+                continue;
             }
+            $this->setStructValue(
+                $container,
+                trim($nameNode->textContent ?? ''),
+                $this->processValue($valueNode->firstChild),
+                $parentPath
+            );
         }
 
         return $container;
     }
 
     /**
-     * Processes system.multicall responses and returns them in a container.
+     * Helper method
      *
-     * @param DOMElement $params The <params> element containing multiple responses
-     * @param Container $container Container to populate with the responses
-     * @return Container Container with responses keyed by index
+     * @param Container $container
+     * @param string $name
+     * @param mixed $value
+     * @param string $parentPath
+     * @return void
      */
-    protected function processMultiCallParams(DOMElement $params, Container $container): Container
+    protected function setStructValue(Container $container, string $name, mixed $value, string $parentPath = ''): void
     {
-        $responses = [];
+        $fullPath = $parentPath ? "$parentPath.$name" : $name;
 
-        $param = $this->getFirstDirectChild($params, 'param');
-        $value = $this->getFirstDirectChild($param, 'value');
-        $array = $this->getFirstDirectChild($value, 'array');
-        $data = $this->getFirstDirectChild($array, 'data');
-
-        foreach ($this->getDirectChildren($data, 'value') as $index => $valueElement) {
-            $child = $valueElement->firstChild;
-
-            if (!$child instanceof DOMElement) {
-                $responses[$index] = null;
-                continue;
+        if ($value instanceof Container) {
+            foreach ($value->toArray() as $childKey => $childValue) {
+                $container->set("$fullPath.$childKey", $childValue);
             }
-
-            if ($child->tagName === 'array') {
-                $innerData = $this->getFirstDirectChild($child, 'data');
-                $result = [];
-                foreach ($this->getDirectChildren($innerData, 'value') as $resultVal) {
-                    $result[] = $this->processValue($resultVal->firstChild);
-                }
-                $responses[$index] = $result;
-            } elseif ($child->tagName === 'struct') {
-                $fault = $this->processStruct($child);
-                $responses[$index] = [
-                'faultCode' => $fault->get('faultCode', -1),
-                'faultString' => $fault->get('faultString', 'Unknown fault'),
-                ];
-            } else {
-                $responses[$index] = $this->processValue($child);
-            }
+            return;
         }
 
-        return $container->set('responses', $responses);
+        $container->set($fullPath, $value);
     }
 
     /**
@@ -328,5 +317,26 @@ class Response
         }
 
         return $children;
+    }
+
+    /**
+     * Processes system.multicall responses and returns them in a container.
+     *
+     * @param DOMElement $params The <params> element containing multiple responses
+     * @param Container $container Container to populate with the responses
+     * @return Container Container with responses keyed by index
+     */
+    protected function processMultiCallParams(DOMElement $params, Container $container): Container
+    {
+        $paramElements = $this->getDirectChildren($params, 'param');
+
+        if (count($paramElements) !== 1) {
+            return $container->set('results', []);
+        }
+
+        $valueElement = $this->getFirstDirectChild($paramElements[0], 'value');
+        $outerArray   = $this->processValue($valueElement?->firstChild);
+        $result = ['results' => Arr::flatten($outerArray)];
+        return Container::fromArray($result);
     }
 }

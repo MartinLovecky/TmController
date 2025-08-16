@@ -36,15 +36,16 @@ class DedimaniaClient
 
         $response = $this->httpClient->post($this->endpoint, $xml, $headers);
 
+        if (!$response) {
+            return false;
+        }
+
         $parsed = $this->response->parseResponse($type, $response, true);
 
-        if ($parsed->has('value.1.faultString')) {
-            /** @var string $fault */
-            $fault = $parsed->get('value.1.faultString');
-            Aseco::console("Dedimania request {$type} fault {$fault}");
-            return $fault;
-        } else {
-            return $parsed->get('value');
+        if ($parsed->has('results.1.faultString')) {
+            Aseco::console("Dedimania request {$type} fault {$parsed->get('results.1.faultString')}");
+            return false;
         }
+        return $parsed->get('results.0');
     }
 }

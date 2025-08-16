@@ -80,6 +80,11 @@ class ManiaKarma
     {
     }
 
+    public function onEverySecond(): void
+    {
+        //I have no clue wtf is going on
+    }
+
     public function onPlayerLink(array $answer): void
     {
         $this->voteService->handleVoteResponse($answer);

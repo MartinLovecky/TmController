@@ -14,11 +14,10 @@ class RecordService
 
     public function __construct(
         protected RepositoryManager $repository,
-        protected ChallengeService $challengeService
+        //protected ChallengeService $challengeService
     ) {
-        $this->uid = $this->challengeService->getUid();
-        // creates empty record if uid not exist for update
-        $this->createRecord($this->uid, Container::fromArray(['ChallengeId' => $this->uid]));
+        //$this->uid = //$this->challengeService->getUid();
+        //$this->createRecord($this->uid, Container::fromArray(['ChallengeId' => $this->uid]));
     }
 
     public function updateLeaderboard(
@@ -60,20 +59,29 @@ class RecordService
         $this->repository->update(Table::RECORDS, $record);
     }
 
-    public function getRecord(?string $challengeId = null): Container
+    public function getRecord(string $challengeId): Container
     {
-        $uid = $challengeId ?? $this->uid;
-
-        if (!$this->exists($uid)) {
+        if (!$this->exists($challengeId)) {
             return Container::fromArray([
                 'Times' => []
             ], true);
         }
 
-        // This is 100% json string it can be empty {}
-        $records = $this->repository->get(Table::RECORDS, 'ChallengeId', $challengeId, ['Times']);
+        /** @var array $record */
+        $record = $this->repository->get(Table::RECORDS, 'ChallengeId', $challengeId);
+        $record['Times'] = json_decode($record['Times'], true);
+        $record['Checkpoints'] = json_decode($record['Checkpoints'], true);
 
-        return Container::fromJsonString($records);
+        return Container::fromArray($record);
+    }
+
+    public function getRecordForPlayer(string $challengeId, string $playerId): array
+    {
+        $record = $this->getRecord($challengeId);
+        if ($record->has("Times.{$playerId}")) {
+            return [$playerId => $record->get("Times.{$playerId}")];
+        }
+        return [];
     }
 
     public function createRecord(string $challengeId, Container $records): void

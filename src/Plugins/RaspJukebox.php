@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\Plugins\Rasp;
 use Yuhzel\TmController\Plugins\ManiaLinks;
 use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Repository\ChallengeService;
+use Yuhzel\TmController\Services\RaspState;
 use Yuhzel\TmController\Services\Server;
 
-class RaspJukebox extends Rasp
+class RaspJukebox
 {
     private array $buffer = [];
     private int $bufferSize = 0;
@@ -20,6 +20,7 @@ class RaspJukebox extends Rasp
         protected ChallengeService $challengeService,
         protected Client $client,
         protected ManiaLinks $maniaLinks,
+        protected RaspState $raspState,
     ) {
     }
 
@@ -40,6 +41,7 @@ class RaspJukebox extends Rasp
         $this->buffer = array_slice($lines, -$this->bufferSize);
         array_pop($this->buffer);
     }
+
     public function chatY(array $command): void
     {
         $player = $command['author'];
@@ -53,14 +55,14 @@ class RaspJukebox extends Rasp
         }
 
         if ($this->isTmxVoteActive()) {
-            $this->processVote($this->tmxadd, $login, function () {
+            $this->processVote($this->raspState->tmxadd, $login, function () {
                 $this->passTmxVote();
             });
             return;
         }
 
         if ($this->isChatVoteActive()) {
-            $this->processVote($this->chatvote, $login, function () {
+            $this->processVote($this->raspState->chatvote, $login, function () {
                 $this->passChatVote();
             });
             return;
@@ -71,7 +73,7 @@ class RaspJukebox extends Rasp
 
     private function isSpectatorVoteNotAllowed($player, string $login): bool
     {
-        if (!$this->allow_spec_voting && $player->get('IsSpectator') && !Aseco::isAnyAdmin($login)) {
+        if (!$this->raspState->allow_spec_voting && $player->get('IsSpectator') && !Aseco::isAnyAdmin($login)) {
             $this->sendPrivateMessage(Aseco::getChatMessage('no_spectators', 'rasp'), $login);
             return true;
         }
@@ -80,7 +82,7 @@ class RaspJukebox extends Rasp
 
     private function hasAlreadyVoted(string $login): bool
     {
-        if (in_array($login, $this->plrvotes)) {
+        if (in_array($login, $this->raspState->plrvotes)) {
             $this->sendPrivateMessage('{#server}> {#error}You have already voted!', $login);
             return true;
         }
@@ -89,12 +91,12 @@ class RaspJukebox extends Rasp
 
     private function isTmxVoteActive(): bool
     {
-        return !empty($this->tmxadd) && $this->tmxadd['votes'] >= 0;
+        return !empty($this->raspState->tmxadd) && $this->raspState->tmxadd['votes'] >= 0;
     }
 
     private function isChatVoteActive(): bool
     {
-        return !empty($this->chatvote) && $this->chatvote['votes'] >= 0;
+        return !empty($this->raspState->chatvote) && $this->raspState->chatvote['votes'] >= 0;
     }
 
     private function processVote(array &$vote, string $login, callable $onPass): void
@@ -102,7 +104,7 @@ class RaspJukebox extends Rasp
         $vote['votes']--;
         if ($vote['votes'] > 0) {
             $this->sendVoteReminder($vote);
-            $this->plrvotes[] = $login;
+            $this->raspState->plrvotes[] = $login;
             $this->maniaLinks->votePanelOff($login);
         } else {
             $onPass();
@@ -112,14 +114,14 @@ class RaspJukebox extends Rasp
 
     private function passTmxVote(): void
     {
-        $this->addTrackToJukebox($this->tmxadd, true);
+        $this->addTrackToJukebox($this->raspState->tmxadd, true);
         $this->sendGlobalMessage(
             Aseco::formatText(
                 Aseco::getChatMessage('jukebox_pass', 'rasp'),
-                Aseco::stripColors($this->tmxadd['name'])
+                Aseco::stripColors($this->raspState->tmxadd['name'])
             )
         );
-        $this->tmxadd = [];
+        $this->raspState->tmxadd = [];
         // TODO: fire onJukeboxChanged event
     }
 
@@ -128,21 +130,21 @@ class RaspJukebox extends Rasp
         $this->sendGlobalMessage(
             Aseco::formatText(
                 Aseco::getChatMessage('vote_pass'),
-                $this->chatvote['desc']
+                $this->raspState->chatvote['desc']
             )
         );
 
-        match ($this->chatvote['type']) {
-            0 => $this->endRound($this->chatvote['login']),
-            1 => $this->restart($this->chatvote['login']),
-            2 => $this->replay($this->chatvote['login']),
-            3 => $this->skip($this->chatvote['login']),
-            4 => $this->kick($this->chatvote['target']),
+        match ($this->raspState->chatvote['type']) {
+            0 => $this->endRound($this->raspState->chatvote['login']),
+            1 => $this->restart($this->raspState->chatvote['login']),
+            2 => $this->replay($this->raspState->chatvote['login']),
+            3 => $this->skip($this->raspState->chatvote['login']),
+            4 => $this->kick($this->raspState->chatvote['target']),
             6 => $this->ignore(),
             default => null
         };
 
-        $this->chatvote = [];
+        $this->raspState->chatvote = [];
     }
 
     private function sendVoteReminder(array $vote): void
@@ -164,13 +166,13 @@ class RaspJukebox extends Rasp
     {
         $message = '{#server}> {#error}There is no vote right now!';
 
-        if ($this->feature_tmxadd) {
-            if ($this->feature_votes) {
+        if ($this->raspState->feature_tmxadd) {
+            if ($this->raspState->feature_votes) {
                 $message .= ' Use {#highlite}$i/add <ID>{#error} or see {#highlite}$i/helpvote{#error} to start one.';
             } else {
                 $message .= ' Use {#highlite}$i/add <ID>{#error} to start one.';
             }
-        } elseif ($this->feature_votes) {
+        } elseif ($this->raspState->feature_votes) {
             $message .= ' See {#highlite}$i/helpvote{#error} to start one.';
         }
 
@@ -190,7 +192,7 @@ class RaspJukebox extends Rasp
     private function addTrackToJukebox(array $track, bool $isTmx = false): void
     {
         $uid = $track['uid'];
-        $this->jukebox[$uid] = [
+        $this->raspState->jukebox[$uid] = [
             'FileName' => $track['filename'],
             'Name'     => $track['name'],
             'Env'      => $track['environment'],
@@ -207,18 +209,18 @@ class RaspJukebox extends Rasp
         $uid   = $this->challengeService->getUid();
         $chall = $this->challengeService->getChallenge();
 
-        $this->jukebox = array_reverse($this->jukebox, true);
-        $this->jukebox[$uid] = [
+        $this->raspState->jukebox = array_reverse($this->raspState->jukebox, true);
+        $this->raspState->jukebox[$uid] = [
             'FileName' => $chall->get('Filename'),
             'Name'     => $chall->get('Name'),
             'Env'      => $chall->get('Environment'),
-            'Login'    => $this->chatvote['login'],
-            'Nick'     => $this->chatvote['nick'],
+            'Login'    => $this->raspState->chatvote['login'],
+            'Nick'     => $this->raspState->chatvote['nick'],
             'source'   => $source,
             'tmx'      => false,
             'uid'      => $uid
         ];
-        $this->jukebox = array_reverse($this->jukebox, true);
+        $this->raspState->jukebox = array_reverse($this->raspState->jukebox, true);
     }
 
 // Vote action methods
@@ -230,7 +232,7 @@ class RaspJukebox extends Rasp
 
     private function restart(string $login): void
     {
-        if ($this->ladder_fast_restart) {
+        if ($this->raspState->ladder_fast_restart) {
             $this->client->query('ChallengeRestart');
         } else {
             $this->jukeboxCurrentTrack('Ladder');
@@ -255,15 +257,19 @@ class RaspJukebox extends Rasp
     private function kick(string $target): void
     {
         $this->client->query('Kick', [$target]);
-        Aseco::console('Vote by {1} kicked player {2}!', $this->chatvote['login'], $target);
+        Aseco::console('Vote by {1} kicked player {2}!', $this->raspState->chatvote['login'], $target);
     }
 
     private function ignore(): void
     {
-        $this->client->query('Ignore', [$this->chatvote['target']]);
-        if (!in_array($this->chatvote['target'], Server::$muteList)) {
-            Server::$muteList[] = $this->chatvote['target'];
+        $this->client->query('Ignore', [$this->raspState->chatvote['target']]);
+        if (!in_array($this->raspState->chatvote['target'], Server::$muteList)) {
+            Server::$muteList[] = $this->raspState->chatvote['target'];
         }
-        Aseco::console('Vote by {1} ignored player {2}!', $this->chatvote['login'], $this->chatvote['target']);
+        Aseco::console(
+            'Vote by {1} ignored player {2}!',
+            $this->raspState->chatvote['login'],
+            $this->raspState->chatvote['target']
+        );
     }
 }

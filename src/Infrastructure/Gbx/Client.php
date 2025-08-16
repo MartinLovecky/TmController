@@ -31,7 +31,7 @@ class Client
         $this->query('Authenticate', [$_ENV['admin_login'], $_ENV['admin_password']]);
     }
 
-    public function query(string $method, array $params = [], bool $readonly = true): Container
+    public function query(string $method, array $params = []): Container
     {
         $xmlString = $this->request->createRpcRequest($method, $params);
 
@@ -43,7 +43,7 @@ class Client
             throw new Exception("Transport error - connection interrupted");
         }
 
-        $result = $this->result($method, $readonly);
+        $result = $this->result($method);
 
         if ($result->has('#err')) {
             Aseco::console("{$method} error {$result->get('#err.faultString')}{$result->get('#err.faultCode')}");
@@ -145,7 +145,7 @@ class Client
         return $this->socket->write($bytes) !== 0;
     }
 
-    protected function result(string $method, bool $readonly): Container
+    protected function result(string $method): Container
     {
         $contents = '';
 
@@ -181,7 +181,7 @@ class Client
                 }
             } while ($recvHandle !== $this->reqHandle);
 
-            return $this->response->parseResponse($method, $contents, $readonly);
+            return $this->response->parseResponse($method, $contents);
         }
 
         return Container::fromArray([], true);

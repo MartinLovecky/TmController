@@ -41,13 +41,13 @@ class Parser
 
 
     #[Deprecated('Config files should be .json')]
-    public static function fromXMLFile(string $fileName, bool $readonly = true): Container
+    public static function fromXMLFile(string $fileName): Container
     {
-        return (new self(new DOMDocument()))->parseXml($fileName, $readonly);
+        return (new self(new DOMDocument()))->parseXml($fileName);
     }
 
     #[Deprecated('Config files should be .json')]
-    public function parseXml(string $fileName, bool $readonly = true): Container
+    public function parseXml(string $fileName): Container
     {
         # TmController/public/xml/$fileName.xml
         $xmlFile = Aseco::path()
@@ -83,10 +83,6 @@ class Parser
 
         $root = $this->dom->documentElement;
         $parsed = $this->parseNode($root);
-
-        if ($readonly) {
-            $parsed->setReadonly();
-        }
 
         return $parsed;
     }

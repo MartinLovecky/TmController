@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Plugins;
 
 use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Plugins\Rasp;
 use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\Repository\ChallengeService;
 use Yuhzel\TmController\Services\Karma\StateService;
+use Yuhzel\TmController\Services\RaspState;
 
-class RaspVotes extends Rasp
+class RaspVotes
 {
     private int $num_laddervotes = 0;
     private int $num_replayvotes = 0;
@@ -48,8 +49,10 @@ class RaspVotes extends Rasp
 
     public function __construct(
         protected Client $client,
+        protected ChallengeService $challengeService,
         protected ManiaLinks $maniaLinks,
         protected RaspJukebox $raspJukebox,
+        protected RaspState $raspState,
         protected StateService $stateService,
         protected Track $track,
     ) {
@@ -79,7 +82,7 @@ class RaspVotes extends Rasp
             return;
         }
 
-        if ($this->feature_votes) {
+        if ($this->raspState->feature_votes) {
             $message = Aseco::getChatMessage('vote_explain', 'rasp');
             if ($this->global_explain === 2) {
                 $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
@@ -95,10 +98,10 @@ class RaspVotes extends Rasp
 
     public function onPlayerDisconnect(Container $player): void
     {
-        if ($this->feature_votes && !empty($this->chatvote)) {
+        if ($this->raspState->feature_votes && !empty($this->raspState->chatvote)) {
             if (
-                $this->chatvote['type'] === 4
-                && $this->chatvote['target'] === $player->get('Login')
+                $this->raspState->chatvote['type'] === 4
+                && $this->raspState->chatvote['target'] === $player->get('Login')
             ) {
                 $this->resetVotes($player);
             }
@@ -107,18 +110,18 @@ class RaspVotes extends Rasp
 
     public function onEndRound(): void
     {
-        if ($this->stateService->getGameMode() !== 'rounds') {
+        if ($this->challengeService->getGameMode() !== 'rounds') {
             return;
         }
-        if (!empty($this->chatvote) && $this->chatvote['type'] === 0) {
+        if (!empty($this->raspState->chatvote) && $this->raspState->chatvote['type'] === 0) {
             $message = Aseco::formatText(
                 Aseco::getChatMessage('vote_end', 'rasp'),
-                $this->chatvote['desc'],
+                $this->raspState->chatvote['desc'],
                 'expired',
                 'Server'
             );
             $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
-            $this->chatvote = [];
+            $this->raspState->chatvote = [];
             $this->maniaLinks->allVotePanelsOff();
         }
     }
@@ -126,32 +129,32 @@ class RaspVotes extends Rasp
     public function onCheckpoint(): void
     {
         if (
-            $this->stateService->getGameMode() === 'rounds'
-            || $this->stateService->getGameMode() === 'team'
-            || $this->stateService->getGameMode() === 'cup'
+            $this->challengeService->getGameMode() === 'rounds'
+            || $this->challengeService->getGameMode() === 'team'
+            || $this->challengeService->getGameMode() === 'cup'
         ) {
             return;
         }
 
-        if (!empty($this->chatvote)) {
-            $expire_limit = !empty($this->tmxadd)
+        if (!empty($this->raspState->chatvote)) {
+            $expire_limit = !empty($this->raspState->tmxadd)
                 ? $this->ta_expire_limit[5]
-                : $this->ta_expire_limit[$this->chatvote['type']];
+                : $this->ta_expire_limit[$this->raspState->chatvote['type']];
             $played = $this->track->timePlaying();
             if ($played - $this->track->timePlaying() >= $expire_limit) {
                 Aseco::console(
                     'Vote by {1} to {2} expired!',
-                    $this->chatvote['login'],
-                    $this->chatvote['desc']
+                    $this->raspState->chatvote['login'],
+                    $this->raspState->chatvote['desc']
                 );
                 $message = Aseco::formatText(
                     Aseco::getChatMessage('vote_end', 'rasp'),
-                    $this->chatvote['desc'],
+                    $this->raspState->chatvote['desc'],
                     'expired',
                     'Server'
                 );
                 $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
-                $this->chatvote = [];
+                $this->raspState->chatvote = [];
                 $this->maniaLinks->allVotePanelsOff();
             } else {
                 if ($this->ta_show_reminder) {
@@ -160,9 +163,9 @@ class RaspVotes extends Rasp
                         $this->ta_show_num = $intervals;
                         $message = Aseco::formatText(
                             Aseco::getChatMessage('vote_y', 'rasp'),
-                            $this->chatvote['votes'],
-                            $this->chatvote['votes'] == 1 ? '' : 's',
-                            $this->chatvote['desc']
+                            $this->raspState->chatvote['votes'],
+                            $this->raspState->chatvote['votes'] == 1 ? '' : 's',
+                            $this->raspState->chatvote['desc']
                         );
                         $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
                     }
@@ -170,15 +173,15 @@ class RaspVotes extends Rasp
             }
         }
 
-        if (!empty($this->tmxadd)) {
+        if (!empty($this->raspState->tmxadd)) {
             Aseco::console(
                 'Vote by {1} to add {2} expired!',
-                $this->tmxadd['login'],
-                Aseco::stripColors($this->tmxadd['name'], false)
+                $this->raspState->tmxadd['login'],
+                Aseco::stripColors($this->raspState->tmxadd['name'], false)
             );
             $message = Aseco::formatText(
                 Aseco::getChatMessage('jukebox_end', 'rasp'),
-                Aseco::stripColors($this->tmxadd['name']),
+                Aseco::stripColors($this->raspState->tmxadd['name']),
                 'expired',
                 'Server'
             );
@@ -186,14 +189,14 @@ class RaspVotes extends Rasp
             $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
         }
 
-        $this->chatvote = [];
+        $this->raspState->chatvote = [];
         $this->maniaLinks->allVotePanelsOff();
     }
 
     public function chatHelpvote($command): void
     {
         $login = $command['author']->login;
-        if (!$this->feature_votes) {
+        if (!$this->raspState->feature_votes) {
             $message = Aseco::getChatMessage('no_vote', 'rasp');
             $this->client->query('ChatSendServerMessageToLogin', [Aseco::formatColors($message), $login]);
         }
@@ -237,7 +240,7 @@ class RaspVotes extends Rasp
         $player = $command['author'];
         $login = $player->get('Login');
 
-        if (!$this->feature_votes) {
+        if (!$this->raspState->feature_votes) {
             $message = Aseco::formatColors(Aseco::getChatMessage('no_vote', 'rasp'));
             $this->client->query('ChatSendServerMessageToLogin', [$message, $login]);
             return;
@@ -259,40 +262,39 @@ class RaspVotes extends Rasp
             $this->client->query('ChatSendServerMessageToLogin', [$message, $login]);
             return;
         }
-        if (!empty($this->chatvote) || !empty($this->tmxadd)) {
+        if (!empty($this->raspState->chatvote) || !empty($this->raspState->tmxadd)) {
             $message = Aseco::formatColors(Aseco::getChatMessage('vote_already', 'rasp'));
             $this->client->query('ChatSendServerMessageToLogin', [$message, $login]);
             return;
         }
 
         if (
-            $this->stateService->getGameMode() == 'time_attack'
-            || $this->stateService->getGameMode() == 'laps'
-            || $this->stateService->getGameMode() == 'stunts'
+            $this->challengeService->getGameMode() == 'time_attack'
+            || $this->challengeService->getGameMode() == 'laps'
+            || $this->challengeService->getGameMode() == 'stunts'
         ) {
-            $message = "{#server}> {#error}Running {#highlite}\$i{$this->stateService->getGameMode()}";
+            $message = "{#server}> {#error}Running {#highlite}\$i{$this->challengeService->getGameMode()}";
             $message .= "{#error} mode - end round disabled!";
             $this->client->query('ChatSendServerMessageToLogin', [$message, $login]);
             return;
         }
 
-        $this->chatvote['login'] = $login;
-        $this->chatvote['nick'] = $player->get('Nickname');
-        $this->chatvote['votes'] = $this->requiredVotes($this->voteRatios[0]);
-        $this->chatvote['type'] = 0;
-        $this->chatvote['desc'] = 'End this Round';
-        $this->plrvotes = [];
+        $this->raspState->chatvote['login'] = $login;
+        $this->raspState->chatvote['nick'] = $player->get('Nickname');
+        $this->raspState->chatvote['votes'] = $this->requiredVotes($this->voteRatios[0]);
+        $this->raspState->chatvote['type'] = 0;
+        $this->raspState->chatvote['desc'] = 'End this Round';
+        $this->raspState->plrvotes = [];
 
         $message = Aseco::formatText(
             Aseco::getChatMessage('vote_start', 'rasp'),
-            Aseco::stripColors($this->chatvote['nick']),
-            $this->chatvote['desc'],
-            $this->chatvote['votes']
+            Aseco::stripColors($this->raspState->chatvote['nick']),
+            $this->raspState->chatvote['desc'],
+            $this->raspState->chatvote['votes']
         );
         $message = str_replace('{br}', "\n", $message);
         $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
-        //TODO:
-        //Only for admin
+        //TODO: Only for admin
         //$this->maniaLinks->displayVotePanel($player, Aseco::formatColors('{#vote}Yes'), '$333No');
         $this->maniaLinks->displayVotePanel($player, Aseco::formatColors('{#vote}Yes - F5'), '$333No');
 
@@ -307,17 +309,17 @@ class RaspVotes extends Rasp
 
     private function resetVotes(?Container $player = null): void
     {
-        if (!empty($this->chatvote)) {
+        if (!empty($this->raspState->chatvote)) {
             Aseco::console(
                 'Vote by {1} to {2} reset!',
-                $player->get('Login') ?? $this->chatvote['login'] ?? '',
+                $player->get('Login') ?? $this->raspState->chatvote['login'] ?? '',
                 'End this Round'
             );
         }
 
         $message = Aseco::getChatMessage('vote_cancel', 'rasp');
         $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
-        $this->chatvote = [];
+        $this->raspState->chatvote = [];
         $this->maniaLinks->allVotePanelsOff();
         $this->num_laddervotes = 0;
         $this->num_replayvotes = 0;

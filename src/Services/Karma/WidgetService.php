@@ -10,6 +10,7 @@ use Yuhzel\TmController\Services\Server;
 use Yuhzel\TmController\App\WidgetBuilder;
 use Yuhzel\TmController\Repository\PlayerService;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\Repository\ChallengeService;
 
 class WidgetService
 {
@@ -27,6 +28,7 @@ class WidgetService
 
     public function __construct(
         protected Client $client,
+        protected ChallengeService $challengeService,
         protected PlayerService $playerService,
         protected StateService $stateService,
         protected WidgetBuilder $widgetBuilder,
@@ -41,7 +43,7 @@ class WidgetService
 
     public function sendInitialWidgets(): void
     {
-        $widgetKey = ($this->stateService->getGameMode() === 'score') ? 'skeleton_score' : 'skeleton_race';
+        $widgetKey = ($this->challengeService->getGameMode() === 'score') ? 'skeleton_score' : 'skeleton_race';
 
         $this->sendWidgetCombination([$widgetKey, 'cups_values']);
 
@@ -54,7 +56,7 @@ class WidgetService
 
     public function updatePlayerWidgets(Container $player): void
     {
-        $widgetKey = ($this->stateService->getGameMode() === 'score') ? 'skeleton_score' : 'skeleton_race';
+        $widgetKey = ($this->challengeService->getGameMode() === 'score') ? 'skeleton_score' : 'skeleton_race';
         $this->sendWidgetCombination([$widgetKey, 'cups_values', 'player_marker'], $player);
     }
 
@@ -248,7 +250,7 @@ class WidgetService
         array $widgets,
         ?Container $player = null
     ): void {
-        $gameMode = $this->stateService->getGameMode();
+        $gameMode = $this->challengeService->getGameMode();
         $playerMarker = $player ? $this->buildPlayerVoteMarker($player, $gameMode) : '';
 
         $xml = $this->widgetBuilder->render("{$this->file}combination", [

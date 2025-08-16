@@ -14,6 +14,17 @@ use Yuhzel\TmController\Repository\RepositoryManager;
 
 class ChallengeService
 {
+    private const GAMEMODE_MAPPING = [
+        0 => 'rounds',
+        1 => 'time_attack',
+        2 => 'team',
+        3 => 'laps',
+        4 => 'stunts',
+        5 => 'cup',
+        7 => 'score'
+    ];
+    private const DEFAULT_GAMEMODE = 'time_attack';
+
     public function __construct(
         private ChallMapFetcher $gbx, //info from {FileName}.gbx
         private InfoFetcher $tmx,     //info from tmnf.exchange website
@@ -84,27 +95,38 @@ class ChallengeService
         $this->repository->delete(Table::CHALLENGES, 'Uid', $uid);
     }
 
-    public function getCurrentChallengeInfo(): Container
+    public function getGameMode(): string
     {
-        $c = $this->client->query('GetCurrentChallengeInfo', readonly:false);
-        // Windows|Linux path fix
-        $c->set('FileName', str_replace('\\', DIRECTORY_SEPARATOR, $c->get('FileName')))
-        ->set('Options', $this->gameInfo->getCurrentGameInfo());
-
-        return $c->setReadonly();
+        $gameMode = $this->getChallenge()->get('Options.GameMode');
+        return self::GAMEMODE_MAPPING[$gameMode] ?? self::DEFAULT_GAMEMODE;
     }
 
-    public function getNextChallengeInfo(): Container
+    public function getCurrentChallengeInfo(): Container
     {
-        $c = $this->client->query('GetNextChallengeInfo', readonly:false);
-        $c->set('FileName', str_replace('\\', DIRECTORY_SEPARATOR, $c->get('FileName')));
-
-        return $c->setReadonly();
+        $c = $this->client->query('GetCurrentChallengeInfo');
+        // Windows|Linux path fix
+        $c
+            ->set('FileName', str_replace('\\', DIRECTORY_SEPARATOR, $c->get('FileName')))
+            ->set('Options', $this->gameInfo->getCurrentGameInfo());
+        return $c;
     }
 
     public function getUid(): string
     {
         return $this->getCurrentChallengeInfo()->get('UId');
+    }
+
+    public function getNextUid(): string
+    {
+        $next = $this->client->query('GetNextChallengeIndex')->get('value');
+        return $this->client->query('GetChallengeList', [1, $next])->get('value.0.UId');
+    }
+
+    public function getNextChallengeInfo(): Container
+    {
+        $c = $this->client->query('GetNextChallengeInfo');
+        $c->set('FileName', str_replace('\\', DIRECTORY_SEPARATOR, $c->get('FileName')));
+        return $c;
     }
 
     private function exists(string $uid): bool

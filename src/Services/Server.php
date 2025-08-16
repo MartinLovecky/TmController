@@ -38,6 +38,7 @@ class Server
     public static float $callVoteRatio = 0.0;
     public static string $gamePath = '';
     public static string $zone = '';
+    public static bool $private = false;
     public static array $muteList = [];
 
     public function __construct()
@@ -83,6 +84,7 @@ class Server
     {
         self::$name = ucfirst($options->get('Name'));
         self::$comment = $options->get('Comment');
+        self::$private = $options->get('Password') != '';
         self::$maxPlayers = $options->get('CurrentMaxPlayers');
         self::$maxSpectators = $options->get('CurrentMaxSpectators');
         self::$ladderMode = $options->get('CurrentLadderMode');

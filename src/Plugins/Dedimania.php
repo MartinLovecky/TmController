@@ -7,7 +7,10 @@ namespace Yuhzel\TmController\Plugins;
 use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\Repository\ChallengeService;
+use Yuhzel\TmController\Repository\PlayerService;
 use Yuhzel\TmController\Services\DedimaniaClient;
+use Yuhzel\TmController\Services\Server;
 
 class Dedimania
 {
@@ -20,9 +23,15 @@ class Dedimania
 
     public function __construct(
         protected Client $client,
-        protected DedimaniaClient $dedimaniaClient
+        protected DedimaniaClient $dedimaniaClient,
+        protected ChallengeService $challengeService,
+        protected PlayerService $playerService,
     ) {
         $this->dediLastSent = time();
+    }
+
+    public function onSync(): void
+    {
         $configFile = Aseco::jsonFolderPath() . 'dedimania.json';
         $this->config = Container::fromJsonFile($configFile, false);
         $this->config
@@ -31,20 +40,19 @@ class Dedimania
             ->set('masterserver_account.nation', $_ENV['dedi_nation'])
             ->set('maxRank', 30);
         Aseco::console('************* (Dedimania) *************');
-        $this->dedimaniaLogin();
+        $this->dedimaniaConnect();
         Aseco::console('------------- (Dedimania) -------------');
-    }
-
-    public function onSync()
-    {
-        // ? $checkpoints
     }
 
     public function onPlayerConnect(Container $player)
     {
         $response = $this->dedimaniaClient->request('playerArrive', $this->playerArrive($player));
 
-        if (isset($response[1]['faultString']) || !$response[1][0] instanceof Container) {
+        if (!$response) {
+            return;
+        }
+
+        if (isset($response[1]['faultString'])) {
             Aseco::console('dedimania_playerconnect - error(s): {1}', $response);
             return;
         }
@@ -72,30 +80,44 @@ class Dedimania
         //dd($response);
     }
 
-    public function onEverySecond()
+    public function onEverySecond(): void
     {
-        if ($this->dediLastSent + $this->dediRefresh < time()) {
-            $response = $this->dedimaniaClient->request(
-                'UpdateServerPlayers',
-                $this->updateServerPlayers()
-            );
-            dd($response);
-        } else {
-        }
+        $response = $this->dedimaniaClient->request(
+            'UpdateServerPlayers',
+            $this->updateServerPlayers()
+        );
+
+        dd($response);
     }
 
-    private function dedimaniaLogin(): bool
+    private function dedimaniaConnect(): void
     {
-        $response = $this->dedimaniaClient->request('authenticate', $this->authenticate());
+        $cfg = $this->config;
+        Aseco::console("* Dataserver connection on {$cfg->get('database.name')} ...");
+        Aseco::console("* Try connection on {$cfg->get('database.url')}");
 
-        if (!$response instanceof Container) {
-            return false;
+        $response = $this->dedimaniaClient->request('validate', $this->validateAccount());
+
+        if (!$response) {
+            Aseco::consoleText('!!! Error bad Dedimania response !!!');
+            return;
         }
 
-        return $response->get('1.0.Status');
+        if (!$response->get('Status') || !$this->dedimaniaAuthenticate()) {
+            Aseco::consoleText('!!! Failed to validate and Authenticate master account !!!');
+            return;
+        }
+
+        Aseco::console('Dedimania Connection and status ok!');
+        return;
     }
 
-    private function authenticate(): array
+    private function dedimaniaAuthenticate(): bool
+    {
+        return $this->dedimaniaClient->request('authenticate', $this->auth());
+    }
+
+    private function auth(): array
     {
         return [
             $this->authCall(),
@@ -173,18 +195,66 @@ class Dedimania
         ];
     }
 
+    private function validateAccount(): array
+    {
+        return [
+            [
+                'methodName' => 'dedimania.ValidateAccount',
+                'params' => []
+            ],
+            $this->warrnings()
+        ];
+    }
+
     private function updateServerPlayers(): array
     {
-        $this->dediLastSent = time();
         return [
-            'methodName' => 'dedimania.UpdateServerPlayers',
-            'params' => [
-                'Game' => 'TMU',
-                'Mode' => null,
-                'SrvInfo' => [],
-                'Players' => []
-            ]
+            [
+                'methodName' => 'dedimania.UpdateServerPlayers',
+                'params' => [
+                    'Game' => 'TMF',
+                    'Mode' => 1,//TODO: add map mode in challengeService return int
+                    'SrvInfo' => $this->serverInfo(),
+                    'Players' => $this->players()
+                ]
+            ],
+            $this->warrnings()
         ];
+    }
+
+    private function serverInfo(): array
+    {
+        return[
+            'SrvName' => Server::$name,
+            'Comment' => Server::$comment,
+            'Private' => Server::$private,
+            'SrvIP' => '',
+            'SrvPort' => 0,
+            'XmlrpcPort' => 0,
+            'NumPlayers' => $this->playerService->numPlayers,
+            'MaxPlayers' => Server::$maxPlayers,
+            'NumSpecs' => $this->playerService->numSpecs,
+            'MaxSpecs' => Server::$maxSpectators,
+            'LadderMode' => Server::$ladderMode,
+            'NextFiveUID' => $this->challengeService->getNextUid()
+        ];
+    }
+
+    private function players(): array
+    {
+        $info = [];
+        $this->playerService->eachPlayer(function (Container $player) {
+            $info[] = [
+                'Login' => $player->get('Login'),
+                'Nation' => $player->get('Nation'),
+                'TeamName' =>  $player->get('LadderStats.TeamName'),
+                'TeamId' => -1,
+                'IsSpec' => $player->get('IsSpectator'),
+                'Ranking' => $player->get('LadderStats.PlayerRankings.0.Ranking'),
+                'IsOff' => $player->get('IsInOfficialMode')
+            ];
+        });
+        return $info;
     }
 
     private function authCall(): array
@@ -192,7 +262,7 @@ class Dedimania
         return [
             'methodName' => 'dedimania.Authenticate',
             'params' => [[
-                'Game' => 'TMU',
+                'Game' => 'TMF',
                 'Login' => $this->config->get('masterserver_account.login'),
                 'Password' => $this->config->get('masterserver_account.password'),
                 'Tool' => 'Xaseco',
