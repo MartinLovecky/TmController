@@ -6,9 +6,7 @@ namespace Yuhzel\TmController\Services\Karma;
 
 use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Core\Container;
-use Yuhzel\TmController\Repository\ChallengeService;
-use Yuhzel\TmController\Repository\PlayerService;
-use Yuhzel\TmController\Repository\RecordService;
+use Yuhzel\TmController\Repository\{ChallengeService, PlayerService, RecordService};
 
 class StateService
 {

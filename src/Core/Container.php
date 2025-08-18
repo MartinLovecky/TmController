@@ -60,10 +60,6 @@ class Container extends ArrayObject implements ContainerInterface
             return $default;
         }
 
-        if (ctype_digit((string)$lastKey)) {
-            $lastKey = (int)$lastKey;
-        }
-
         return $parent->offsetExists($lastKey) ? $parent[$lastKey] : $default;
     }
 
@@ -259,6 +255,46 @@ class Container extends ArrayObject implements ContainerInterface
         }
 
         return self::fromJsonString($json);
+    }
+
+    /**
+     * Save this container to a JSON file.
+     * - save location TmController/public/json/
+     * @param string $file without .json
+     * @return bool true on success
+     */
+    public function saveToJsonFile(string $file): bool
+    {
+        $json = json_encode(
+            $this->jsonSerialize(),
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+        );
+
+        if ($json === false) {
+            return false;
+        }
+
+        $filePath = Aseco::jsonFolderPath() . "{$file}.json";
+
+        return file_put_contents($filePath, $json) !== false;
+    }
+
+    /**
+     * Update a value at a given dot-path inside a JSON file.
+     *
+     * Loads the JSON → applies update → writes back.
+     *
+     * @param string $filePath Path to JSON file
+     * @param string $path Dot-path inside the JSON
+     * @param mixed $value New value
+     * @return bool
+     */
+    public static function updateJsonFile(string $filePath, string $path, mixed $value): bool
+    {
+        $container = self::fromJsonFile($filePath);
+        $container->set($path, $value);
+
+        return $container->saveToJsonFile($filePath);
     }
 
     /**

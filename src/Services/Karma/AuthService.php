@@ -6,8 +6,7 @@ namespace Yuhzel\TmController\Services\Karma;
 
 use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Core\Container;
-use Yuhzel\TmController\Services\Server;
-use Yuhzel\TmController\Services\HttpClient;
+use Yuhzel\TmController\Services\{HttpClient, Server};
 use Yuhzel\TmController\Infrastructure\Xml\Parser;
 
 class AuthService

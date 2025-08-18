@@ -136,6 +136,6 @@ class CommandService
 
     private function cfg(): Container
     {
-        return Config::get();
+        return Container::fromJsonFile(Aseco::jsonFolderPath() . 'maniaKarma.json');
     }
 }

@@ -46,6 +46,6 @@ class DedimaniaClient
             Aseco::console("Dedimania request {$type} fault {$parsed->get('results.1.faultString')}");
             return false;
         }
-        return $parsed->get('results.0');
+        return $parsed->get('results');
     }
 }
