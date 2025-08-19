@@ -32,7 +32,6 @@ class PlayerService
         foreach ($this->getPlayerList() as $player) {
             $login = $player->get('Login');
             $info = $this->getDetailedPlayerInfo($login);
-            // Game = TMU|TMF, Nation = XXX formant example CZE
             $info
                 ->set('Nation', Aseco::mapCountry($info['Path']))
                 ->set('Donation', [100, 200, 500, 1000, 2000])
@@ -56,9 +55,9 @@ class PlayerService
     */
     public function update(Container $player): void
     {
-        foreach ($player->getIterator() as $_ => $playerContainer) {
-            $this->repository->update(Table::PLAYERS, $playerContainer);
-            $this->repository->update(Table::PLAYERS_EXTRA, $playerContainer);
+        foreach ($player->getIterator() as $login => $player) {
+            $this->repository->update(Table::PLAYERS, $this->playerData($player), $login);
+            $this->repository->update(Table::PLAYERS_EXTRA, $this->extraPlayerData($login), $login);
         }
     }
 
@@ -105,9 +104,9 @@ class PlayerService
 
     private function storeAllFromServer(): void
     {
-        foreach ($this->container->getIterator() as $_ => $player) {
-            $this->repository->insert(Table::PLAYERS, $player);
-            $this->repository->insert(Table::PLAYERS_EXTRA, $player);
+        foreach ($this->container->getIterator() as $login => $player) {
+            $this->repository->insert(Table::PLAYERS, $this->playerData($player), $login);
+            $this->repository->insert(Table::PLAYERS_EXTRA, $this->extraPlayerData($login), $login);
         }
     }
 
@@ -119,5 +118,41 @@ class PlayerService
     private function getPlayerList(): array
     {
         return $this->client->query('GetPlayerList', [30, 0, 2], false)->get('value');
+    }
+
+    private function playerData(Container $player): array
+    {
+        //NOTE: to allow only TMU acc on server -> if($player->get('rights') === 3)
+        return [
+            'Login'      => $player->get('Login'),
+            'Game'       => 'TMF',
+            'NickName'   => $player->get('NickName'),
+            'playerID'   => $player->get('Login'),
+            'Nation'     => $player->get('Nation'),
+            'Wins'       => $player->get('LadderStats.NbrMatchWins'),
+            'TimePlayed' => time() - $player->get('created'),
+            'TeamName'   => $player->get('LadderStats.TeamName'),
+            'LastSeen'   => date('Y-m-d H:i:s'),
+        ];
+    }
+
+    private function extraPlayerData(string $login): array
+    {
+        return [
+            'cps'       => -1,
+            'dedicps'   => -1,
+            'donations' => 0,
+            'style'     => $_ENV['window_style'],
+            //Default panels file names
+            'panels' => json_encode(
+                [
+                    'admin'   => $_ENV['admin_panel'],
+                    'donate'  => $_ENV['donate_panel'],
+                    'records' => $_ENV['records_panel'],
+                    'vote'    => $_ENV['vote_panel']
+                ]
+            ),
+            'playerID' => $login,
+        ];
     }
 }

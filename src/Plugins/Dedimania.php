@@ -7,10 +7,9 @@ namespace Yuhzel\TmController\Plugins;
 use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\Repository\ChallengeService;
-use Yuhzel\TmController\Repository\PlayerService;
-use Yuhzel\TmController\Services\DedimaniaClient;
-use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\Plugins\Manager\EventContext;
+use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
+use Yuhzel\TmController\Services\{DedimaniaClient, Server};
 
 class Dedimania
 {
@@ -23,6 +22,7 @@ class Dedimania
     public function __construct(
         protected Client $client,
         protected DedimaniaClient $dedimaniaClient,
+        protected EventContext $eventContext,
         protected ChallengeService $challengeService,
         protected PlayerService $playerService,
     ) {
@@ -39,9 +39,9 @@ class Dedimania
         $configFile = Aseco::jsonFolderPath() . 'dedimania.json';
         $this->config = Container::fromJsonFile($configFile, false);
         $this->config
-            ->set('masterserver_account.login', $_ENV['dedi_username'])
-            ->set('masterserver_account.password', $_ENV['dedi_code'])
-            ->set('masterserver_account.nation', $_ENV['dedi_nation']);
+        ->set('masterserver_account.login', $_ENV['dedi_username'])
+        ->set('masterserver_account.password', $_ENV['dedi_code'])
+        ->set('masterserver_account.nation', $_ENV['dedi_nation']);
         Aseco::console('************* (Dedimania) *************');
         $this->dedimaniaConnect();
         Aseco::console('------------- (Dedimania) -------------');
@@ -72,7 +72,7 @@ class Dedimania
             $message = str_replace('{br}', "\n", $message);
             $message = str_replace('www.dedimania.com', '$l[http://www.dedimania.com/]www.dedimania.com$l', $message);
             $this->client->query('ChatSendServerMessageToLogin', [
-                Aseco::formatColors($message), $player->get('Login')
+            Aseco::formatColors($message), $player->get('Login')
             ]);
         }
         //NOTE: idk if this will ever happen
@@ -105,17 +105,34 @@ class Dedimania
             return;
         }
 
+        /** @var array<string,array> $checkpoints */
+        $checkpoints = $this->eventContext->data[Checkpoints::class]['checkpoints'];
         /** @var array<int,Container> $records */
         $records = $response->get('1.Records');
+
         if (!empty($records)) {
             foreach ($records as $rec) {
                 $rec->set('NickName', str_replace("\n", '', $rec->get('NickName')));
             }
+            foreach ($checkpoints as $login => &$cp) {
+                // Try to find the player's own record
+                $record = null;
+                foreach ($records as $rec) {
+                    if ($rec->get('Login') === $login) {
+                        $record = $rec;
+                        break;
+                    }
+                }
 
-            dd($records);  //TODO plugin checkpoints
+                if ($record === null) {
+                    $record = $records[0];
+                }
+
+                $cp['bestFin'] = $record->get('Best');    // Best time
+                $cp['bestCps'] = $record->get('Checks');  // Checkpoints
+            }
         }
     }
-
     private function dedimaniaConnect(): void
     {
         $cfg = $this->config;

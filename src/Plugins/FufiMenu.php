@@ -11,6 +11,7 @@ class FufiMenu
 {
     private Container $config;
     private array $styles = [];
+
     public function __construct()
     {
         $this->config = Container::fromJsonFile(Aseco::jsonFolderPath() . 'fufiConfig.json');

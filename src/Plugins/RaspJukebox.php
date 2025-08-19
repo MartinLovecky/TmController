@@ -8,8 +8,7 @@ use Yuhzel\TmController\Plugins\ManiaLinks;
 use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Repository\ChallengeService;
-use Yuhzel\TmController\Services\RaspState;
-use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\Services\{RaspState, Server};
 
 class RaspJukebox
 {

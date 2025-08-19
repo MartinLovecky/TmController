@@ -156,7 +156,6 @@ class TmController
 
         $this->playerService->syncFromServer();
         $this->pm->callFunctions('onSync');
-
         $this->playerService->eachPlayer(function (Container $player) {
             $this->playerConnect($player);
         });

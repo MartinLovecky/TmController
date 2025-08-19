@@ -6,16 +6,10 @@ namespace Yuhzel\TmController\Plugins;
 
 use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Database\Table;
-use Yuhzel\TmController\Repository\ChallengeService;
-use Yuhzel\TmController\Repository\RepositoryManager;
+use Yuhzel\TmController\Repository\{ChallengeService, RepositoryManager};
 
 class Checkpoints
 {
-    public int $bestFin = 9223372036854775807;
-    public int $currFin = 9223372036854775807;
-    private int $loclRec = -1;
-    private int $dediRec = -1;
-    private int $best_time = 0;
     public array $checkpoints = [];
     private array $bestCps = [];
     private array $currCps = [];
@@ -27,52 +21,85 @@ class Checkpoints
     ) {
     }
 
-    public function onPlayerConnect(Container $player)
+    public function onPlayerConnect(Container $player): void
     {
         $login = $player->get('Login');
-        $this->checkpoints[$login] = $this;
+        $this->checkpoints[$login] = [
+            'checkpoints' => [],
+            'currFin'     => PHP_INT_MAX,
+            'bestFin'     => PHP_INT_MAX,
+            'loclRec'     => -1,
+            'dediRec'     => -1,
+            'best_time'   => 0,
+        ];
         if ($this->challengeService->getGameMode() === 'laps') {
-            $this->checkpoints[$login]->currFin = 0;
+            $this->checkpoints[$login]['currFin'] = 0;
         }
+
         $cps = $this->repositoryManager->get(
             Table::PLAYERS_EXTRA,
             'playerID',
             $login,
-            ['dedicps', 'cps']
+            ['cps', 'dedirec']
         );
-        dd($cps);
 
-        //$this->chekpoints[$login]->loclrec = 0;
-
-        //$this->chekpoints[$login]->loclrec = $cps['cps'];
-        //$this->chekpoints[$login]->dedicps = $cps['dedicps'];
+        if (is_array($cps)) {
+            $this->checkpoints[$login]['loclrec'] = array_key_first($cps);
+            $this->checkpoints[$login]['dedirec'] = [...$cps];
+        } else {
+            $this->checkpoints[$login]['loclrec'] = 0;
+            $this->checkpoints[$login]['dedirec'] = 0;
+        }
     }
 
-    public function onPlayerDisconnect(Container $player)
+    public function onPlayerDisconnect(Container $player): void
     {
+        $login = $player->get('Login');
+        $update = [
+            'cps' => $this->checkpoints[$login]['cps'],
+            'dedirec' => $this->checkpoints[$login]['dedirec'],
+        ];
+        $this->repositoryManager->update(Table::PLAYERS_EXTRA, $update, $login);
+
+        unset($this->checkpoints[$login]);
     }
 
-    public function onNewChallenge(Container $challenge)
+    public function onNewChallenge(ChallengeService $challengeService)
     {
         foreach ($this->checkpoints as $login => $_) {
-            $this->checkpoints[$login]->bestCps = $this->bestCps;
-            $this->checkpoints[$login]->currCps = $this->currCps;
-            $this->checkpoints[$login]->bestFin = $this->bestFin;
+            $this->checkpoints[$login]['bestCps'] = $this->bestCps;
+            $this->checkpoints[$login]['currCps'] = $this->currCps;
+            $this->checkpoints[$login]['bestFin'] = PHP_INT_MAX;
 
             if ($this->challengeService->getGameMode() === 'laps') {
-                $this->checkpoints[$login]->currFin = 0;
+                $this->checkpoints[$login]['currFin'] = 0;
             } else {
-                $this->checkpoints[$login]->currFin = $this->currFin;
+                $this->checkpoints[$login]['currFin'] = PHP_INT_MAX;
             }
-
-            //TODO complete RecordService
         }
+    }
+
+    public function onBeginRound()
+    {
+    }
+
+    public function onEndRace()
+    {
     }
 
     public function onRestartChallenge()
     {
-        // array $checkpoints
-        // loop  checkpoints and set //curr_cps = []
-        // curr_fin = $this->currFin
+    }
+
+    public function onCheckpoint()
+    {
+    }
+
+    public function onPlayerFinish1()
+    {
+    }
+
+    public function onPlayerInfoChanged()
+    {
     }
 }

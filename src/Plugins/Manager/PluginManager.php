@@ -28,6 +28,7 @@ class PluginManager
     /** @var object[] $plugins*/
     private array $plugins = [];
     public function __construct(
+        public EventContext $eventContext,
         private CpLiveAdvanced $cpLiveAdvanced,
         private Cpll $cpll,
         private Dedimania $dedimania,
@@ -67,11 +68,14 @@ class PluginManager
     public function callPluginFunction(string $pluginName, string $functionName, ...$args): mixed
     {
         $plugin = $this->getPlugin($pluginName);
-        if ($plugin !== null && method_exists($plugin, $functionName)) {
-            return $plugin->$functionName(...$args);
+        if (!$plugin || !method_exists($plugin, $functionName)) {
+            return null;
         }
 
-        return null;
+        $result = $plugin->$functionName(...$args);
+        $this->eventContext->saveToContext($plugin);
+
+        return $result;
     }
 
     /**
@@ -87,6 +91,7 @@ class PluginManager
         foreach ($this->plugins as $plugin) {
             if (method_exists($plugin, $functionName)) {
                 $plugin->$functionName(...$args);
+                $this->eventContext->saveToContext($plugin);
             }
         }
     }

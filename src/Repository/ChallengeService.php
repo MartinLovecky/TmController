@@ -45,7 +45,7 @@ class ChallengeService
 
         $this->gbx->setXml(true);
         $this->gbx->processFile($file);
-        $this->tmx->setData($this->getUid(), true);
+        $this->tmx->setData($this->gbx->UId, true);
         $this->createChallengeInDb();
     }
 
@@ -64,13 +64,9 @@ class ChallengeService
         return $this->getCurrentChallengeInfo();
     }
 
-    public function fromDB(?string $uid = null)
+    public function fromDB(?string $uid = null): Container
     {
         $uid = $uid ?? $this->getUid();
-
-        if (!$this->exists($uid)) {
-            return;
-        }
 
         return Container::fromArray(
             $this->repository->get(Table::CHALLENGES, 'Uid', $uid)
@@ -79,19 +75,16 @@ class ChallengeService
 
     public function updateChallengeInDb(Container $challange): void
     {
-        if (!$this->exists($challange->get('UId'))) {
-            return;
-        }
+        $update = [
+            'Name' => $challange->get('Name'),
+            'Author' => $challange->get('Author')
+        ];
 
-        $this->repository->update(Table::CHALLENGES, $challange);
+        $this->repository->update(Table::CHALLENGES, $update, $challange->get('UId'));
     }
 
     public function deleteChallengeInDb(string $uid): void
     {
-        if (!$this->exists($uid)) {
-            return;
-        }
-
         $this->repository->delete(Table::CHALLENGES, 'Uid', $uid);
     }
 
@@ -129,17 +122,15 @@ class ChallengeService
         return $c;
     }
 
-    private function exists(string $uid): bool
-    {
-        return $this->repository->exists(Table::CHALLENGES, 'Uid', $uid);
-    }
 
     private function createChallengeInDb(): void
     {
-        if ($this->exists($this->getUid())) {
-            return;
-        }
-
-        $this->repository->insert(Table::CHALLENGES, $this->getCurrentChallengeInfo());
+        $data = [
+            'Uid'         => $this->gbx->UId,
+            'Name'        => $this->gbx->name,
+            'Author'      => $this->gbx->author,
+            'Environment' => $this->gbx->envir
+        ];
+        $this->repository->insert(Table::CHALLENGES, $data, $this->gbx->UId);
     }
 }

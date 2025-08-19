@@ -32,6 +32,6 @@ class Panels
         //Vote panel
         $voteFile = "{$folder}{$_ENV['vote_panel']}";
         Aseco::console('Default vote panel [{1}]', $_ENV['vote_panel']);
-        $this->votePanel = Aseco::safeFileGetContents($voteFile);
+        $this->votePanel = $this->widgetBuilder->render($voteFile);
     }
 }

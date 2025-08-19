@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Repository;
 
-use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Database\{Fluent, Table};
 
 class RepositoryManager
@@ -13,32 +12,26 @@ class RepositoryManager
     {
     }
 
-    public function insert(Table $table, Container $c): void
+    public function insert(Table $table, array $updateData, string $where): void
     {
-        $prepared = $this->getData($table, $c);
-        $check = $prepared['check'];
+        $check = $this->getCheck($table, $where);
 
         if ($this->exists($table, $check['column'], $check['value'])) {
             return;
         }
 
-        $data = $prepared['data'];
-
-        $this->fluent->query->insertInto($table->value)->values($data)->execute();
+        $this->fluent->query->insertInto($table->value)->values($updateData)->execute();
     }
 
-    public function update(Table $table, Container $c): void
+    public function update(Table $table, array $updateData, string $where): void
     {
-        $prepared = $this->getData($table, $c);
-        $check = $prepared['check'];
+        $check = $this->getCheck($table, $where);
 
         if (!$this->exists($table, $check['column'], $check['value'])) {
             return;
         }
 
-        $data = $prepared['data'];
-
-        $this->fluent->query->update($table->value)->set($data)->execute();
+        $this->fluent->query->update($table->value)->set($updateData)->execute();
     }
 
     public function delete(Table $table, string $column, mixed $value): void
@@ -79,7 +72,7 @@ class RepositoryManager
         }
     }
 
-    public function exists(Table $table, string $column, mixed $value): bool
+    private function exists(Table $table, string $column, mixed $value): bool
     {
         return $this->fluent->query
             ->from($table->value)
@@ -88,124 +81,72 @@ class RepositoryManager
             ->fetch($column) !== false;
     }
 
-    private function getData(Table $table, Container $c): array
+    private function getCheck(Table $table, string $c): array
     {
         return match ($table->value) {
-            'players' => $this->preparePlayerData($c),
-            'challenges' => $this->prepareChallengeData($c),
-            'records' => $this->prepareRecordsData($c),
-            'players_extra' => $this->preparePlayersExtraData($c),
-            'rs_karma' => $this->prepareRsKarmaData($c),
-            'rs_rank' => $this->prepareRsRankData($c),
+            'players'       => $this->playerCheck($c),
+            'challenges'    => $this->challengeCheck($c),
+            'records'       => $this->recordsCheck($c),
+            'players_extra' => $this->playersExtraCheck($c),
+            'rs_karma'      => $this->rsKarmaCheck($c),
+            'rs_rank'       => $this->rsRankCheck($c),
             default => throw new \InvalidArgumentException(
                 "No data preparation method defined for table: {$table->value}"
             )
         };
     }
 
-    private function prepareChallengeData(Container $c): array
+    private function challengeCheck(string $check): array
     {
         return [
-            'data' => [
-                'Uid'         => $c->get('UId'),
-                'Name'        => $c->get('Name'),
-                'Author'      => $c->get('Author'),
-                'Environment' => $c->get('Environnement')
-            ],
-            'check' => [
-                'column' => 'Uid',
-                'value'  => $c->get('UId'),
-            ]
+            'column' => 'Uid',
+            'value'  => $check,
         ];
     }
 
-    private function preparePlayerData(Container $c): array
+    private function playerCheck(string $check): array
     {
         return [
-            'data' => [
-                'Login'      => $c->get('Login'),
-                'Game'       => $c->get('Game'),
-                'NickName'   => $c->get('NickName'),
-                'playerID'   => $c->get('Login'),
-                'Nation'     => $c->get('Nation'),
-                'Wins'       => $c->get('Wins', 0),
-                'TimePlayed' => $c->get('TimePlayed', 0),
-                'TeamName'   => $c->get('TeamName', ''),
-                'LastSeen'   => date('Y-m-d H:i:s'),
-            ],
-            'check' => [
-                'column' => 'playerID',
-                'value'  => $c->get('Login'),
-            ]
-        ];
-    }
-
-    private function preparePlayersExtraData(Container $c): array
-    {
-        return [
-        'data' => [
-            'cps'        => $c->get('Cps', -1),
-            'dedicps'    => $c->get('Dedicps', -1),
-            'donations'  => $c->get('Donations', 0),
-            'style'      => $c->get('Style', ''),
-            'panels'     => $c->get('Panels', ''),
-            'playerID'   => $c->get('PlayerID', ''),
-        ],
-        'check' => [
             'column' => 'playerID',
-            'value'  => $c->get('PlayerID'),
-        ]
+            'value'  => $check,
         ];
     }
 
-    private function prepareRecordsData(Container $c): array
+    private function playersExtraCheck(string $check): array
     {
         return [
-        'data' => [
-            'ChallengeId' => $c->get('ChallengeId', ''),
-            'Times'       => $c->has('Times') ? json_encode($c->get('Times')) : '{}',
-            'Date'        => date('Y-m-d H:i:s'),
-            'Checkpoints' => $c->has('Checkpoints') ? json_encode($c->get('Checkpoints')) : '{}',
-        ],
-        'check' => [
+            'column' => 'playerID',
+            'value'  => $check,
+        ];
+    }
+
+    private function recordsCheck(string $check): array
+    {
+        return [
             'column' => 'ChallengeId',
-            'value'  => $c->get('ChallengeId'),
-        ]
+            'value'  => $check,
         ];
     }
 
-    private function prepareRsKarmaData(Container $c): array
+    /**
+     * Undocumented function
+     *
+     * @param string $check playerID|challangeID
+     * @return array
+     */
+    private function rsKarmaCheck(string $check): array
     {
         return [
-        'data' => [
-            'ChallengeId'       => $c->get('ChallengeId', ''),
-            'playerID'          => $c->get('PlayerId', ''),
-            'Score'             => $c->get('score', 0),
-            'Plus'              => $c->get('plus', 0),
-            'PlusPlus'          => $c->get('plusplus', 0),
-            'PlusPlusPlus'      => $c->get('plusplusplus', 0),
-            'Minus'             => $c->get('minus', 0),
-            'MinusMinus'        => $c->get('minusminus', 0),
-            'MinusMinusMinus'   => $c->get('minusminusminus', 0),
-        ],
-        'check' => [
             'column' => 'playerID',
-            'value'  => $c->get('PlayerId') . '|' . $c->get('ChallengeId'),
-        ]
+            'value'  => $check
         ];
     }
 
-    private function prepareRsRankData(Container $c): array
+    private function rsRankCheck(string $check): array
     {
         return [
-        'data' => [
-            'playerID'  => $c->get('PlayerId', ''),
-            'avg_score' => $c->get('avg_score', 0.000),
-        ],
-        'check' => [
             'column' => 'playerID',
-            'value'  => $c->get('PlayerId'),
-        ]
+            'value'  => $check,
         ];
     }
 }
