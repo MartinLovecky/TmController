@@ -64,7 +64,6 @@ class Server
 
     public function setVersion(Container $version): void
     {
-        self::$game = $version->get('Name');
         self::$version = $version->get('Version');
         self::$build = $version->get('Build');
     }

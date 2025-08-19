@@ -25,10 +25,6 @@ class RecordService
         string $playerId,
         int $newTime
     ): void {
-        if (!$this->exists($challengeId)) {
-            return;
-        }
-
         $times = $this->repository->get(Table::RECORDS, 'ChallengeId', $challengeId);
 
         // Filter out existing player's entry if it exists
@@ -51,24 +47,23 @@ class RecordService
         usort($times, fn ($a, $b) => $a['time'] <=> $b['time']);
         $times = array_slice($times, 0, 30);
 
-        $record = Container::fromArray([
-            'ChallengeId' => $challengeId,
+        //TODO : Checkpoints
+        $record = [
             'Times' => $times
-        ]);
+        ];
 
-        $this->repository->update(Table::RECORDS, $record);
+        $this->repository->update(Table::RECORDS, $record, $challengeId);
     }
 
     public function getRecord(string $challengeId): Container
     {
-        if (!$this->exists($challengeId)) {
-            return Container::fromArray([
-                'Times' => []
-            ], true);
+        /** @var ?array $record */
+        $record = $this->repository->get(Table::RECORDS, 'ChallengeId', $challengeId);
+
+        if (!isset($record)) {
+            return Container::fromArray([]);
         }
 
-        /** @var array $record */
-        $record = $this->repository->get(Table::RECORDS, 'ChallengeId', $challengeId);
         $record['Times'] = json_decode($record['Times'], true);
         $record['Checkpoints'] = json_decode($record['Checkpoints'], true);
 
@@ -84,15 +79,13 @@ class RecordService
         return [];
     }
 
-    public function createRecord(string $challengeId, Container $records): void
+    public function createEmptyRecord(string $challengeId): void
     {
-        if (!$this->exists($challengeId)) {
-            $this->repository->insert(Table::RECORDS, $records);
-        }
-    }
-
-    private function exists(string $challengeId): bool
-    {
-        return $this->repository->exists(Table::RECORDS, 'ChallengeId', $challengeId);
+        $data = [
+            'challengeId' => $challengeId,
+            'Times' => '{}',
+            'Checkpoints' => '{}'
+        ];
+        $this->repository->insert(Table::RECORDS, $data, $challengeId);
     }
 }

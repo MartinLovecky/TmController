@@ -40,7 +40,7 @@ class Checkpoints
             Table::PLAYERS_EXTRA,
             'playerID',
             $login,
-            ['cps', 'dedirec']
+            ['cps', 'dedicps']
         );
 
         if (is_array($cps)) {
@@ -56,8 +56,8 @@ class Checkpoints
     {
         $login = $player->get('Login');
         $update = [
-            'cps' => $this->checkpoints[$login]['cps'],
-            'dedirec' => $this->checkpoints[$login]['dedirec'],
+            'cps' => $this->checkpoints[$login]['loclrec'],
+            'dedicps' => $this->checkpoints[$login]['dedirec'],
         ];
         $this->repositoryManager->update(Table::PLAYERS_EXTRA, $update, $login);
 

@@ -170,7 +170,7 @@ class Dedimania
             $this->updateServerPlayers()
         );
 
-        dd($response); //auth
+        //auth
     }
 
     private function auth(): array
@@ -192,7 +192,7 @@ class Dedimania
             [
                 'methodName' => 'dedimania.PlayerArrive',
                 'params' => [
-                    'Game' => 'TMF',
+                    'Game' => Server::$game,
                     'Login' => $player->get('Login'),
                     'Nation' => $player->get('Nation'),
                     'Nickname' => $player->get('NickName'),
@@ -217,7 +217,7 @@ class Dedimania
                     'Name' => $challenge->get('Name'),
                     'Environment' => $challenge->get('Environnement'),
                     'Author' => $challenge->get('Author'),
-                    'Game' => 'TMF',
+                    'Game' => Server::$game,
                     'Mode' => $challenge->get('Options.GameMode'),
                     'SrvInfos' => $this->serverInfo(),
                     'MaxGetTimes' => $this->serverMaxRank,
@@ -245,7 +245,7 @@ class Dedimania
             [
                 'methodName' => 'dedimania.UpdateServerPlayers',
                 'params' => [
-                    'Game' => 'TMF',
+                    'Game' => Server::$game,
                     'Mode' => 1,//TODO: add map mode in challengeService return int
                     'SrvInfo' => $this->serverInfo(),
                     'Players' => $this->players()
@@ -278,7 +278,7 @@ class Dedimania
         $info = [];
         $this->playerService->eachPlayer(function (Container $player) {
             $info[] = [
-                'Game' => 'TMF',
+                'Game' => Server::$game,
                 'Login' => $player->get('Login'),
                 'Nation' => $player->get('Nation'),
                 'TeamName' =>  $player->get('LadderStats.TeamName'),
@@ -296,13 +296,13 @@ class Dedimania
         return [
             'methodName' => 'dedimania.Authenticate',
             'params' => [[
-                'Game' => 'TMF',
+                'Game' => Server::$game,
                 'Login' => $this->config->get('masterserver_account.login'),
                 'Password' => $this->config->get('masterserver_account.password'),
                 'Tool' => 'Xaseco',
                 'Version' => '1.16',
                 'Nation' =>  $this->config->get('masterserver_account.nation'),
-                'Packmask' => 'United'
+                'Packmask' => Server::$packmask //'United'
             ]]
         ];
     }
