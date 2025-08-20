@@ -6,10 +6,11 @@ namespace Yuhzel\TmController\Plugins;
 
 use Yuhzel\TmController\App\Aseco;
 use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Plugins\ManiaLinks;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Plugins\Manager\EventContext;
-use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 use Yuhzel\TmController\Services\{DedimaniaClient, Server};
+use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class Dedimania
 {
@@ -24,6 +25,7 @@ class Dedimania
         protected DedimaniaClient $dedimaniaClient,
         protected EventContext $eventContext,
         protected ChallengeService $challengeService,
+        protected ManiaLinks $maniaLinks,
         protected PlayerService $playerService,
     ) {
         $this->dediLastSent = time();
@@ -39,12 +41,13 @@ class Dedimania
         $configFile = Aseco::jsonFolderPath() . 'dedimania.json';
         $this->config = Container::fromJsonFile($configFile, false);
         $this->config
-        ->set('masterserver_account.login', $_ENV['dedi_username'])
-        ->set('masterserver_account.password', $_ENV['dedi_code'])
-        ->set('masterserver_account.nation', $_ENV['dedi_nation']);
+            ->set('masterserver_account.login', $_ENV['dedi_username'])
+            ->set('masterserver_account.password', $_ENV['dedi_code'])
+            ->set('masterserver_account.nation', $_ENV['dedi_nation']);
         Aseco::console('************* (Dedimania) *************');
         $this->dedimaniaConnect();
         Aseco::console('------------- (Dedimania) -------------');
+        $this->dediLastSent = time();
     }
 
     /**
@@ -81,6 +84,10 @@ class Dedimania
         }
     }
 
+    public function onPlayerDisconnect()
+    {
+    }
+
     /**
      *
      * @return void
@@ -88,13 +95,20 @@ class Dedimania
     public function onEverySecond(): void
     {
         if ($this->requestDone) {
-            $this->dedmimaniaAnnounce();
+            $this->dedimaniaAnnounce();
+            return;
         } else {
             $this->dedimaniaConnect();
+            return;
         }
     }
 
-    public function onNewChallenge()
+    /**
+     * Undocumented function
+     *
+     * @return void
+     */
+    public function onNewChallenge(): void
     {
         $response = $this->dedimaniaClient->request(
             'currentChallenge',
@@ -110,29 +124,76 @@ class Dedimania
         /** @var array<int,Container> $records */
         $records = $response->get('1.Records');
 
-        if (!empty($records)) {
+        if (empty($records)) {
+            return;
+        }
+
+        // Normalize nicknames
+        foreach ($records as $rec) {
+            $rec->set('NickName', str_replace("\n", '', $rec->get('NickName')));
+        }
+
+        foreach ($checkpoints as $login => &$cp) {
+            // Try to find the player's own record
+            $record = null;
             foreach ($records as $rec) {
-                $rec->set('NickName', str_replace("\n", '', $rec->get('NickName')));
-            }
-            foreach ($checkpoints as $login => &$cp) {
-                // Try to find the player's own record
-                $record = null;
-                foreach ($records as $rec) {
-                    if ($rec->get('Login') === $login) {
-                        $record = $rec;
-                        break;
-                    }
+                if ($rec->get('Login') === $login) {
+                    $record = $rec;
+                    break;
                 }
-
-                if ($record === null) {
-                    $record = $records[0];
-                }
-
-                $cp['bestFin'] = $record->get('Best');    // Best time
-                $cp['bestCps'] = $record->get('Checks');  // Checkpoints
             }
+
+            // If no personal record, fall back to best (first)
+            if ($record === null) {
+                $record = $records[0];
+            }
+
+            $cp['bestFin'] = $record->get('Best');    // Best time
+            $cp['bestCps'] = $record->get('Checks');  // Checkpoints
+
+            // Format time
+            $time = $this->challengeService->getGameMode() === 'stunts'
+            ? str_pad($cp['bestFin'], 5, ' ', STR_PAD_LEFT)
+            : Aseco::formatTime($cp['bestFin']);
+
+            // Store in ManiaLinks global
+            $maniaLinks = $this->eventContext->data[ManiaLinks::class]['mlRecords'];
+            $maniaLinks['dedi'] = $time;
+
+            // Get player object
+            $player = $this->playerService->getPlayerByLogin($login);
+
+            // Determine player's own record time
+            $ownRecordTime = $record && $record->get('Best') > 0
+            ? ($this->challengeService->getGameMode() === 'stunts'
+                ? str_pad($record->get('Best'), 5, ' ', STR_PAD_LEFT)
+                : Aseco::formatTime($record->get('Best')))
+                : ($this->challengeService->getGameMode() === 'stunts' ? '  ---' : '   --.--');
+
+            // Display panel
+            $this->maniaLinks->displayRecPanel($player, $ownRecordTime);
         }
     }
+
+    public function onEndRace(Container $data)
+    {
+        $maniaLinks = $this->eventContext->data[ManiaLinks::class]['mlRecords'];
+        $maniaLinks['dedi'] = $this->challengeService->getGameMode() === 'stunts' ? '  ---' : '   --.--';
+        if ($this->challengeService->getGameMode() === 'stunts') {
+            return;
+        }
+
+        dd($data);
+    }
+
+    public function onPlayerFinish()
+    {
+    }
+
+    public function onPlayerManialinkPageAnswer()
+    {
+    }
+
     private function dedimaniaConnect(): void
     {
         $cfg = $this->config;
@@ -153,7 +214,6 @@ class Dedimania
 
         Aseco::console('Dedimania Connection and status ok!');
         $this->requestDone = true;
-        $this->dediLastSent = time();
         return;
     }
 
@@ -162,15 +222,14 @@ class Dedimania
         return $this->dedimaniaClient->request('authenticate', $this->auth())->get('0');
     }
 
-    private function dedmimaniaAnnounce()
+    private function dedimaniaAnnounce(): void
     {
-        $this->dediLastSent = time();
-        $response = $this->dedimaniaClient->request(
+        $this->dedimaniaClient->request(
             'UpdateServerPlayers',
             $this->updateServerPlayers()
         );
-
-        //auth
+        $this->dediLastSent = time();
+        $this->requestDone = true;
     }
 
     private function auth(): array

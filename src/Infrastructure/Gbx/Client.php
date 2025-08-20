@@ -126,6 +126,11 @@ class Client
         return $this->cb_message;
     }
 
+    public function popCBResponse(): ?Container
+    {
+        return array_shift($this->cb_message) ?: null;
+    }
+
     public function terminate(): void
     {
         $this->socket->close();

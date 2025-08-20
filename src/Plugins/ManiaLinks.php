@@ -11,7 +11,7 @@ use Yuhzel\TmController\Repository\PlayerService;
 
 class ManiaLinks
 {
-    private array $mlRecords = ['local' => '   --.--', 'dedi' => '   --.--', 'tmx' => '   --.--'];
+    public array $mlRecords = ['local' => '   --.--', 'dedi' => '   --.--', 'tmx' => '   --.--'];
 
     public function __construct(
         protected Client $client,

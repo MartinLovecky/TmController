@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\App;
 
+use Yuhzel\TmController\App\Log;
 use Yuhzel\TmController\Core\Container;
 use Yuhzel\TmController\Services\Server;
 use Yuhzel\TmController\Core\Enums\RestartMode;
@@ -54,6 +55,7 @@ class TmController
         while (true) {
             $starttime = microtime(true);
             $this->executeCallbacks();
+            usleep(100_000);
             //$this->pm->callFunctions('onMainLoop');
 
             $this->currsecond = time();
@@ -344,46 +346,92 @@ class TmController
         return Aseco::formatTime($score);
     }
 
-    private function endRace($race)
+    private function endRace(Container $race): void
     {
-        dd($race);
+        if ($race->get('4')) {
+            $this->restarting = RestartMode::QUICK;
+
+            if ($this->changingmode) {
+                $this->restarting = RestartMode::FULL;
+            } else {
+                dd($race);
+            }
+
+            if ($this->restarting === RestartMode::FULL) {
+                Aseco::consoleText('Restart Challenge (with ChatTime)');
+            } else {
+                Aseco::consoleText('Restart Challenge (instant)');
+                $this->pm->callFunctions('onRestartChallenge', $race);
+                return;
+            }
+        }
+
+        Server::$gameState = 'score';
+        if ($this->restarting === RestartMode::NONE) {
+            Aseco::console('End Challenge');
+        }
+
+        $this->pm->callPluginFunction('chatCmd', 'trackrecs', null, 'after');
+
+        $this->pm->callFunctions('onEndRace1', $race);
+        $this->pm->callFunctions('onEndRace', $race);
     }
 
     private function executeCallbacks(): void
     {
         $this->client->readCallBack();
-        $calls = $this->client->getCBResponses();
 
-        if (empty($calls)) {
-            return;
-        }
-        $ps = $this->playerService;
-        /** @var ?Container $call*/
-        while ($call = array_shift($calls)) {
+        while ($call = $this->client->popCBResponse()) {
             match ($call->get('methodName')) {
-                'TrackMania.PlayerConnect' => $this->playerConnect($ps->getPlayerByLogin($call['login'])),
-                'TrackMania.PlayerDisconnect' => $this->disconnect($ps->getPlayerByLogin($call['login'])),
-                'TrackMania.PlayerChat' => $this->playerChat($call),
-                'TrackMania.PlayerServerMessageAnswer' => $this->pm->callPluginFunction('rasp', 'messageAnswer', $call),
-                'TrackMania.PlayerCheckpoint' => $this->pm->callFunctions('onCheckpoint', $call),
-                'TrackMania.PlayerFinish' => $this->playerFinish($call),
-                'TrackMania.BeginRound' => $this->beginRound(),
-                'TrackMania.StatusChanged' => $this->statusChanged(),
-                'TrackMania.EndRound' => $this->endRound(),
-                'TrackMania.BeginChallenge' => dd($call), // beginRace
-                'TrackMania.EndChallenge' => $this->endRace($call),
-                'TrackMania.PlayerManialinkPageAnswer' => $this->pm->callFunctions('onPlayerLink', $call),
-                'TrackMania.BillUpdated' => dd($call), // onBillUpdated
-                'TrackMania.ChallengeListModified' => dd($call), // onChallengeListModified
-                'TrackMania.PlayerInfoChanged' => dd($call), // this->playerInfoChanged
-                'TrackMania.PlayerIncoherence' => dd($call), // onPlayerIncoherence
-                'TrackMania.TunnelDataReceived' => dd($call), // onPlayerIncoherence
-                'TrackMania.Echo' => dd($call), // onEcho
-                'TrackMania.ManualFlowControlTransition' => dd($call), // onMfct
-                'TrackMania.VoteUpdated' => dd($call), // onVoteUpdated
+                'TrackMania.PlayerConnect' => $this->callBackConnect($call),
+                // $this->disconnect
+                'TrackMania.PlayerDisconnect' => Log::debug('PlayerDisconnect', $call->toArray(), 'PlayerDisconnect'),
+                // this->playerChat($call),
+                'TrackMania.PlayerChat' => Log::debug('PlayerChat', $call->toArray(), 'PlayerChat'),
+                // this->pm->callPluginFunction('rasp', 'messageAnswer', $call)
+                'TrackMania.PlayerServerMessageAnswer' => Log::debug('PlayerAnswer', $call->toArray(), 'PlayerAnswer'),
+                //$this->pm->callFunctions('onCheckpoint', $call)
+                'TrackMania.PlayerCheckpoint' => Log::debug('PlayerCheckpoint', $call->toArray(), 'PlayerCheckpoint'),
+                // $this->playerFinish($call),
+                'TrackMania.PlayerFinish' => Log::debug('PlayerFinish', $call->toArray(), 'PlayerFinish'),
+                // this->beginRound()
+                'TrackMania.BeginRound' => Log::debug('BeginRound', $call->toArray(), 'BeginRound'),
+                // $this->statusChanged()
+                'TrackMania.StatusChanged' => Log::debug('StatusChanged', $call->toArray(), 'StatusChanged'),
+                // $this->endRound()
+                'TrackMania.EndRound' => Log::debug('EndRound', $call->toArray(), 'EndRound'),
+                // beginRace
+                'TrackMania.BeginChallenge' => Log::debug('beginRace', $call->toArray(), 'beginRace'),
+                // $this->endRace($call)
+                'TrackMania.EndChallenge' => Log::debug('EndChallenge', $call->toArray(), 'EndChallenge'),
+                // onPlayerLink
+                'TrackMania.PlayerManialinkPageAnswer' => Log::debug('onPlayerLink', $call->toArray(), 'onPlayerLink'),
+                // onBillUpdated
+                'TrackMania.BillUpdated' => Log::debug('BillUpdated', $call->toArray(), 'BillUpdated'),
+                // onChallengeListModified
+                'TrackMania.ChallengeListModified' => Log::debug('List', $call->toArray(), 'List'),
+                // onPlayerInfoChanged
+                'TrackMania.PlayerInfoChanged' => Log::debug('InfoC', $call->toArray(), 'InfoC'),
+                // onPlayerIncoherence
+                'TrackMania.PlayerIncoherence' => Log::debug('PlayerI', $call->toArray(), 'PlayerI'),
+                // onTunnelDataReceived
+                'TrackMania.TunnelDataReceived' => Log::debug('Tunenel', $call->toArray(), 'Tunenel'),
+                // echo
+                'TrackMania.Echo' => Log::debug('Echo', $call->toArray(), 'Echo'),
+                // ManualFlowControlTransition
+                'TrackMania.ManualFlowControlTransition' => Log::debug('FlowControl', $call->toArray(), 'FlowControl'),
+                // onVoteUpdated
+                'TrackMania.VoteUpdated' => Log::debug('VoteUpdated', $call->toArray(), 'VoteUpdated'),
                 default => dd("Handle:? {$call->get('methodName')}")
             };
         }
+    }
+
+    private function callBackConnect(Container $call): void
+    {
+        $info = $this->client->query('GetPlayerInfo', [$call['chatType'], 1]);
+        $this->playerService->addPlayer($info->get('Login'));
+        $this->playerConnect($this->playerService->getPlayerByLogin($info->get('Login')));
     }
 
     //NOTE: We dont register commnad for tmf
@@ -460,7 +508,6 @@ class TmController
 
     private function playerFinish(Container $finish): void
     {
-        dd($finish);
         $date = date('Y/m/d;H:i:s');
         $uid = $finish['0']; // $this->challengeService->getUid()
         $login = $finish['login'];

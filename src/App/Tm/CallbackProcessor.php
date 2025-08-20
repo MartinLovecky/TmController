@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Mlkali\Sa\Controllers;
+namespace Yuhzel\TmController\App\Tm;
 
 use Yuhzel\TmController\App\Tm\{
     ChatHandler,

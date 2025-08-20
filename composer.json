@@ -20,7 +20,8 @@
         "league/container": "5.x-dev",
         "envms/fluentpdo": "dev-master",
         "vlucas/phpdotenv": "^5.6@dev",
-        "twig/twig": "4.x-dev"
+        "twig/twig": "4.x-dev",
+        "monolog/monolog": "^3.0@dev"
     },
     "scripts": {
         "fix": "phpcbf --standard=PSR12 src",

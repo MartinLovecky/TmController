@@ -52,6 +52,7 @@ class PluginManager
             }
             if (is_object($pluginInstance)) {
                 $this->plugins[$propertyName] = $pluginInstance;
+                $this->eventContext->saveToContext($pluginInstance);
             }
         }
     }

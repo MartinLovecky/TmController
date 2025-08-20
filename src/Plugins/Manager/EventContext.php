@@ -10,16 +10,31 @@ class EventContext
 
     public function saveToContext(object $class): void
     {
-        $props = (new \ReflectionObject($class))->getProperties(
-            \ReflectionProperty::IS_PRIVATE |
-            \ReflectionProperty::IS_PROTECTED |
-            \ReflectionProperty::IS_PUBLIC
-        );
+        $className = get_class($class);
 
-        $this->data[get_class($class)] = [];
+        $excluded = [
+            self::class,
+        ];
+
+        if (in_array($className, $excluded, true)) {
+            return;
+        }
+
+         $props = (new \ReflectionObject($class))->getProperties(
+             \ReflectionProperty::IS_PRIVATE |
+             \ReflectionProperty::IS_PROTECTED |
+             \ReflectionProperty::IS_PUBLIC
+         );
+
+        $this->data[$className] = [];
 
         foreach ($props as $prop) {
             $name = $prop->getName();
+
+            if (!$prop->isInitialized($class)) {
+                continue;
+            }
+
             $prop->setAccessible(true);
             $value = $prop->getValue($class);
 

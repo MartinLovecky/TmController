@@ -60,6 +60,10 @@ class Container extends ArrayObject implements ContainerInterface
             return $default;
         }
 
+        if (ctype_digit((string)$lastKey)) {
+            $lastKey = (int)$lastKey;
+        }
+
         return $parent->offsetExists($lastKey) ? $parent[$lastKey] : $default;
     }
 
