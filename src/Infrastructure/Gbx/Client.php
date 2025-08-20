@@ -121,11 +121,6 @@ class Client
         return $somethingReceived;
     }
 
-    public function getCBResponses(): array
-    {
-        return $this->cb_message;
-    }
-
     public function popCBResponse(): ?Container
     {
         return array_shift($this->cb_message) ?: null;

@@ -24,13 +24,6 @@ class Log
                 Level::Debug
             );
 
-            // $formatter = new LineFormatter(
-            //     "[%datetime%] %level_name% [$channel]: %message%\n%context%\n\n",
-            //     "Y-m-d H:i:s",
-            //     true,  // allow multiline
-            //     true   // use print_r for arrays/objects
-            // );
-
             $formatter = new JsonFormatter();
             $formatter->includeStacktraces(true); // optional
             $formatter->setJsonPrettyPrint(true); // pretty print JSON

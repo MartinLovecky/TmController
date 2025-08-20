@@ -36,7 +36,7 @@ class Checkpoints
             $this->checkpoints[$login]['currFin'] = 0;
         }
 
-        $cps = $this->repositoryManager->get(
+        $cps = $this->repositoryManager->fetch(
             Table::PLAYERS_EXTRA,
             'playerID',
             $login,

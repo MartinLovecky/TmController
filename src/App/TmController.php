@@ -200,9 +200,8 @@ class TmController
         $this->pm->callFunctions('onPlayerConnect', $player);
     }
 
-    private function disconnect(Container $player)
+    private function playerDisconnect(Container $player): void
     {
-        //NOTE: we cant rly remove from $player
         $playTime = time() - $player->get('created');
         Aseco::console(
             '>> player {1} left the game [{2} : {3}]',
@@ -383,15 +382,12 @@ class TmController
 
         while ($call = $this->client->popCBResponse()) {
             match ($call->get('methodName')) {
-                'TrackMania.PlayerConnect' => $this->callBackConnect($call),
-                // $this->disconnect
-                'TrackMania.PlayerDisconnect' => Log::debug('PlayerDisconnect', $call->toArray(), 'PlayerDisconnect'),
-                // this->playerChat($call),
-                'TrackMania.PlayerChat' => Log::debug('PlayerChat', $call->toArray(), 'PlayerChat'),
+                'TrackMania.PlayerConnect'    => $this->callBackConnect($call),
+                'TrackMania.PlayerDisconnect' => $this->callBackDisconnect($call),
+                'TrackMania.PlayerChat'       => $this->playerChat($call),
                 // this->pm->callPluginFunction('rasp', 'messageAnswer', $call)
                 'TrackMania.PlayerServerMessageAnswer' => Log::debug('PlayerAnswer', $call->toArray(), 'PlayerAnswer'),
-                //$this->pm->callFunctions('onCheckpoint', $call)
-                'TrackMania.PlayerCheckpoint' => Log::debug('PlayerCheckpoint', $call->toArray(), 'PlayerCheckpoint'),
+                'TrackMania.PlayerCheckpoint' => $this->pm->callFunctions('onCheckpoint', $call),
                 // $this->playerFinish($call),
                 'TrackMania.PlayerFinish' => Log::debug('PlayerFinish', $call->toArray(), 'PlayerFinish'),
                 // this->beginRound()
@@ -429,30 +425,35 @@ class TmController
 
     private function callBackConnect(Container $call): void
     {
-        $info = $this->client->query('GetPlayerInfo', [$call['chatType'], 1]);
-        $this->playerService->addPlayer($info->get('Login'));
-        $this->playerConnect($this->playerService->getPlayerByLogin($info->get('Login')));
+        $player = $this->playerService->getPlayerInfo($call['chatType']);
+        $this->playerService->addPlayer($player->get('Login'));
+        $this->playerConnect($this->playerService->getPlayerByLogin($player->get('Login')));
     }
 
-    //NOTE: We dont register commnad for tmf
+    private function callBackDisconnect(Container $call): void
+    {
+        $player = $this->playerService->getPlayerByLogin($call['chatType']);
+        $this->playerDisconnect($player);
+        $this->playerService->removePlayer($player);
+    }
+
     private function playerChat(Container $call): void
     {
-        $login = $call['login'];
-        $command = $call['message'];
+        $login = $call->get('login');
+        $command = $call->get('message');
 
         $this->pm->callFunctions('onChat', $call);
 
         if ($command == '' || $command == '???') {
             Aseco::console(
                 '{1} attempted to use chat command "{2}"',
-                $call->get('1'),
+                $login,
                 $command
             );
         } elseif (str_starts_with($command, '/')) {
             $cmd = substr($command, 1);
             $params = explode(' ', $cmd, 2);
             $name = ucfirst(str_replace(['+', '-'], ['plus', 'dash'], $params[0]));
-
             $params[1] = isset($params[1]) ? trim($params[1]) : '';
             $auth = $this->playerService->getPlayerByLogin($login);
 
@@ -474,7 +475,6 @@ class TmController
                     $params[0],
                     $params[1]
                 );
-                trigger_error("Player object for {$login} not found", E_USER_WARNING);
             }
         }
     }

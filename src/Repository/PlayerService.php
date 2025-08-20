@@ -23,7 +23,7 @@ class PlayerService
         protected RepositoryManager $repository,
         protected Styles $styles,
     ) {
-        // Initialize with first connected player as master admin
+        // master admin is allways frist result
         if ($firstLogin = $this->getFirstPlayerLogin()) {
             $this->addPlayer($firstLogin, true);
         }
@@ -67,6 +67,21 @@ class PlayerService
         $this->repository->insert(Table::PLAYERS_EXTRA, $this->extraPlayerData($login), $login);
     }
 
+    public function removePlayer(Container $player, bool $fromDB = false): void
+    {
+        $login = $player->get('Login');
+
+        if ($player->has('isMasterAdmin') || !$this->hasPlayer($login)) {
+            return;
+        }
+
+        $this->container->delete($login);
+
+        if ($fromDB) {
+            $this->deleteFromDB($login);
+        }
+    }
+
     /**
      * Sync currently connected players (after restart).
      */
@@ -90,10 +105,9 @@ class PlayerService
         }
     }
 
-    public function delete(string $playerID): void
+    private function deleteFromDB(string $playerID): void
     {
         if (in_array($playerID, $this->getAllLogins())) {
-            $this->container->delete($playerID);
             $this->repository->delete(Table::PLAYERS, 'playerID', $playerID);
             $this->repository->delete(Table::PLAYERS_EXTRA, 'playerID', $playerID);
         }
@@ -134,6 +148,11 @@ class PlayerService
     public function getDetailedPlayerInfo(string $login): Container
     {
         return $this->client->query('GetDetailedPlayerInfo', [$login], false);
+    }
+
+    public function getPlayerInfo(string $login): Container
+    {
+        return $this->client->query('GetPlayerInfo', [$login, 1]);
     }
 
     /**
