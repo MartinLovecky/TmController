@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Repository;
 
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Database\Table;
 use Yuhzel\TmController\Repository\{ChallengeService, RepositoryManager};
 
@@ -17,7 +17,7 @@ class RecordService
         //protected ChallengeService $challengeService
     ) {
         //$this->uid = //$this->challengeService->getUid();
-        //$this->createRecord($this->uid, Container::fromArray(['ChallengeId' => $this->uid]));
+        //$this->createRecord($this->uid, TmContainer::fromArray(['ChallengeId' => $this->uid]));
     }
 
     public function updateLeaderboard(
@@ -25,7 +25,7 @@ class RecordService
         string $playerId,
         int $newTime
     ): void {
-        $times = $this->repository->get(Table::RECORDS, 'ChallengeId', $challengeId);
+        $times = $this->repository->fetch(Table::RECORDS, 'ChallengeId', $challengeId);
 
         // Filter out existing player's entry if it exists
         $times = array_filter($times, fn ($entry) => $entry['playerId'] !== $playerId);
@@ -55,19 +55,19 @@ class RecordService
         $this->repository->update(Table::RECORDS, $record, $challengeId);
     }
 
-    public function getRecord(string $challengeId): Container
+    public function getRecord(string $challengeId): TmContainer
     {
         /** @var ?array $record */
-        $record = $this->repository->get(Table::RECORDS, 'ChallengeId', $challengeId);
+        $record = $this->repository->fetch(Table::RECORDS, 'ChallengeId', $challengeId);
 
         if (!isset($record)) {
-            return Container::fromArray([]);
+            return TmContainer::fromArray([]);
         }
 
         $record['Times'] = json_decode($record['Times'], true);
         $record['Checkpoints'] = json_decode($record['Checkpoints'], true);
 
-        return Container::fromArray($record);
+        return TmContainer::fromArray($record);
     }
 
     public function getRecordForPlayer(string $challengeId, string $playerId): array

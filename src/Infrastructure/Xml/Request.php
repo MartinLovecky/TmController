@@ -6,7 +6,7 @@ namespace Yuhzel\TmController\Infrastructure\Xml;
 
 use DOMElement;
 use DOMDocument;
-use Yuhzel\TmController\App\Aseco;
+use Yuhzel\TmController\App\Service\Aseco;
 use Yuhzel\TmController\Services\Arr;
 
 /**

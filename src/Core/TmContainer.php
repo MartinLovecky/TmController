@@ -6,12 +6,13 @@ namespace Yuhzel\TmController\Core;
 
 use ArrayObject;
 use ArrayIterator;
-use Yuhzel\TmController\App\Aseco;
+use Yuhzel\TmController\App\Service\Aseco;
 use Yuhzel\TmController\Core\Contracts\ContainerInterface;
 use Yuhzel\TmController\Core\Traits\{
     ArrayForwarderTrait,
     DotPathTrait
 };
+use Yuhzel\TmController\Services\Server;
 
 /**
  * Recursive container supporting dot-path access
@@ -20,7 +21,7 @@ use Yuhzel\TmController\Core\Traits\{
  *
  * @implements \ArrayAccess<string, mixed>
  */
-class Container extends ArrayObject implements ContainerInterface
+class TmContainer extends ArrayObject implements ContainerInterface
 {
     use DotPathTrait;
     use ArrayForwarderTrait;
@@ -278,7 +279,7 @@ class Container extends ArrayObject implements ContainerInterface
             return false;
         }
 
-        $filePath = Aseco::jsonFolderPath() . "{$file}.json";
+        $filePath = Server::$jsonDir . "{$file}.json";
 
         return file_put_contents($filePath, $json) !== false;
     }

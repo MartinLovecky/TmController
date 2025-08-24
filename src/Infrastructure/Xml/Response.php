@@ -7,12 +7,12 @@ namespace Yuhzel\TmController\Infrastructure\Xml;
 use DOMNode;
 use DOMElement;
 use DOMDocument;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Services\Arr;
 
 /**
  * This class handles parsing of XML-RPC responses.
- * It supports both single and multi-call responses and maps them into Container objects.
+ * It supports both single and multi-call responses and maps them into TmContainer objects.
  *
  * @author Yuhzel <yuhzel@gmail.com>
  */
@@ -34,20 +34,20 @@ class Response
     }
 
     /**
-     * Parses an XML-RPC method call into a Container structure.
+     * Parses an XML-RPC method call into a TmContainer structure.
      *
      * @param string $xml XML string representing the method call
      * @param bool $multicall set true to procces multiCall
-     * @return Container Parsed container with methodName and params
+     * @return TmContainer Parsed container with methodName and params
      * @throws \Exception If parsing fails
      */
-    public function parseMethodCall(string $xml, bool $multicall = false): Container
+    public function parseMethodCall(string $xml, bool $multicall = false): TmContainer
     {
         if (!$this->dom->loadXML($xml, LIBXML_NOCDATA | LIBXML_NOWARNING)) {
             throw new \Exception("Failed to parse XML method call.");
         }
 
-        $container = new Container();
+        $container = new TmContainer();
         $root = $this->dom->documentElement;
 
         if ($root->tagName !== 'methodCall') {
@@ -93,15 +93,15 @@ class Response
     }
 
     /**
-     * Parses an XML-RPC response into a Container structure.
+     * Parses an XML-RPC response into a TmContainer structure.
      *
      * @param string $methodName Name of the method being responded to
      * @param string $xml XML response content
      * @param bool $multicall set true to procces multiCallRequest
-     * @return Container Parsed container object with the response data
+     * @return TmContainer Parsed container object with the response data
      * @throws \Exception If the XML is malformed or missing required elements
      */
-    public function parseResponse(string $methodName, string $xml, bool $multicall = false): Container
+    public function parseResponse(string $methodName, string $xml, bool $multicall = false): TmContainer
     {
         $this->methodName = $methodName;
 
@@ -109,7 +109,7 @@ class Response
             throw new \Exception("Failed to parse XML response for, {$this->methodName}");
         }
 
-        $container = new Container();
+        $container = new TmContainer();
         $container->set('methodName', $this->methodName);
 
         $root = $this->dom->documentElement;
@@ -134,15 +134,15 @@ class Response
      * Processes a fault response and extracts faultCode and faultString.
      *
      * @param DOMElement $fault The <fault> element
-     * @param Container $container Container to update with fault data
-     * @return Container Container with fault details set
+     * @param TmContainer $container TmContainer to update with fault data
+     * @return TmContainer TmContainer with fault details set
      */
-    protected function processFault(DOMElement $fault, Container $container): Container
+    protected function processFault(DOMElement $fault, TmContainer $container): TmContainer
     {
         $valueElement = $this->getFirstDirectChild($fault, 'value');
         if ($valueElement) {
             $faultStruct = $this->processValue($valueElement?->firstChild);
-            if ($faultStruct instanceof Container) {
+            if ($faultStruct instanceof TmContainer) {
                 return $container
                 ->set('#err.faultCode', $faultStruct->get('faultCode', -1))
                 ->set('#err.faultString', $faultStruct->get('faultString', 'Unknown fault'));
@@ -158,35 +158,35 @@ class Response
      * Processes a standard <params> response.
      *
      * @param DOMElement $params The <params> element
-     * @param Container $container Container to populate with response data
-     * @return Container Updated container with parsed parameter values
+     * @param TmContainer $container TmContainer to populate with response data
+     * @return TmContainer Updated container with parsed parameter values
      */
-    protected function processParams(DOMElement $params, Container $container): Container
+    protected function processParams(DOMElement $params, TmContainer $container): TmContainer
     {
         $paramElements = $this->getDirectChildren($params, 'param');
         if (count($paramElements) === 1) {
             $valueElement = $this->getFirstDirectChild($paramElements[0], 'value');
             $processedValue = $this->processValue($valueElement?->firstChild);
 
-            return $processedValue instanceof Container
+            return $processedValue instanceof TmContainer
             ? $container->merge($processedValue)
             : $container->set('value', $processedValue);
         }
 
-        $paramsContainer = new Container();
+        $paramsTmContainer = new TmContainer();
         foreach ($paramElements as $index => $param) {
             $valueElement = $this->getFirstDirectChild($param, 'value');
-            $paramsContainer->set((string)$index, $this->processValue($valueElement?->firstChild));
+            $paramsTmContainer->set((string)$index, $this->processValue($valueElement?->firstChild));
         }
 
-        return $container->set('params', $paramsContainer);
+        return $container->set('params', $paramsTmContainer);
     }
 
     /**
      * Processes an individual <value> node based on XML-RPC type.
      *
      * @param DOMNode|null $node The <value> node
-     * @return mixed Parsed PHP value (e.g., string, int, array, Container, etc.)
+     * @return mixed Parsed PHP value (e.g., string, int, array, TmContainer, etc.)
      * @throws \Exception If the type is unknown
      */
     protected function processValue(?DOMNode $node): mixed
@@ -205,7 +205,7 @@ class Response
             'dateTime.iso8601' => new \DateTime($node->textContent),
             'base64' => base64_decode($node->textContent),
             'nil' => null,
-            'fault' => $this->processFault($node, new Container()),
+            'fault' => $this->processFault($node, new TmContainer()),
             default => throw new \Exception("Unknown element type '{$node->tagName}' in value processing.")
         };
     }
@@ -232,15 +232,15 @@ class Response
     }
 
     /**
-     * Processes a <struct> element and returns a mapped Container.
+     * Processes a <struct> element and returns a mapped TmContainer.
      *
      * @param DOMElement $element <struct> element to convert
      * @param string $parentPath Used internally for dot-prefixed keys
-     * @return Container Container populated with struct members
+     * @return TmContainer TmContainer populated with struct members
      */
-    protected function processStruct(DOMElement $element, string $parentPath = ''): Container
+    protected function processStruct(DOMElement $element, string $parentPath = ''): TmContainer
     {
-        $container = new Container();
+        $container = new TmContainer();
 
         foreach ($this->getDirectChildren($element, 'member') as $member) {
             $nameNode = $this->getFirstDirectChild($member, 'name');
@@ -262,17 +262,17 @@ class Response
     /**
      * Helper method
      *
-     * @param Container $container
+     * @param TmContainer $container
      * @param string $name
      * @param mixed $value
      * @param string $parentPath
      * @return void
      */
-    protected function setStructValue(Container $container, string $name, mixed $value, string $parentPath = ''): void
+    protected function setStructValue(TmContainer $container, string $name, mixed $value, string $parentPath = ''): void
     {
         $fullPath = $parentPath ? "$parentPath.$name" : $name;
 
-        if ($value instanceof Container) {
+        if ($value instanceof TmContainer) {
             foreach ($value->toArray() as $childKey => $childValue) {
                 $container->set("$fullPath.$childKey", $childValue);
             }
@@ -323,10 +323,10 @@ class Response
      * Processes system.multicall responses and returns them in a container.
      *
      * @param DOMElement $params The <params> element containing multiple responses
-     * @param Container $container Container to populate with the responses
-     * @return Container Container with responses keyed by index
+     * @param TmContainer $container TmContainer to populate with the responses
+     * @return TmContainer TmContainer with responses keyed by index
      */
-    protected function processMultiCallParams(DOMElement $params, Container $container): Container
+    protected function processMultiCallParams(DOMElement $params, TmContainer $container): TmContainer
     {
         $paramElements = $this->getDirectChildren($params, 'param');
 
@@ -337,6 +337,6 @@ class Response
         $valueElement = $this->getFirstDirectChild($paramElements[0], 'value');
         $outerArray   = $this->processValue($valueElement?->firstChild);
         $result = ['results' => Arr::flatten($outerArray)];
-        return Container::fromArray($result);
+        return TmContainer::fromArray($result);
     }
 }

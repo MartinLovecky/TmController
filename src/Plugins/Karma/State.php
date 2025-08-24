@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\Services\Karma;
+namespace Yuhzel\TmController\Plugins\Karma;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService, RecordService};
 
-class StateService
+class State
 {
     public array $karma = [];
     private const VOTE_TYPES = [
@@ -195,7 +195,7 @@ class StateService
         }
     }
 
-    public function initializePlayerState(Container $player): void
+    public function initializePlayerState(TmContainer $player): void
     {
         if ($player->get('OnlineRights') === 3) {
             $player->set('ManiaKarma.LotteryPayout', 0);
@@ -207,7 +207,7 @@ class StateService
         $this->initializePlayerKarma($player);
     }
 
-    private function initializePlayerKarma(Container $player): void
+    private function initializePlayerKarma(TmContainer $player): void
     {
         $uid = $this->karma['data']['uid'] ?? null;
         if (!$uid) {
@@ -224,7 +224,7 @@ class StateService
 
     public function resetForNewChallenge(): void
     {
-        $this->playerService->eachPlayer(function (Container $player) {
+        $this->playerService->eachPlayer(function (TmContainer $player) {
             $player->set('ManiaKarma.FinishedMapCount', 0);
         });
     }

@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\App;
+namespace Yuhzel\TmController\App\Service;
 
 use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\JsonFormatter;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Services\Server;
 
 class Log
 {
@@ -20,7 +22,7 @@ class Log
             $logger = new Logger($channel);
 
             $handler = new StreamHandler(
-                Aseco::path() . "logs" . DIRECTORY_SEPARATOR . "{$channel}.log",
+                Server::$logsDir . "{$channel}.log",
                 Level::Debug
             );
 

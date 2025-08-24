@@ -2,9 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\App\Tm;
+namespace Yuhzel\TmController\App\DTO;
 
-use Yuhzel\TmController\App\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
+use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Repository\PlayerService;
+use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\Plugins\Manager\PluginManager;
 
 class ServerManager
 {
@@ -15,7 +20,7 @@ class ServerManager
         private Server $server,
         private PlayerService $playerService,
         private PluginManager $pm,
-        private Container $config
+        private TmContainer $config
     ) {
     }
 

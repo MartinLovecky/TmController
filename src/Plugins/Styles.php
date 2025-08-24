@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\Core\TmContainer;
+use Yuhzel\TmController\App\Service\Aseco;
 
 class Styles
 {
-    public Container $style;
+    public TmContainer $style;
 
     public function __construct()
     {
-        $styleFile = Aseco::jsonFolderPath()
+        $styleFile =
+            Server::$jsonDir
             . 'styles'
             . DIRECTORY_SEPARATOR
             . $_ENV['window_style']
             . '.json';
         Aseco::console('Load default style [{1}]', $styleFile);
-        $this->style = Container::fromJsonFile($styleFile);
+        $this->style = TmContainer::fromJsonFile($styleFile);
     }
 }

@@ -6,8 +6,9 @@ namespace Yuhzel\TmController\Database;
 
 use PDO;
 use Envms\FluentPDO\Query;
-use Yuhzel\TmController\App\Aseco;
+use Yuhzel\TmController\App\Service\Aseco;
 use Yuhzel\TmController\Database\Table;
+use Yuhzel\TmController\Services\Server;
 
 class Fluent
 {
@@ -42,7 +43,7 @@ class Fluent
     public function executeFile(Table $table): void
     {
         $table = strtolower($table->value);
-        $filePath = Aseco::path() . "public/sql/{$table}.sql";
+        $filePath = Server::$sqlDir . "{$table}.sql";
 
         if (!file_exists($filePath)) {
             throw new \InvalidArgumentException("Invalid file path: '{$filePath}'.");

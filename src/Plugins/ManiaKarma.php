@@ -4,55 +4,55 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\Core\Container;
-use Yuhzel\TmController\Services\Karma\{
-    AuthService,
-    CommandService,
-    VoteService,
-    StateService,
-    WidgetService
+use Yuhzel\TmController\Core\TmContainer;
+use Yuhzel\TmController\Plugins\Karma\{
+    Auth,
+    Command,
+    Vote,
+    State,
+    Widget
 };
 use Yuhzel\TmController\Services\Server;
 
 class ManiaKarma
 {
     public function __construct(
-        protected AuthService $authService,
-        protected CommandService $commandService,
-        protected StateService $stateService,
-        protected VoteService $voteService,
-        protected WidgetService $widgetService,
+        protected Auth $auth,
+        protected Command $command,
+        protected State $state,
+        protected Vote $vote,
+        protected Widget $widget,
     ) {
     }
 
     public function onSync(): void
     {
-        $this->authService->authenticate();
-        $this->stateService->initializeKarmaState();
-        //$this->widgetService->getTemplate();
-        $this->widgetService->sendInitialWidgets();
+        $this->auth->authenticate();
+        $this->state->initializeKarmaState();
+        //$this->widget->getTemplate();
+        $this->widget->sendInitialWidgets();
     }
 
-    public function onChat(Container $chat): void
+    public function onChat(TmContainer $chat): void
     {
         if ($chat->get('0') === Server::$id) {
             return;
         }
-        $this->commandService->handleChatCommand($chat);
+        $this->command->handleChatCommand($chat);
     }
 
-    public function onPlayerConnect(Container $player): void
+    public function onPlayerConnect(TmContainer $player): void
     {
-        $this->widgetService->sendWelcomeMessage($player);
-        $this->commandService->handleAdminFeatures($player);
-        $this->stateService->initializePlayerState($player);
-        $this->widgetService->updatePlayerWidgets($player);
+        $this->widget->sendWelcomeMessage($player);
+        $this->command->handleAdminFeatures($player);
+        $this->state->initializePlayerState($player);
+        $this->widget->updatePlayerWidgets($player);
     }
 
-    public function onPlayerDisconnect(Container $player): void
+    public function onPlayerDisconnect(TmContainer $player): void
     {
-        $this->voteService->storeKarmaVotes();
-        $this->widgetService->closeReminderWindow($player);
+        $this->vote->storeKarmaVotes();
+        $this->widget->closeReminderWindow($player);
     }
 
     public function onPlayerFinish(object $finish_item)
@@ -64,8 +64,8 @@ class ManiaKarma
 
     public function onNewChallenge(): void
     {
-        $this->stateService->resetForNewChallenge();
-        $this->widgetService->hideAllWidgets();
+        $this->state->resetForNewChallenge();
+        $this->widget->hideAllWidgets();
     }
 
     public function onNewChallenge2()
@@ -87,7 +87,7 @@ class ManiaKarma
 
     public function onPlayerLink(array $answer): void
     {
-        $this->voteService->handleVoteResponse($answer);
+        $this->vote->handleVoteResponse($answer);
     }
 
     public function onKarmaChange()
@@ -96,6 +96,6 @@ class ManiaKarma
 
     public function onShutdown(): void
     {
-        $this->voteService->storeKarmaVotes();
+        $this->vote->storeKarmaVotes();
     }
 }

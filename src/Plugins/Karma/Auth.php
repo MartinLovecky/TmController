@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\Services\Karma;
+namespace Yuhzel\TmController\Plugins\Karma;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Services\{HttpClient, Server};
 use Yuhzel\TmController\Infrastructure\Xml\Parser;
 
-class AuthService
+class Auth
 {
     public string $api = 'http://worldwide.mania-karma.com/api/tmforever-trackmania-v4.php';
     public int $retryTime = 0;
@@ -61,7 +61,7 @@ class AuthService
         ];
     }
 
-    private function handleAuthenticationFailure(Container $output): void
+    private function handleAuthenticationFailure(TmContainer $output): void
     {
         $this->mode = 'local';
         $this->retryTime = time() + $this->retryWait;
@@ -75,7 +75,7 @@ class AuthService
         Aseco::console('**********************************************************');
     }
 
-    private function handleAuthenticationSuccess(Container $output): void
+    private function handleAuthenticationSuccess(TmContainer $output): void
     {
         $this->mode = 'global';
         $this->importDone = $output->get('import_done');

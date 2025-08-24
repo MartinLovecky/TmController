@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\App;
+namespace Yuhzel\TmController\App\Service;
 
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\Extension\DebugExtension;
-use Yuhzel\TmController\App\Aseco;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Services\Server;
 
 class WidgetBuilder
 {
@@ -15,13 +16,17 @@ class WidgetBuilder
 
     public function __construct()
     {
-        $loader = new FilesystemLoader(Aseco::path() . 'public' . DIRECTORY_SEPARATOR . 'templates');
+        $loader = new FilesystemLoader(Server::$twigDir);
         $this->twig = new Environment($loader, [
-            'cache' => Aseco::path() . 'public' . DIRECTORY_SEPARATOR . 'cache',
+            'cache' => Server::$publicDir . 'cache',
             'auto_reload' => true,
             'debug' => true,            //(false in production)
             'strict_variables' => true
         ]);
+
+        $this->twig->addFilter(new \Twig\TwigFilter('sum', function ($array) {
+            return array_sum($array);
+        }));
 
         if ($this->twig->isDebug()) {
             $this->twig->addExtension(new DebugExtension());

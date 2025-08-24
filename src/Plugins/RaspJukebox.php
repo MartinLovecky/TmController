@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Plugins\Rasp\Vote;
+use Yuhzel\TmController\Services\Server;
 use Yuhzel\TmController\Plugins\ManiaLinks;
-use Yuhzel\TmController\App\Aseco;
+use Yuhzel\TmController\Plugins\Rasp\RaspState;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Repository\ChallengeService;
-use Yuhzel\TmController\Services\{RaspState, Server};
 
 class RaspJukebox
 {
@@ -25,12 +27,7 @@ class RaspJukebox
 
     public function onSync(): void
     {
-        $filePath = Aseco::path(3)
-        . 'GameData'
-        . DIRECTORY_SEPARATOR
-        . 'Tracks'
-        . DIRECTORY_SEPARATOR
-        . 'trackhist.txt';
+        $filePath = Server::$trackDir . 'trackhist.txt';
 
         if (!is_readable($filePath)) {
             throw new \RuntimeException("Failed to open track history file: {$filePath}");
@@ -54,7 +51,7 @@ class RaspJukebox
         }
 
         if ($this->isTmxVoteActive()) {
-            $this->processVote($this->raspState->tmxadd, $login, function () {
+            $this->processVote($vote, $login, function () {
                 $this->passTmxVote();
             });
             return;
@@ -98,7 +95,7 @@ class RaspJukebox
         return !empty($this->raspState->chatvote) && $this->raspState->chatvote['votes'] >= 0;
     }
 
-    private function processVote(array &$vote, string $login, callable $onPass): void
+    private function processVote(Vote &$vote, string $login, callable $onPass): void
     {
         $vote['votes']--;
         if ($vote['votes'] > 0) {
@@ -142,11 +139,9 @@ class RaspJukebox
             6 => $this->ignore(),
             default => null
         };
-
-        $this->raspState->chatvote = [];
     }
 
-    private function sendVoteReminder(array $vote): void
+    private function sendVoteReminder(Vote $vote): void
     {
         $messageKey = isset($vote['tmx']) ? 'jukebox_y' : 'vote_y';
         $desc       = isset($vote['tmx']) ? Aseco::stripColors($vote['name']) : $vote['desc'];

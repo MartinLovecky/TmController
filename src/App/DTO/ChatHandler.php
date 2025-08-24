@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\App\Tm;
+namespace Yuhzel\TmController\App\DTO;
 
 use League\Container\Container;
-use Yuhzel\TmController\App\Aseco;
+use Yuhzel\TmController\App\Service\Aseco;
 
 class ChatHandler
 {

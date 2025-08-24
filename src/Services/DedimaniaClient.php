@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Services;
 
-use Yuhzel\TmController\App\Aseco;
+use Yuhzel\TmController\App\Service\Aseco;
 use Yuhzel\TmController\Services\HttpClient;
 use Yuhzel\TmController\Infrastructure\Xml\Request;
 use Yuhzel\TmController\Infrastructure\Xml\Response;

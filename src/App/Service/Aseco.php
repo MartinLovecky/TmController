@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\App;
+namespace Yuhzel\TmController\App\Service;
 
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Core\TmContainer;
+use Yuhzel\TmController\Services\Server;
 
 class Aseco
 {
-    public static Container $adminOps;
+    public static TmContainer $adminOps;
     public static int $restarting = 0;
     public static bool $startupPhase = false;
     public static array $colors = [
@@ -35,11 +36,6 @@ class Aseco
         'dedirec ' => '$0b3',
         'Error ' => '$f00$i'
     ];
-
-    public static function path(int $level = 2): string
-    {
-        return rtrim(dirname(__DIR__, $level), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-    }
 
     /**
      * Its 2025 just stop nonsence - Yuha
@@ -68,19 +64,9 @@ class Aseco
         return in_array($login, array_unique(array_merge($admin, $ops)));
     }
 
-    /**
-     * /public/json/
-     * - slash is adaptive
-     * @return string
-     */
-    public static function jsonFolderPath(): string
-    {
-        return self::path() . 'public' . DIRECTORY_SEPARATOR . 'json' . DIRECTORY_SEPARATOR;
-    }
-
     public static function updateEnvFile(string $key, string $value): void
     {
-        $envPath = self::path() . '.env';
+        $envPath = Server::$rootDir . '.env';
 
         $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $found = false;
@@ -435,7 +421,7 @@ class Aseco
 
     public static function getChatMessage(string $message, string $jsonFile = 'messages'): ?string
     {
-        $file = self::safeFileGetContents(self::jsonFolderPath() . "{$jsonFile}.json");
+        $file = self::safeFileGetContents(Server::$jsonDir . "{$jsonFile}.json");
 
         if (!$file) {
             return null;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 
 class Cpll
@@ -14,7 +14,7 @@ class Cpll
     {
     }
 
-    public function onPlayerConnect(Container $player): void
+    public function onPlayerConnect(TmContainer $player): void
     {
         $message = Aseco::getChatMessage('cpll_info', 'rasp');
 

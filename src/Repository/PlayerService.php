@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Repository;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Database\Table;
 use Yuhzel\TmController\Plugins\{Panels, Styles};
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
@@ -18,7 +18,7 @@ class PlayerService
 
     public function __construct(
         protected Client $client,
-        protected Container $container,
+        protected TmContainer $container,
         protected Panels $panels,
         protected RepositoryManager $repository,
         protected Styles $styles,
@@ -67,7 +67,7 @@ class PlayerService
         $this->repository->insert(Table::PLAYERS_EXTRA, $this->extraPlayerData($login), $login);
     }
 
-    public function removePlayer(Container $player, bool $fromDB = false): void
+    public function removePlayer(TmContainer $player, bool $fromDB = false): void
     {
         $login = $player->get('Login');
 
@@ -80,6 +80,15 @@ class PlayerService
         if ($fromDB) {
             $this->deleteFromDB($login);
         }
+    }
+
+    public function getActivePlayersCount(bool $includeSpectators = false): int
+    {
+        if ($includeSpectators) {
+            return $this->numPlayers;
+        }
+
+        return $this->numPlayers - $this->numSpecs;
     }
 
     /**
@@ -95,9 +104,9 @@ class PlayerService
 
     /**
      * Update player info in DB.
-     * @param Container<string, Container<string, mixed>> $players
+     * @param TmContainer<string, TmContainer<string, mixed>> $players
      */
-    public function update(Container $player): void
+    public function update(TmContainer $player): void
     {
         foreach ($player->getIterator() as $login => $player) {
             $this->repository->update(Table::PLAYERS, $this->playerData($player), $login);
@@ -113,7 +122,7 @@ class PlayerService
         }
     }
 
-    public function first(): ?Container
+    public function first(): ?TmContainer
     {
         return $this->container->first();
     }
@@ -130,7 +139,7 @@ class PlayerService
         }
     }
 
-    public function getPlayerByLogin(string $login): ?Container
+    public function getPlayerByLogin(string $login): ?TmContainer
     {
         return $this->container->get($login);
     }
@@ -140,17 +149,17 @@ class PlayerService
         return $this->container->has($login);
     }
 
-    public function getCurrentRanking(): Container
+    public function getCurrentRanking(): TmContainer
     {
         return $this->client->query('GetCurrentRanking', [0, 100], true);
     }
 
-    public function getDetailedPlayerInfo(string $login): Container
+    public function getDetailedPlayerInfo(string $login): TmContainer
     {
         return $this->client->query('GetDetailedPlayerInfo', [$login], false);
     }
 
-    public function getPlayerInfo(string $login): Container
+    public function getPlayerInfo(string $login): TmContainer
     {
         return $this->client->query('GetPlayerInfo', [$login, 1]);
     }
@@ -175,7 +184,7 @@ class PlayerService
         return $list[0]->get('Login');
     }
 
-    private function playerData(Container $player): array
+    private function playerData(TmContainer $player): array
     {
         return [
             'Login'      => $player->get('Login'),

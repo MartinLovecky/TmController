@@ -6,8 +6,8 @@ namespace Yuhzel\TmController\Infrastructure\Gbx;
 
 use Deprecated;
 use Exception;
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Services\Socket;
 use Yuhzel\TmController\Infrastructure\Xml\{Request, Response};
 
@@ -18,7 +18,7 @@ class Client
     private const int MAX_REQ_SIZE = 512 * 1024 - 8;
     private const int MAX_RES_SIZE = 4096 * 1024;
     private const float TIMEOUT = 20.0;
-    /** @var Container[] */
+    /** @var TmContainer[] */
     private array $cb_message = [];
     public array $calls = [];
 
@@ -31,7 +31,7 @@ class Client
         $this->query('Authenticate', [$_ENV['admin_login'], $_ENV['admin_password']]);
     }
 
-    public function query(string $method, array $params = []): Container
+    public function query(string $method, array $params = []): TmContainer
     {
         $xmlString = $this->request->createRpcRequest($method, $params);
 
@@ -121,7 +121,7 @@ class Client
         return $somethingReceived;
     }
 
-    public function popCBResponse(): ?Container
+    public function popCBResponse(): ?TmContainer
     {
         return array_shift($this->cb_message) ?: null;
     }
@@ -145,7 +145,7 @@ class Client
         return $this->socket->write($bytes) !== 0;
     }
 
-    protected function result(string $method): Container
+    protected function result(string $method): TmContainer
     {
         $contents = '';
 
@@ -184,7 +184,7 @@ class Client
             return $this->response->parseResponse($method, $contents);
         }
 
-        return Container::fromArray([], true);
+        return TmContainer::fromArray([], true);
     }
 
     protected function convertHandle(int $handle): int
@@ -242,10 +242,5 @@ class Client
                 throw new Exception("Unsupported protocol: '{$handshake}'. Only GBXRemote 2 is supported.");
             }
         }
-    }
-
-    protected function rpcMessages(): array
-    {
-        return Aseco::safeJsonDecode(Aseco::safeFileGetContents(Aseco::jsonFolderPath() . 'methods.json'))['methods'];
     }
 }

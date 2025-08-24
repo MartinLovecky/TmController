@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\App\Tm;
+namespace Yuhzel\TmController\App\DTO;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
 
 class PlayerManager
 {
     private array $bannedIps = [];
     private array $players = [];
 
-    public function connect(Container $call): void
+    public function connect(TmContainer $call): void
     {
         $player = $call->player ?? null;
         if (!$player) {
@@ -28,7 +28,7 @@ class PlayerManager
         Aseco::consoleText("Player connected: " . $player->get('NickName'));
     }
 
-    public function disconnect(Container $call): void
+    public function disconnect(TmContainer $call): void
     {
         $player = $call->player ?? null;
         if (!$player) {

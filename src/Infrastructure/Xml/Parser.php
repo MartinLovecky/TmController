@@ -8,11 +8,12 @@ use Deprecated;
 use DOMNode;
 use DOMElement;
 use DOMDocument;
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
+use Yuhzel\TmController\Services\Server;
 
 /**
- * Use to parse XML response into Container
+ * Use to parse XML response into TmContainer
  */
 class Parser
 {
@@ -25,12 +26,12 @@ class Parser
     }
 
     /**
-     * Parse XML response into Container
+     * Parse XML response into TmContainer
      *
      * @param string $xmlContent xml string to process
-     * @return Container contains php types
+     * @return TmContainer contains php types
      */
-    public static function fromXMLString(string $xmlContent): Container
+    public static function fromXMLString(string $xmlContent): TmContainer
     {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
@@ -41,18 +42,17 @@ class Parser
 
 
     #[Deprecated('Config files should be .json')]
-    public static function fromXMLFile(string $fileName): Container
+    public static function fromXMLFile(string $fileName): TmContainer
     {
         return (new self(new DOMDocument()))->parseXml($fileName);
     }
 
     #[Deprecated('Config files should be .json')]
-    public function parseXml(string $fileName): Container
+    public function parseXml(string $fileName): TmContainer
     {
         # TmController/public/xml/$fileName.xml
-        $xmlFile = Aseco::path()
-            . 'public'
-            . DIRECTORY_SEPARATOR
+        $xmlFile =
+            Server::$publicDir
             . 'xml'
             . DIRECTORY_SEPARATOR
             . $fileName
@@ -95,20 +95,20 @@ class Parser
      */
     protected function parseNode(DOMElement|DOMNode $node): mixed
     {
-        $container = new Container();
+        $TmContainer = new TmContainer();
         $elementCount = []; // Track element occurrences by name
         $textContent = [];
 
         if ($node instanceof DOMElement) {
             foreach ($node->attributes as $attribute) {
-                $container->set($attribute->nodeName, $this->convertValues($attribute->nodeValue));
+                $TmContainer->set($attribute->nodeName, $this->convertValues($attribute->nodeValue));
             }
         }
 
         foreach ($node->childNodes as $child) {
             if ($child instanceof DOMElement) {
                 $childName = $child->nodeName;
-                $childContainer = $this->parseNode($child);
+                $childTmContainer = $this->parseNode($child);
 
                 if (isset($elementCount[$childName])) {
                     $elementCount[$childName]++;
@@ -118,16 +118,16 @@ class Parser
                     $newChildName = $childName;
                 }
 
-                if ($container->offsetExists($newChildName)) {
+                if ($TmContainer->offsetExists($newChildName)) {
                     // If it exists, store the values in an array
-                    $existingValue = $container->get($newChildName);
+                    $existingValue = $TmContainer->get($newChildName);
                     if (!is_array($existingValue)) {
                         $existingValue = [$existingValue]; // Convert to array if not already
                     }
-                    $existingValue[] = $childContainer;
-                    $container->set($newChildName, $existingValue);
+                    $existingValue[] = $childTmContainer;
+                    $TmContainer->set($newChildName, $existingValue);
                 } else {
-                    $container->set($newChildName, $childContainer);
+                    $TmContainer->set($newChildName, $childTmContainer);
                 }
             } elseif ($child->nodeType === XML_TEXT_NODE || $child->nodeType === XML_CDATA_SECTION_NODE) {
                 $text = trim($child->nodeValue);
@@ -140,14 +140,14 @@ class Parser
         // If we have accumulated text content, store it as well
         if (!empty($textContent)) {
             $combined = implode(' ', $textContent);
-            if ($container->count() === 0) {
+            if ($TmContainer->count() === 0) {
                 return $this->convertValues($combined);
             } else {
-                $container->set('#text', $combined);
+                $TmContainer->set('#text', $combined);
             }
         }
 
-        return $container;
+        return $TmContainer;
     }
 
     /**

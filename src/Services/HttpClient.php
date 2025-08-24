@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Services;
 
 use CurlHandle;
-use Yuhzel\TmController\App\Aseco;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\App\Service\Log;
 
 class HttpClient
 {
@@ -26,8 +27,8 @@ class HttpClient
 
     public function __construct()
     {
-        $this->cert = Aseco::path() . 'public/cacert.pem';
-        $this->cookieFile = Aseco::path() . 'public/cookies.txt';
+        $this->cert = Server::$publicDir . 'cacert.pem';
+        $this->cookieFile = Server::$publicDir . 'cookies.txt';
         $this->ch = curl_init();
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($this->ch, CURLOPT_CAINFO, $this->cert);
@@ -144,14 +145,26 @@ class HttpClient
         $response = curl_exec($this->ch);
 
         if (curl_errno($this->ch)) {
-            Aseco::console($endpoint . ' curl error ' . curl_error($this->ch));
+            Log::error('cURL error: ' . curl_error($this->ch), [
+                'endpoint' => $endpoint,
+                'method' => $method,
+                'params'   => $params,
+                'headers'  => $headers,
+            ], 'Aseco\HttpClient');
             return false;
         }
 
         $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
 
         if ($httpCode !== 200) {
-            Aseco::console($endpoint . ' HTTP error: ' . $httpCode);
+            Log::error('HTTP error: ' . $httpCode, [
+                'endpoint' => $endpoint,
+                'method'   => $method,
+                'params'   => $params,
+                'headers'  => $headers,
+                'httpCode' => $httpCode,
+                'response' => $response,
+            ], 'Aseco\HttpClient');
             return false;
         }
 

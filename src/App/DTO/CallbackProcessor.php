@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\App\Tm;
+namespace Yuhzel\TmController\App\DTO;
 
-use Yuhzel\TmController\App\Tm\{
+use Yuhzel\TmController\App\DTO\{
     ChatHandler,
     RaceManager,
     PlayerManager,

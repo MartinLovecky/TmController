@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\ManiaLinks;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Plugins\Manager\EventContext;
@@ -14,7 +14,7 @@ use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class Dedimania
 {
-    private Container $config;
+    private TmContainer $config;
     private int $dediLastSent = 0;
     private int $serverMaxRank = 30;
     private bool $requestDone = false;
@@ -38,8 +38,8 @@ class Dedimania
      */
     public function onSync(): void
     {
-        $configFile = Aseco::jsonFolderPath() . 'dedimania.json';
-        $this->config = Container::fromJsonFile($configFile, false);
+        $configFile = Server::$jsonDir . 'dedimania.json';
+        $this->config = TmContainer::fromJsonFile($configFile, false);
         $this->config
             ->set('masterserver_account.login', $_ENV['dedi_username'])
             ->set('masterserver_account.password', $_ENV['dedi_code'])
@@ -53,10 +53,10 @@ class Dedimania
     /**
      * Undocumented function
      *
-     * @param Container $player
+     * @param TmContainer $player
      * @return void
      */
-    public function onPlayerConnect(Container $player)
+    public function onPlayerConnect(TmContainer $player)
     {
         $response = $this->dedimaniaClient->request('playerArrive', $this->playerArrive($player));
 
@@ -121,7 +121,7 @@ class Dedimania
 
         /** @var array<string,array> $checkpoints */
         $checkpoints = $this->eventContext->data[Checkpoints::class]['checkpoints'];
-        /** @var array<int,Container> $records */
+        /** @var array<int,TmContainer> $records */
         $records = $response->get('1.Records');
 
         if (empty($records)) {
@@ -175,7 +175,7 @@ class Dedimania
         }
     }
 
-    public function onEndRace(Container $data)
+    public function onEndRace(TmContainer $data)
     {
         $maniaLinks = $this->eventContext->data[ManiaLinks::class]['mlRecords'];
         $maniaLinks['dedi'] = $this->challengeService->getGameMode() === 'stunts' ? '  ---' : '   --.--';
@@ -244,7 +244,7 @@ class Dedimania
         ];
     }
 
-    private function playerArrive(Container $player): array
+    private function playerArrive(TmContainer $player): array
     {
         return [
             $this->authCall(),
@@ -265,7 +265,7 @@ class Dedimania
         ];
     }
 
-    private function currentChallenge(Container $challenge): array
+    private function currentChallenge(TmContainer $challenge): array
     {
         return [
             $this->authCall(),
@@ -335,7 +335,7 @@ class Dedimania
     private function players(): array
     {
         $info = [];
-        $this->playerService->eachPlayer(function (Container $player) {
+        $this->playerService->eachPlayer(function (TmContainer $player) {
             $info[] = [
                 'Game' => Server::$game,
                 'Login' => $player->get('Login'),

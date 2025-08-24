@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\Services\Karma;
+namespace Yuhzel\TmController\Plugins\Karma;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Services\Server;
-use Yuhzel\TmController\App\WidgetBuilder;
-use Yuhzel\TmController\Repository\PlayerService;
+use Yuhzel\TmController\App\Service\{Aseco, WidgetBuilder};
+use Yuhzel\TmController\Plugins\Karma\State;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\Repository\ChallengeService;
+use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
-class WidgetService
+class Widget
 {
     private const VOTE_BUTTONS = [
         ['label' => '+++', 'id' => 18],
@@ -30,7 +29,7 @@ class WidgetService
         protected Client $client,
         protected ChallengeService $challengeService,
         protected PlayerService $playerService,
-        protected StateService $stateService,
+        protected State $stateService,
         protected WidgetBuilder $widgetBuilder,
     ) {
         $this->file = 'karma' . DIRECTORY_SEPARATOR;
@@ -47,20 +46,20 @@ class WidgetService
 
         $this->sendWidgetCombination([$widgetKey, 'cups_values']);
 
-        $this->playerService->eachPlayer(function (Container $player) {
+        $this->playerService->eachPlayer(function (TmContainer $player) {
             $this->sendWidgetCombination(['player_marker'], $player);
         });
 
         $this->sendConnectionStatus(true, 'rounds');
     }
 
-    public function updatePlayerWidgets(Container $player): void
+    public function updatePlayerWidgets(TmContainer $player): void
     {
         $widgetKey = ($this->challengeService->getGameMode() === 'score') ? 'skeleton_score' : 'skeleton_race';
         $this->sendWidgetCombination([$widgetKey, 'cups_values', 'player_marker'], $player);
     }
 
-    public function sendWelcomeMessage(Container $player): void
+    public function sendWelcomeMessage(TmContainer $player): void
     {
         if (!$this->cfg()->get('show_welcome')) {
             return;
@@ -79,7 +78,7 @@ class WidgetService
         ]);
     }
 
-    public function closeReminderWindow(?Container $player = null): void
+    public function closeReminderWindow(?TmContainer $player = null): void
     {
         $xml = $this->widgetBuilder->render("{$this->file}manialink");
 
@@ -94,7 +93,7 @@ class WidgetService
                 ]);
             }
         } else {
-            $this->playerService->eachPlayer(function (Container $player) {
+            $this->playerService->eachPlayer(function (TmContainer $player) {
                 $player->set('ManiaKarma.ReminderWindow', false);
             });
             $this->client->query('SendDisplayManialinkPage', [$xml, 0, false]);
@@ -197,7 +196,7 @@ class WidgetService
             : $this->cfg()->get('messages.karma_vote_plural');
     }
 
-    private function buildPlayerVoteMarker(Container $player, string $gameMode): string
+    private function buildPlayerVoteMarker(TmContainer $player, string $gameMode): string
     {
         $login = $player->get('Login');
         $playerVote = $this->stateService->getPlayerVote($login) ?? 0;
@@ -248,7 +247,7 @@ class WidgetService
 
     public function sendWidgetCombination(
         array $widgets,
-        ?Container $player = null
+        ?TmContainer $player = null
     ): void {
         $gameMode = $this->challengeService->getGameMode();
         $playerMarker = $player ? $this->buildPlayerVoteMarker($player, $gameMode) : '';
@@ -297,8 +296,8 @@ class WidgetService
         $this->client->query('SendDisplayManialinkPage', [$xml, 0, false]);
     }
 
-    private function cfg(): Container
+    private function cfg(): TmContainer
     {
-        return Container::fromJsonFile(Aseco::jsonFolderPath() . 'maniaKarma.json');
+        return TmContainer::fromJsonFile(Server::$jsonDir . 'maniaKarma.json');
     }
 }

@@ -14,18 +14,18 @@
         <quad pos="-0.055 -0.045 -0.2"
               size="{{ hsize + (icon[2]|default(0)) }} {{ hsize + (icon[2]|default(0)) }}"
               halign="center" valign="center"
-              style="{{ icon[0] }}" substyle="{{ icon[1] }}"/>
+              style="{{ icon[0]|default('') }}" substyle="{{ icon[1]|default('') }}"/>
         <label pos="-0.10 -0.025 -0.2"
                size="{{ widths[0] - 0.12 }} {{ hsize }}"
                halign="left"
                style="{{ style.get('header.textstyle') }}"
-               text="{{ header }}"/>
+               text="{{ header|default('') }}"/>
     {% else %}
         <label pos="-0.03 -0.025 -0.2"
                size="{{ widths[0] - 0.05 }} {{ hsize }}"
                halign="left"
                style="{{ style.get('header.textstyle') }}"
-               text="{{ header }}"/>
+               text="{{ header|default('') }}"/>
     {% endif %}
 
     <quad pos="-{{ widths[0] / 2 }} -{{ 0.02 + hsize }} -0.1"
@@ -46,26 +46,26 @@
                               halign="left"
                               style="{{ style.get('button.style') }}"
                               substyle="{{ style.get('button.substyle') }}"
-                              action="{{ line[i][1] }}"/>
+                              action="{{ line[i][1]|default(0) }}"/>
                         <label pos="-{{ 0.025 + widths[1:i+1]|sum }} -{{ hsize - 0.008 + cnt * bsize }} -0.2"
                                size="{{ widths[i+1] - 0.05 }} {{ 0.02 + bsize }}"
                                halign="left"
                                style="{{ style.get('body.textstyle') }}"
-                               text="{{ line[i][0] }}"/>
+                               text="{{ line[i][0]|default('') }}"/>
                     {% else %}
                         <label pos="-{{ 0.025 + widths[1:i+1]|sum }} -{{ hsize - 0.008 + cnt * bsize }} -0.2"
                                size="{{ widths[i+1] - 0.05 }} {{ 0.02 + bsize }}"
                                halign="left"
                                style="{{ style.get('body.textstyle') }}"
-                               text="{{ line[i] }}"/>
+                               text="{{ line[i]|default('') }}"/>
                     {% endif %}
                 {% endfor %}
-            {% else %}
+            {% elseif line|length > 0 %}
                 <label pos="-0.025 -{{ hsize - 0.008 + cnt * bsize }} -0.2"
                        size="{{ widths[0] - 0.04 }} {{ 0.02 + bsize }}"
                        halign="left"
                        style="{{ style.get('body.textstyle') }}"
-                       text="{{ line[0] }}"/>
+                       text="{{ line[0]|default('') }}"/>
             {% endif %}
         {% endif %}
     {% endfor %}

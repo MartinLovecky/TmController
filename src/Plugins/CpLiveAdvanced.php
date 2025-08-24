@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Repository\ChallengeService;
 
 class CpLiveAdvanced
@@ -23,7 +23,7 @@ class CpLiveAdvanced
     }
 
     // ???????
-    public function onPlayerConnect(Container $player)
+    public function onPlayerConnect(TmContainer $player)
     {
         $spectator = $player->get('IsSpectator', true);
         $this->bindToggleKey($player->get('Login'));

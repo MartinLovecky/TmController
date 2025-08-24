@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Services;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Core\TmContainer;
+use League\Container\Container;
 
 class Server
 {
@@ -20,8 +20,15 @@ class Server
     public static string $version = '2.11.26';
     public static string $build = '';
     public static string $nickName = '';
+    public static string $gamePath = '';
     public static string $gameDir = '';
+    public static string $rootDir = '';
+    public static string $publicDir = '';
     public static string $trackDir = '';
+    public static string $jsonDir = '';
+    public static string $twigDir = '';
+    public static string $sqlDir = '';
+    public static string $logsDir = '';
     public static float $timeout = 10.0;
     public static int $startTime = 0;
     public static int $rights = 0;
@@ -36,39 +43,52 @@ class Server
     public static int $vehicleNetQuality = 0;
     public static int $callVoteTimeout = 0;
     public static float $callVoteRatio = 0.0;
-    public static string $gamePath = '';
     public static string $zone = '';
     public static bool $private = false;
     public static array $muteList = [];
 
-    public function __construct()
+    /**
+     * init global vars
+     *
+     * @param Container $container
+     * @return void
+     */
+    public static function init(Container $container): void
     {
+        $paths = $container->get('config.paths');
+
+        self::$gamePath  = $paths['game'] . DIRECTORY_SEPARATOR;
+        self::$gameDir   = self::$gamePath . 'GameData' . DIRECTORY_SEPARATOR;
+        self::$trackDir  = self::$gameDir . 'Tracks' . DIRECTORY_SEPARATOR;
+        self::$rootDir   = $paths['root'];
+        self::$publicDir = $paths['public'];
+        self::$jsonDir   = $paths['json'];
+        self::$twigDir   = $paths['templates'];
+        self::$sqlDir    = $paths['sql'];
+        self::$logsDir   = $paths['logs'];
+        self::$login     = $_ENV['admin_login'];
+        self::$pass      = $_ENV['admin_password'];
+        self::$ip        = $_ENV['server_ip'];
+        self::$port      = (int)$_ENV['server_port'];
+        self::$timeout   = (float)$_ENV['server_timeout'];
         self::$startTime = time();
-        self::$gamePath = Aseco::path(3);
-        self::$gameDir = self::$gamePath . 'GameData' . DIRECTORY_SEPARATOR;
-        self::$trackDir = self::$gameDir . 'Tracks' . DIRECTORY_SEPARATOR;
-        self::$login = $_ENV['admin_login'];
-        self::$pass = $_ENV['admin_password'];
-        self::$ip = $_ENV['server_ip'];
-        self::$port = (int)$_ENV['server_port'];
-        self::$timeout = (float)$_ENV['server_timeout'];
     }
 
-    public function setServerInfo(Container $admin): void
+    public function setServerInfo(TmContainer $admin): void
     {
-        self::$id = $admin->get('PlayerId');
+        self::$id       = $admin->get('PlayerId');
         self::$nickName = $admin->get('NickName');
-        self::$zone = substr($admin->get('Path'), 6);
-        self::$rights = $admin->get('OnlineRights');
+        self::$zone     = substr($admin->get('Path'), 6);
+        self::$rights   = $admin->get('OnlineRights');
     }
 
-    public function setVersion(Container $version): void
+    public function setVersion(TmContainer $version): void
     {
         self::$version = $version->get('Version');
-        self::$build = $version->get('Build');
+        self::$build   = $version->get('Build');
     }
 
-    public function setLadder(Container $ladder): void
+    public function setLadder(TmContainer $ladder): void
     {
         self::$ladderMin = $ladder->get('LadderServerLimitMin');
         self::$ladderMax = $ladder->get('LadderServerLimitMax');
@@ -79,16 +99,16 @@ class Server
         self::$packmask = $mask;
     }
 
-    public function setOptions(Container $options): void
+    public function setOptions(TmContainer $options): void
     {
-        self::$name = ucfirst($options->get('Name'));
-        self::$comment = $options->get('Comment');
-        self::$private = $options->get('Password') != '';
-        self::$maxPlayers = $options->get('CurrentMaxPlayers');
-        self::$maxSpectators = $options->get('CurrentMaxSpectators');
-        self::$ladderMode = $options->get('CurrentLadderMode');
+        self::$name              = ucfirst($options->get('Name'));
+        self::$comment           = $options->get('Comment');
+        self::$private           = $options->get('Password') != '';
+        self::$maxPlayers        = $options->get('CurrentMaxPlayers');
+        self::$maxSpectators     = $options->get('CurrentMaxSpectators');
+        self::$ladderMode        = $options->get('CurrentLadderMode');
         self::$vehicleNetQuality = $options->get('CurrentVehicleNetQuality');
-        self::$callVoteTimeout = $options->get('CurrentCallVoteTimeOut');
-        self::$callVoteRatio = $options->get('CallVoteRatio');
+        self::$callVoteTimeout   = $options->get('CurrentCallVoteTimeOut');
+        self::$callVoteRatio     = $options->get('CallVoteRatio');
     }
 }

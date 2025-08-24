@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
+use Yuhzel\TmController\Services\Server;
 
 class FufiMenu
 {
-    private Container $config;
+    private TmContainer $config;
     private array $styles = [];
 
     public function __construct()
     {
-        $this->config = Container::fromJsonFile(Aseco::jsonFolderPath() . 'fufiConfig.json');
+        $this->config = TmContainer::fromJsonFile(Server::$jsonDir . 'fufiConfig.json');
         $this->loadSettings();
         $this->loadStyles();
     }
 
     private function loadSettings(): void
     {
-        $filePath = Aseco::path()
-            . 'public'
-            . DIRECTORY_SEPARATOR
+        $filePath =
+            Server::$publicDir
             . 'xml'
             . DIRECTORY_SEPARATOR
             . 'fufi_menu.xml';

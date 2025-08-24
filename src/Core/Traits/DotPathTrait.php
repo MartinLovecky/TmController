@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Core\Traits;
 
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Core\TmContainer;
 
 trait DotPathTrait
 {
     /**
-     * Navigate to the parent container of the last segment in a dot-path.
+     * Navigate to the parent TmContainer of the last segment in a dot-path.
      *
      * Supports escaped dots (\.) in keys and arrays
-     * Can create missing intermediate containers if $createMissing is true.
+     * Can create missing intermediate TmContainers if $createMissing is true.
      *
      * @param string $path Dot-separated path
-     * @param bool $createMissing Whether to create missing intermediate containers
-     * @return array{Container|null, string|null} [$parentContainer, $lastKey]
+     * @param bool $createMissing Whether to create missing intermediate TmContainers
+     * @return array{TmContainer|null, string|null} [$parentTmContainer, $lastKey]
      */
     protected function navigateToParent(string $path, bool $createMissing): array
     {

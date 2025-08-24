@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\Services\Karma;
+namespace Yuhzel\TmController\Plugins\Karma;
 
-use Yuhzel\TmController\App\Aseco;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\Core\TmContainer;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Plugins\Karma\State;
 use Yuhzel\TmController\Services\HttpClient;
+use Yuhzel\TmController\Repository\PlayerService;
 use Yuhzel\TmController\Infrastructure\Xml\Parser;
 use Yuhzel\TmController\Repository\ChallengeService;
 use Yuhzel\TmController\Infrastructure\Gbx\ChallMapFetcher;
-use Yuhzel\TmController\Repository\PlayerService;
 
-class VoteService
+class Vote
 {
     private int $retryTime = 0;
     private const RETRY_WAIT = 300;
@@ -29,7 +30,7 @@ class VoteService
         protected ChallengeService $challengeService,
         protected HttpClient $httpClient,
         protected PlayerService $playerService,
-        protected StateService $stateService,
+        protected State $state,
     ) {
     }
 
@@ -45,20 +46,20 @@ class VoteService
     private function shouldStoreVotes(): bool
     {
         return $this->retryTime === 0 &&
-               !empty($this->stateService->getKarmaState()['new']['players']) &&
+               !empty($this->state->getKarmaState()['new']['players']) &&
                $this->retryTime <= time();
     }
 
     private function sendVotesToCentralDatabase(): void
     {
         $gbx = $this->challengeService->getGBX();
-        $karmaState = $this->stateService->getKarmaState();
+        $karmaState = $this->state->getKarmaState();
         $votes = $this->formatVotesForApi();
 
         $response = $this->httpClient->get($_ENV['KarmaAPI'], [
             'Action' => 'Vote',
             'login' => $_ENV['server_login'],
-            'authcode' => $_ENV['KarmaHash'],
+            'authcode' => $_ENV['authcode'],
             'uid' => $karmaState['data']['uid'],
             'map' => base64_encode($karmaState['data']['name']),
             'author' => urlencode($karmaState['data']['author']),
@@ -71,6 +72,11 @@ class VoteService
             'votes' => implode('|', $votes),
             'tmx' => $karmaState['data']['id']
         ]);
+
+        if (!$response) {
+            Aseco::consoleText("Failed to send votes to Karma API. Aseco\HttpClient logs for details.");
+            return;
+        }
 
         $this->handleVoteStorageResponse($response);
     }
@@ -88,7 +94,7 @@ class VoteService
     private function formatVotesForApi(): array
     {
         $pairs = [];
-        $newVotes = $this->stateService->getKarmaState()['new']['players'] ?? [];
+        $newVotes = $this->state->getKarmaState()['new']['players'] ?? [];
 
         foreach ($newVotes as $login => $voteData) {
             $pairs[] = urlencode($login) . '=' . $voteData['vote'];
@@ -108,7 +114,7 @@ class VoteService
         }
     }
 
-    private function handleVoteStorageFailure(Container $output): void
+    private function handleVoteStorageFailure(TmContainer $output): void
     {
         Aseco::console("Storing votes failed with returncode {1}", $output->get('status'));
         $this->retryTime = time() + self::RETRY_WAIT;
@@ -117,7 +123,7 @@ class VoteService
     private function handleVoteStorageSuccess(): void
     {
         $this->retryTime = time() + $this->retryTime;
-        $this->stateService->clearNewVotes(); // Clear after successful storage
+        $this->state->clearNewVotes(); // Clear after successful storage
     }
 
     public function handleVoteResponse(array $answer): void
@@ -131,15 +137,15 @@ class VoteService
         }
     }
 
-    public function recordVote(Container $player, int $vote): void
+    public function recordVote(TmContainer $player, int $vote): void
     {
         $login = $player->get('Login');
-        $previousVote = $this->stateService->getPlayerVote($login) ?? 0;
+        $previousVote = $this->state->getPlayerVote($login) ?? 0;
 
-        $this->stateService->updateVoteCount('global', $previousVote, $vote);
-        $this->stateService->updatePlayerVote($login, $vote, $previousVote);
+        $this->state->updateVoteCount('global', $previousVote, $vote);
+        $this->state->updatePlayerVote($login, $vote, $previousVote);
 
-        $this->stateService->calculateKarma(['global']);
+        $this->state->calculateKarma(['global']);
     }
 
     public function getRetryTime(): int

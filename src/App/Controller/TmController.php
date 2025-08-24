@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\App;
+namespace Yuhzel\TmController\App\Controller;
 
-use Yuhzel\TmController\App\Log;
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Log;
+use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Services\Server;
 use Yuhzel\TmController\Core\Enums\RestartMode;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
@@ -14,8 +15,8 @@ use Yuhzel\TmController\Repository\{ChallengeService, PlayerService, RecordServi
 
 class TmController
 {
-    public Container $config;
-    public ?Container $bannedIps = null;
+    public TmContainer $config;
+    public ?TmContainer $bannedIps = null;
     private RestartMode $restarting = RestartMode::NONE;
     private int $prevsecond = 0;
     private int $currsecond = 0;
@@ -78,22 +79,22 @@ class TmController
 
     private function readConfig(): void
     {
-        $conf = Aseco::jsonFolderPath() . 'config.json';
+        $conf = Server::$jsonDir . 'config.json';
         Aseco::consoleText('[X8seco] Load settings from [{1}]', $conf);
-        $this->config = Container::fromJsonFile($conf, true);
+        $this->config = TmContainer::fromJsonFile($conf, true);
     }
 
     private function readAdminOps(): void
     {
-        $ops = Aseco::jsonFolderPath() . 'adminops.json';
+        $ops = Server::$jsonDir . 'adminops.json';
         Aseco::consoleText('[X8seco] Load admin/ops lists [{1}]', $ops);
-        Aseco::$adminOps = Container::fromJsonFile($ops);
+        Aseco::$adminOps = TmContainer::fromJsonFile($ops);
     }
 
     private function readBannedIps(): void
     {
-        $ipsFile = Aseco::jsonFolderPath() . 'bannedips.json';
-        $bannedIps = Container::fromJsonFile($ipsFile);
+        $ipsFile = Server::$jsonDir . 'bannedips.json';
+        $bannedIps = TmContainer::fromJsonFile($ipsFile);
 
         if (!$bannedIps->get('ban_list')->isEmpty()) {
             Aseco::consoleText('[X8seco] Load banned IPs list [{1}]', $ipsFile);
@@ -158,12 +159,12 @@ class TmController
 
         $this->playerService->syncFromServer();
         $this->pm->callFunctions('onSync');
-        $this->playerService->eachPlayer(function (Container $player) {
+        $this->playerService->eachPlayer(function (TmContainer $player) {
             $this->playerConnect($player);
         });
     }
 
-    private function playerConnect(Container $player)
+    private function playerConnect(TmContainer $player)
     {
         if (!$this->bannedIps->isEmpty()) {
             foreach ($this->bannedIps->getIterator() as $_ => $ip) {
@@ -200,7 +201,7 @@ class TmController
         $this->pm->callFunctions('onPlayerConnect', $player);
     }
 
-    private function playerDisconnect(Container $player): void
+    private function playerDisconnect(TmContainer $player): void
     {
         $playTime = time() - $player->get('created');
         Aseco::console(
@@ -245,7 +246,7 @@ class TmController
         $this->client->query('ChatSendServerMessage', [Aseco::formatColors($startupMsg)]);
     }
 
-    private function beginRace(bool|Container $challenge)
+    private function beginRace(bool|TmContainer $challenge)
     {
         if (!$challenge) {
             $this->newChallenge($this->challengeService->getCurrentChallengeInfo());
@@ -254,7 +255,7 @@ class TmController
         }
     }
 
-    private function newChallenge(Container $challenge): void
+    private function newChallenge(TmContainer $challenge): void
     {
         $this->changingmode = false;
 
@@ -291,13 +292,13 @@ class TmController
         return false;
     }
 
-    private function buildRecordMessage(Container $challenge): string
+    private function buildRecordMessage(TmContainer $challenge): string
     {
-        $curRecordContainer = $this->recordService->getRecord($this->challengeService->getUid());
+        $curRecordTmContainer = $this->recordService->getRecord($this->challengeService->getUid());
         $gbx = $this->challengeService->getGBX();
 
-        if (!$curRecordContainer->isEmpty()) {
-            $firstRecord = $curRecordContainer->first();
+        if (!$curRecordTmContainer->isEmpty()) {
+            $firstRecord = $curRecordTmContainer->first();
             $score = $this->formatScore($firstRecord->score);
             $playerName = $firstRecord->player->nickname ?? 'Unknown';
 
@@ -345,7 +346,7 @@ class TmController
         return Aseco::formatTime($score);
     }
 
-    private function endRace(Container $race): void
+    private function endRace(TmContainer $race): void
     {
         if ($race->get('4')) {
             $this->restarting = RestartMode::QUICK;
@@ -388,8 +389,7 @@ class TmController
                 // this->pm->callPluginFunction('rasp', 'messageAnswer', $call)
                 'TrackMania.PlayerServerMessageAnswer' => Log::debug('PlayerAnswer', $call->toArray(), 'PlayerAnswer'),
                 'TrackMania.PlayerCheckpoint' => $this->pm->callFunctions('onCheckpoint', $call),
-                // $this->playerFinish($call),
-                'TrackMania.PlayerFinish' => Log::debug('PlayerFinish', $call->toArray(), 'PlayerFinish'),
+                'TrackMania.PlayerFinish'     => $this->playerFinish($call),
                 // this->beginRound()
                 'TrackMania.BeginRound' => Log::debug('BeginRound', $call->toArray(), 'BeginRound'),
                 // $this->statusChanged()
@@ -423,21 +423,21 @@ class TmController
         }
     }
 
-    private function callBackConnect(Container $call): void
+    private function callBackConnect(TmContainer $call): void
     {
         $player = $this->playerService->getPlayerInfo($call['chatType']);
         $this->playerService->addPlayer($player->get('Login'));
         $this->playerConnect($this->playerService->getPlayerByLogin($player->get('Login')));
     }
 
-    private function callBackDisconnect(Container $call): void
+    private function callBackDisconnect(TmContainer $call): void
     {
         $player = $this->playerService->getPlayerByLogin($call['chatType']);
         $this->playerDisconnect($player);
         $this->playerService->removePlayer($player);
     }
 
-    private function playerChat(Container $call): void
+    private function playerChat(TmContainer $call): void
     {
         $login = $call->get('login');
         $command = $call->get('message');
@@ -454,20 +454,19 @@ class TmController
             $cmd = substr($command, 1);
             $params = explode(' ', $cmd, 2);
             $name = ucfirst(str_replace(['+', '-'], ['plus', 'dash'], $params[0]));
+            // must be string dont change it
             $params[1] = isset($params[1]) ? trim($params[1]) : '';
-            $auth = $this->playerService->getPlayerByLogin($login);
+            $player = $this->playerService->getPlayerByLogin($login);
 
-            if ($auth instanceof Container) {
+            if ($player instanceof TmContainer) {
                 Aseco::console(
                     'player {1} used chat command "/{2} {3}"',
                     $login,
                     $params[0],
                     $params[1]
                 );
-
-                $cmdCommand = ['author' => $auth, 'params' => $params[1]];
-
-                $this->pm->callFunctions("chat{$name}", $cmdCommand);
+                $player->set('command.name', $name)->set('command.params', $params[1]);
+                $this->pm->callFunctions("handleChatCommand", $player);
             } else {
                 Aseco::console(
                     'player {1} attempted to use chat command "/{2} {3}"',
@@ -506,16 +505,17 @@ class TmController
         $this->pm->callFunctions('onStatusChangeTo', $this->currStatus);
     }
 
-    private function playerFinish(Container $finish): void
+    private function playerFinish(TmContainer $finish): void
     {
+        Log::debug('PlayerFinish', $finish->toArray(), 'PlayerFinish');
         $date = date('Y/m/d;H:i:s');
-        $uid = $finish['0']; // $this->challengeService->getUid()
-        $login = $finish['login'];
-        $score = $finish['2'];
+        $uid = $this->challengeService->getUid();
+        $login = $finish->get('login');
+        $score = null;
         $new = false;
 
-        $this->pm->callFunctions('onPlayerFinish1', $uid, $login, $date, $score, $new);
-        $this->pm->callFunctions('onPlayerFinish', $uid, $login, $date, $score, $new);
+        //$this->pm->callFunctions('onPlayerFinish1', $uid, $login, $date, $score, $new);
+        //$this->pm->callFunctions('onPlayerFinish', $uid, $login, $date, $score, $new);
     }
 
     private function runningPlay(): void

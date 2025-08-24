@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\Core\Container;
+use Yuhzel\TmController\App\Service\Log;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Database\Table;
 use Yuhzel\TmController\Repository\{ChallengeService, RepositoryManager};
 
@@ -21,7 +22,7 @@ class Checkpoints
     ) {
     }
 
-    public function onPlayerConnect(Container $player): void
+    public function onPlayerConnect(TmContainer $player): void
     {
         $login = $player->get('Login');
         $this->checkpoints[$login] = [
@@ -52,13 +53,14 @@ class Checkpoints
         }
     }
 
-    public function onPlayerDisconnect(Container $player): void
+    public function onPlayerDisconnect(TmContainer $player): void
     {
         $login = $player->get('Login');
         $update = [
             'cps' => $this->checkpoints[$login]['loclrec'],
-            'dedicps' => $this->checkpoints[$login]['dedirec'],
+            'dedicps' => $this->checkpoints[$login]['dedirec'][0],
         ];
+        Log::debug('Checkpoints', $update, 'onPlayerDisconnect');
         $this->repositoryManager->update(Table::PLAYERS_EXTRA, $update, $login);
 
         unset($this->checkpoints[$login]);

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\{Aseco, WidgetBuilder};
-use Yuhzel\TmController\Core\Container;
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Repository\PlayerService;
+use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\App\Service\{Aseco, WidgetBuilder};
 
 class ManiaLinks
 {
@@ -41,7 +41,7 @@ class ManiaLinks
         $this->roundsPanelOff();
     }
 
-    public function onPlayerFinish(Container $player): void
+    public function onPlayerFinish(TmContainer $player): void
     {
         $this->roundsPanelOn($player);
     }
@@ -126,7 +126,7 @@ class ManiaLinks
         $this->renderAndSendToLogin($login, 'display_track', $vars, 0, true);
     }
 
-    public function displayManialinkMulti(Container $player): void
+    public function displayManialinkMulti(TmContainer $player): void
     {
         $this->eventManiaLink([0, $player, 1]);
     }
@@ -138,7 +138,7 @@ class ManiaLinks
             return;
         }
 
-        /** @var Container $player */
+        /** @var TmContainer $player */
         $player = $answer[1];
         $login = $player->get('Login');
 
@@ -228,7 +228,7 @@ class ManiaLinks
         $this->sendXmlToAll('<manialink id="2"></manialink>');
     }
 
-    public function displayAdmPanel(Container $player): void
+    public function displayAdmPanel(TmContainer $player): void
     {
         $this->sendXmlToLogin($player->get('Login'), $player->get('panels.admin'));
     }
@@ -238,7 +238,7 @@ class ManiaLinks
         $this->sendXmlToLogin($login, '<manialink id="3"></manialink>');
     }
 
-    public function displayDonPanel(Container $player, array $coppers): void
+    public function displayDonPanel(TmContainer $player, array $coppers): void
     {
         $xml = $player->get('panels.donate');
         for ($i = 1; $i <= 7; $i++) {
@@ -253,7 +253,7 @@ class ManiaLinks
         $this->sendXmlToLogin($login, '<manialink id="6"></manialink>');
     }
 
-    public function displayRecPanel(Container $player, $pb): void
+    public function displayRecPanel(TmContainer $player, $pb): void
     {
         $xml = str_replace(
             ['%PB%', '%TMX%', '%LCL%', '%DED%'],
@@ -270,7 +270,7 @@ class ManiaLinks
     }
 
     public function displayVotePanel(
-        Container $player,
+        TmContainer $player,
         string $yes,
         string $no,
         int $timeout = 0
@@ -326,7 +326,7 @@ class ManiaLinks
         }
     }
 
-    public function roundsPanelOn(Container $player): void
+    public function roundsPanelOn(TmContainer $player): void
     {
         $this->renderAndSendToLogin($player->get('Login'), 'costum_ui', ['ui' => '<round_scores visible="True"/>']);
     }
@@ -392,7 +392,7 @@ class ManiaLinks
         $this->client->query('SendDisplayManialinkPage', [$xml, $timeout, $hideOld]);
     }
 
-    private function buildData(Container $player, int $tot): array
+    private function buildData(TmContainer $player, int $tot): array
     {
         $ptr = $player['msgs'][0][0];
         $header = Aseco::validateUTF8($player['msgs'][0][1]);
