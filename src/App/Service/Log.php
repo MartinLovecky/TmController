@@ -8,8 +8,7 @@ use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\JsonFormatter;
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\App\Service\Server;
 
 class Log
 {

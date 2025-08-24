@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Repository;
 
 use Exception;
+use Yuhzel\TmController\App\Service\Server;
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Database\Table;
 use Yuhzel\TmController\Infrastructure\Gbx\{Client, ChallMapFetcher};
 use Yuhzel\TmController\Infrastructure\Tmx\InfoFetcher;
 use Yuhzel\TmController\Repository\RepositoryManager;
-use Yuhzel\TmController\Services\Server;
 
 class ChallengeService
 {

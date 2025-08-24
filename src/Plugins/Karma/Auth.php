@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Karma;
 
-use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\App\Service\{Aseco, HttpClient, Server};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Services\{HttpClient, Server};
 use Yuhzel\TmController\Infrastructure\Xml\Parser;
 
 class Auth

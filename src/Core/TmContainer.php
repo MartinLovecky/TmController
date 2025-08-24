@@ -6,13 +6,12 @@ namespace Yuhzel\TmController\Core;
 
 use ArrayObject;
 use ArrayIterator;
-use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\App\Service\{Aseco, Server};
 use Yuhzel\TmController\Core\Contracts\ContainerInterface;
 use Yuhzel\TmController\Core\Traits\{
     ArrayForwarderTrait,
     DotPathTrait
 };
-use Yuhzel\TmController\Services\Server;
 
 /**
  * Recursive container supporting dot-path access

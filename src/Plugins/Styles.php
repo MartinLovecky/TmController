@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\App\Service\{Aseco, Server};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\App\Service\Aseco;
 
 class Styles
 {

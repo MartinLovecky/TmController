@@ -6,9 +6,8 @@ namespace Yuhzel\TmController\Database;
 
 use PDO;
 use Envms\FluentPDO\Query;
-use Yuhzel\TmController\App\Service\Aseco;
 use Yuhzel\TmController\Database\Table;
-use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\App\Service\Server;
 
 class Fluent
 {

@@ -8,9 +8,8 @@ use Deprecated;
 use DOMNode;
 use DOMElement;
 use DOMDocument;
-use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\App\Service\{Aseco, Server};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Services\Server;
 
 /**
  * Use to parse XML response into TmContainer

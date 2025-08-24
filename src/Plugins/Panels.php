@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\App\Service\WidgetBuilder;
+use Yuhzel\TmController\App\Service\{Aseco, WidgetBuilder};
 
 class Panels
 {

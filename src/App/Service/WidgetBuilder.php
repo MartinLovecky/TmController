@@ -7,8 +7,7 @@ namespace Yuhzel\TmController\App\Service;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\Extension\DebugExtension;
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\App\Service\Server;
 
 class WidgetBuilder
 {

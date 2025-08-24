@@ -16,13 +16,14 @@ class ManiaLinks
     public function __construct(
         protected Client $client,
         protected PlayerService $playerService,
+        protected RaspJukebox $raspJukebox,
         protected WidgetBuilder $widgetBuilder,
     ) {
     }
 
-    public function onPlayerLink()
+    public function onPlayerLink(TmContainer $manialink)
     {
-        $this->eventManiaLink([]);
+        $this->eventManiaLink($manialink);
     }
 
     public function onNewChallenge(): void
@@ -126,32 +127,38 @@ class ManiaLinks
         $this->renderAndSendToLogin($login, 'display_track', $vars, 0, true);
     }
 
-    public function displayManialinkMulti(TmContainer $player): void
-    {
-        $this->eventManiaLink([0, $player, 1]);
-    }
+    // public function displayManialinkMulti(TmContainer $player): void
+    // {
+    //     $this->eventManiaLink([0, $player, 1]);
+    // }
 
-    //TODO $player->msgs and rest of this bs
-    public function eventManiaLink(array $answer)
+    public function eventManiaLink(TmContainer $manialink)
     {
-        if ($answer[2] < -6 || $answer[2] > 36) {
+        $message = $manialink->get('message');
+        if ($message < -6 || $message > 36) {
             return;
         }
 
-        /** @var TmContainer $player */
-        $player = $answer[1];
-        $login = $player->get('Login');
+        $login = $manialink->get('login');
+        $player = $this->playerService->getPlayerByLogin($login);
 
-        match ($answer[2]) {
+        if (!$player) {
+            return;
+        }
+
+        $total = count($player->get('page.data')) - 1;
+        $current = $player->get('page.index', 0);
+
+        match ($message) {
             -6 => null, // rasp->chat_top100(['author' => $login])
             -5 => null, // rasp->chat_active(['author' => $login])
-            -4 => null, //$player->set('msgs', 1),
-            -3 => null, //$player->set('msgs', -5),
-            -2 => null, //$player->set('msgs', -1),
+            -4 => $player->set('msgs', 1),
+            -3 => $player->set('msgs', -5),
+            -2 => $player->set('msgs', -1),
             0  => $this->mainWindowOff($login),
             1  => null, // stay on current page
-            2  => null, // $player->set('msgs', +1),
-            3  => null, // $player->set('msgs', +5),
+            2  => $player->set('msgs', 1),
+            3  => $player->set('msgs', 5),
             4  => null, // $player->set('msgs', count($player->msgs)),
             5  => null, // chat.records2->chat_toprecs(['author' => $login])
             6  => null, // rasp->chat_topwins(['author' => $login])
@@ -166,8 +173,8 @@ class ManiaLinks
             // 15 => $this->mainWindowOff($login), rasp.jukebox->chat_list(['author' => $login, params => 'env:Island'])
             // 16 => $this->mainWindowOff($login), rasp.jukebox->chat_list(['author' => $login, params => 'env:Rally'])
             // 17 => $this->mainWindowOff($login), rasp.jukebox->chat_list(['author' => $login, params => 'env:Speed'])
-            18 => null, //ras->chat_y(['author' => $login])
-            19 => null, //ignored
+            18 => $this->raspJukebox->chatY($player),
+            19 => null, //ignored no
             20 => $this->mainWindowOff($login), //chatAdmin->chat_admin(['author' => $login, params => 'clearjukebox])
             21 => null, //chatAdmin->chat_admin(['author' => $login, params => 'restartmap])
             22 => null, //chatAdmin->chat_admin(['author' => $login, params => 'endround])
@@ -187,7 +194,7 @@ class ManiaLinks
             36 => null, //donate->chat_donate(['author' => $login, params => $donation_values[6]])
             default => null
         };
-        dd($player);
+
         $tot = count($player->get('msg'));
 
         $template = $this->widgetBuilder->render(

@@ -8,7 +8,7 @@ use DOMNode;
 use DOMElement;
 use DOMDocument;
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Services\Arr;
+use Yuhzel\TmController\App\Service\Arr;
 
 /**
  * This class handles parsing of XML-RPC responses.

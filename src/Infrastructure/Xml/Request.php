@@ -6,8 +6,7 @@ namespace Yuhzel\TmController\Infrastructure\Xml;
 
 use DOMElement;
 use DOMDocument;
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Services\Arr;
+use Yuhzel\TmController\App\Service\{Aseco, Arr};
 
 /**
  * Request is responsible for creating XML-RPC

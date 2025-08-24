@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\Services;
+namespace Yuhzel\TmController\App\Service;
 
 use CurlHandle;
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\App\Service\Log;
+use Yuhzel\TmController\App\Service\{Aseco, Log};
 
 class HttpClient
 {

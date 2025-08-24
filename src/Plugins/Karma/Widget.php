@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Plugins\Karma;
 
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Services\Server;
-use Yuhzel\TmController\App\Service\{Aseco, WidgetBuilder};
+use Yuhzel\TmController\App\Service\{Aseco, Server, WidgetBuilder};
 use Yuhzel\TmController\Plugins\Karma\State;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};

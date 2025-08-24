@@ -6,9 +6,8 @@ namespace Yuhzel\TmController\Infrastructure\Gbx;
 
 use Deprecated;
 use Exception;
-use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\App\Service\{Aseco, Socket};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Services\Socket;
 use Yuhzel\TmController\Infrastructure\Xml\{Request, Response};
 
 class Client

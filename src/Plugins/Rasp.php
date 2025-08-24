@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\App\Service\Server;
 use Yuhzel\TmController\Plugins\Rasp\RaspState;
 
 class Rasp

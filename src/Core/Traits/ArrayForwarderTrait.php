@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Core\Traits;
 
-use Yuhzel\TmController\Services\Arr;
+use Yuhzel\TmController\App\Service\Arr;
 
 trait ArrayForwarderTrait
 {

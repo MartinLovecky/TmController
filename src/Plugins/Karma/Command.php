@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Karma;
 
-use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\App\Service\{Aseco, HttpClient, Server};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\App\Service\Aseco;
 use Yuhzel\TmController\Plugins\Karma\Vote;
-use Yuhzel\TmController\Services\HttpClient;
 use Yuhzel\TmController\Repository\PlayerService;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Infrastructure\Xml\Parser;

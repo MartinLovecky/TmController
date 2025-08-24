@@ -2,15 +2,12 @@
 
 namespace Yuhzel\TmController\Plugins\Rasp;
 
-use Yuhzel\TmController\Plugins\Track;
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Plugins\ManiaLinks;
-use Yuhzel\TmController\Plugins\Rasp\VoteType;
-use Yuhzel\TmController\Plugins\Rasp\RaspState;
+use Yuhzel\TmController\Plugins\{ManiaLinks, Track};
+use Yuhzel\TmController\Plugins\Rasp\{VoteType, RaspState};
 use Yuhzel\TmController\App\Service\{Aseco, Log};
-use Yuhzel\TmController\Repository\PlayerService;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\Repository\ChallengeService;
+use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class VoteCommandHandler
 {
@@ -27,188 +24,81 @@ class VoteCommandHandler
 
     public function handleSkip(TmContainer $player): bool
     {
-        $login = $player->get('Login');
-
-        if ($this->handleVoteCancel($player)) {
-            return false;
-        }
-
-        $error = $this->canStartVote($player, 'skip', $this->raspState->max_skipvotes);
-
-        if ($error !== null) {
-            return $this->sendError($login, $error);
-        }
-
-        $mode = $this->challengeService->getGameMode();
-
-        if ($mode === 'rounds' && $this->raspState->r_points_limits) {
-            return $this->checkRoundsPointsLimit('skip', $login);
-        } elseif ($mode === 'time_attack' && $this->raspState->ta_time_limits) {
-            return $this->checkTimeAttackLimit('skip', $login);
-        }
-
-        $this->raspState->num_skipvotes++;
-        $this->voteManager->startVote(
+        return $this->tryStartVote(
             $player,
-            VoteType::SKIP->value,
-            VoteType::SKIP->description(),
-            VoteType::SKIP->defaultRatio()
+            'skip',
+            $this->raspState->max_skipvotes,
+            fn($type, $login) => $this->checkModeLimits($type, $login)
         );
-        return true;
     }
 
     public function handleEndRound(TmContainer $player): bool
     {
-        $login = $player->get('Login');
-
-        if ($this->handleVoteCancel($player)) {
-            return false;
+        $mode = $this->challengeService->getGameMode();
+        if (in_array($mode, ['time_attack', 'laps', 'stunts'], true)) {
+            return $this->sendError($player->get('Login'), 'Mode does not support /endround vote!');
         }
 
-        $error = $this->canStartVote(
+        return $this->tryStartVote(
             $player,
             'endround',
             $this->raspState->max_laddervotes
         );
-
-        if ($error !== null) {
-            return $this->sendError($login, $error);
-        }
-
-        if (in_array($this->challengeService->getGameMode(), ['time_attack', 'laps', 'stunts'], true)) {
-            return $this->sendError($login, 'Mode does not support /endround vote!');
-        }
-
-        $this->voteManager->startVote(
-            $player,
-            VoteType::ENDROUND->value,
-            VoteType::ENDROUND->description(),
-            VoteType::ENDROUND->defaultRatio()
-        );
-
-        return true;
     }
 
     public function handleLadder(TmContainer $player): bool
     {
-        $login = $player->get('Login');
-
-        if ($this->handleVoteCancel($player)) {
-            return false;
-        }
-
-        $error = $this->canStartVote($player, 'ladder', $this->raspState->max_laddervotes);
-
-        if ($error !== null) {
-            return $this->sendError($login, $error);
-        }
-
-        $mode = $this->challengeService->getGameMode();
-        if ($mode === 'rounds' && $this->raspState->r_points_limits) {
-            return $this->checkRoundsPointsLimit('laddder', $login);
-        } elseif ($mode === 'time_attack' && $this->raspState->ta_time_limits) {
-            return $this->checkTimeAttackLimit('ladder', $login);
-        }
-
-        $this->raspState->num_laddervotes++;
-        $this->voteManager->startVote(
+        return $this->tryStartVote(
             $player,
-            VoteType::LADDER->value,
-            VoteType::LADDER->description(),
-            VoteType::LADDER->defaultRatio()
+            'ladder',
+            $this->raspState->max_laddervotes,
+            fn($type, $login) => $this->checkModeLimits($type, $login)
         );
-        return true;
     }
 
     public function handleReplay(TmContainer $player): bool
     {
         $login = $player->get('Login');
 
-        if ($this->handleVoteCancel($player)) {
-            return false;
-        }
-
-        $error = $this->canStartVote($player, 'replay', $this->raspState->max_replayvotes);
-
-        if ($error !== null) {
-            return $this->sendError($login, $error);
-        }
-
         if (
             $this->raspState->replays_limit > 0
             && $this->raspState->replays_counter >= $this->raspState->replays_limit
         ) {
-            $msg = Aseco::formatText(
-                Aseco::getChatMessage('no_more_replay', 'rasp'),
-                $this->raspState->replays_limit,
-                ($this->raspState->replays_limit == 1 ? '' : 's')
-            );
-            return $this->sendError($login, $msg);
+            return $this->sendError($login, "No more replays allowed ({$this->raspState->replays_limit})");
         }
 
-        // Check if track already in jukebox
         $currentUid = $this->challengeService->getUid();
-        if (!empty($this->raspState->jukebox) && array_key_exists($currentUid, $this->raspState->jukebox)) {
-            return $this->sendError($login, 'Track is already getting replayed!');
+        if (isset($this->raspState->jukebox[$currentUid])) {
+            return $this->sendError($login, 'Track is already being replayed!');
         }
 
-        $mode = $this->challengeService->getGameMode();
-
-        if ($mode === 'rounds' && $this->raspState->r_points_limits) {
-            return $this->checkRoundsPointsLimit('replay', $login, true);
-        } elseif ($mode === 'time_attack' && $this->raspState->ta_time_limits) {
-            return $this->checkTimeAttackLimit('replay', $login, true);
-        }
-
-        $this->raspState->replays_counter++;
-        $this->voteManager->startVote(
+        return $this->tryStartVote(
             $player,
-            VoteType::REPLAY->value,
-            VoteType::REPLAY->description(),
-            VoteType::REPLAY->defaultRatio()
+            'replay',
+            $this->raspState->max_replayvotes,
+            fn($type, $login) => $this->checkModeLimits($type, $login, true)
         );
-        return true;
     }
 
-    public function handleKick(TmContainer $player)
+    public function handleKick(TmContainer $player): bool
     {
-        $login  = $player->get('Login');
-        $params = $player->get('command.params');
+        $login = $player->get('Login');
+        $targetLogin = $player->get('command.params');
 
-        if (empty($params)) {
-            return $this->sendError($login, "/kick needs player login");
+        if (!$targetLogin) {
+            return $this->sendError($login, '/kick needs player login');
         }
 
-        $targetPlayer = $this->playerService->getPlayerByLogin($params);
-
+        $targetPlayer = $this->playerService->getPlayerByLogin($targetLogin);
         if (!$targetPlayer) {
-            return $this->sendError($login, "Player not found its case sesitive !");
-        }
-
-        if ($this->handleVoteCancel($player)) {
-            return false;
+            return $this->sendError($login, 'Player not found (case sensitive)');
         }
 
         if (!$this->raspState->allow_kickvotes) {
             return $this->sendError($login, 'Kick votes not allowed!');
         }
 
-        $error = $this->canStartVote($player, 'kick');
-
-        if ($error !== null) {
-            return $this->sendError($login, $error);
-        }
-
-        //TODO - NO KICK ADMIN :)
-
-        $this->voteManager->startVote(
-            $player,
-            VoteType::KICK->value,
-            'Kick ' . Aseco::stripColors($targetPlayer->get('NickName')),
-            VoteType::KICK->defaultRatio()
-        );
-        $this->raspState->chatvote->target = $targetPlayer->get('Login');
-        return true;
+        return $this->tryStartVote($player, 'kick');
     }
 
     public function handleHelp(TmContainer $player): bool
@@ -253,6 +143,45 @@ class VoteCommandHandler
         return true;
     }
 
+    private function tryStartVote(
+        TmContainer $player,
+        string $type,
+        ?int $maxVotes = null,
+        ?callable $modeCheck = null
+    ): bool {
+        $login = $player->get('Login');
+        if ($this->handleVoteCancel($player)) {
+            return false;
+        }
+        $error = $this->canStartVote($player, $type, $maxVotes);
+        if ($error) {
+            return $this->sendError($login, $error);
+        }
+        if ($modeCheck) {
+            $modeError = $modeCheck($type, $login);
+            if ($modeError) {
+                return false;
+            }
+        }
+        $this->incrementVoteCounter($type);
+        $voteTypeEnum = VoteType::from($type);
+        $this->voteManager->startVote(
+            $player,
+            $voteTypeEnum->value,
+            $voteTypeEnum->description(),
+            $voteTypeEnum->defaultRatio()
+        );
+        return true;
+    }
+
+    private function incrementVoteCounter(string $type): void
+    {
+        $counterKey = "num_{$type}votes";
+        if (property_exists($this->raspState, $counterKey)) {
+            $this->raspState->$counterKey++;
+        }
+    }
+
     /**
      * Undocumented function
      *
@@ -265,7 +194,7 @@ class VoteCommandHandler
         $params      = strtolower($player->get('command.params'));
         $login       = $player->get('Login');
 
-        if (empty($this->raspState->chatvote)) {
+        if (!$this->raspState->chatvote) {
             return $this->sendError($login, 'There is no vote in progress!');
         }
 
@@ -277,8 +206,19 @@ class VoteCommandHandler
             return false;
         }
 
-        $this->voteManager->resetVotes($player);
+        $this->voteManager->resetVotes();
         return true;
+    }
+
+    private function checkModeLimits(string $voteType, string $login, bool $isMinCheck = false): bool
+    {
+        $mode = $this->challengeService->getGameMode();
+        if ($mode === 'rounds' && $this->raspState->r_points_limits) {
+            return $this->checkRoundsPointsLimit($voteType, $login, $isMinCheck);
+        } elseif ($mode === 'time_attack' && $this->raspState->ta_time_limits) {
+            return $this->checkTimeAttackLimit($voteType, $login, $isMinCheck);
+        }
+        return false;
     }
 
     private function canStartVote(TmContainer $player, string $type, ?int $maxVotes = null): ?string

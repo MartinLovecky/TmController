@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\Services;
+namespace Yuhzel\TmController\App\Service;
 
 class Socket
 {

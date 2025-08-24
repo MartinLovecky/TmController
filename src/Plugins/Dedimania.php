@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\App\Service\{Aseco, DedimaniaClient, Server};
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\ManiaLinks;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Plugins\Manager\EventContext;
-use Yuhzel\TmController\Services\{DedimaniaClient, Server};
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class Dedimania

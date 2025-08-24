@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\Services;
+namespace Yuhzel\TmController\App\Service;
 
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Services\HttpClient;
-use Yuhzel\TmController\Infrastructure\Xml\Request;
-use Yuhzel\TmController\Infrastructure\Xml\Response;
+use Yuhzel\TmController\App\Service\{Aseco, HttpClient};
+use Yuhzel\TmController\Infrastructure\Xml\{Request, Response};
 
 class DedimaniaClient
 {

@@ -39,16 +39,16 @@ class RaspVotes
 
     public function handleChatCommand(TmContainer $player): void
     {
-        match (strtolower($player->get('command.name'))) {
-            VoteType::ENDROUND->value => $this->voteHandler->handleEndRound($player),
-            VoteType::LADDER->value   => $this->voteHandler->handleLadder($player),
-            VoteType::SKIP->value     => $this->voteHandler->handleSkip($player),
-            VoteType::REPLAY->value   => $this->voteHandler->handleReplay($player),
-            VoteType::KICK->value     => $this->voteHandler->handleKick($player),
-            VoteType::HELP->value     => $this->voteHandler->handleHelp($player),
-            VoteType::CANCEL->value   => $this->voteHandler->handleVoteCancel($player),
-            default                   => null,
-        };
+        $command = strtolower($player->get('command.name'));
+        foreach (VoteType::cases() as $voteType) {
+            if ($voteType->value === $command) {
+                $method = 'handle' . ucfirst($voteType->value);
+                if (method_exists($this->voteHandler, $method)) {
+                    $this->voteHandler->$method($player);
+                }
+                return;
+            }
+        }
     }
 
     public function onSync(): void
@@ -73,34 +73,20 @@ class RaspVotes
             return;
         }
 
-        if ($this->raspState->chatvote?->type === VoteType::ENDROUND->value) {
-            $message = Aseco::formatText(
-                Aseco::getChatMessage('vote_end', 'rasp'),
-                $this->raspState->chatvote->desc,
-                'expired',
-                'Server'
-            );
-            $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
-            $this->voteManager->resetVotes();
-        }
+        $this->checkVoteExpiry(VoteType::ENDROUND->value, 'expired');
     }
 
     public function onCheckpoint(): void
     {
-        if ($this->raspState->chatvote) {
-            $expireLimit = $this->raspState->ta_expire_limit[$this->raspState->chatvote->type] ?? 90;
-            $played = $this->track->timePlaying();
+        if (!$this->raspState->chatvote) {
+            return;
+        }
+        $type = $this->raspState->chatvote->type;
+        $expireLimit = $this->raspState->ta_expire_limit[$type] ?? 90;
+        $played = $this->track->timePlaying();
 
-            if (($played - $this->raspState->ta_expire_start) >= $expireLimit) {
-                $message = Aseco::formatText(
-                    Aseco::getChatMessage('vote_end', 'rasp'),
-                    $this->raspState->chatvote->desc,
-                    'expired',
-                    'Server'
-                );
-                $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
-                $this->voteManager->resetVotes();
-            }
+        if (($played - $this->raspState->ta_expire_start) >= $expireLimit) {
+            $this->checkVoteExpiry($type, 'expired');
         }
     }
 
@@ -110,17 +96,32 @@ class RaspVotes
             return;
         }
 
-        $message = Aseco::getChatMessage('vote_explain', 'rasp');
-        $this->client->query('ChatSendServerMessageToLogin', [
-            Aseco::formatColors($message),
-            $player->get('Login')
-        ]);
+        $this->sendMessage($player, Aseco::getChatMessage('vote_explain', 'rasp'));
     }
 
     public function onPlayerDisconnect(TmContainer $player): void
     {
-        if ($this->raspState->chatvote && $this->raspState->chatvote->login === $player->get('Login')) {
-            $this->voteManager->resetVotes($player);
+        if ($this->raspState->chatvote?->login === $player->get('Login')) {
+            $this->voteManager->resetVotes();
         }
+    }
+
+    private function checkVoteExpiry(string $type, string $status): void
+    {
+        if ($this->raspState->chatvote?->type === $type) {
+            $message = Aseco::formatText(
+                Aseco::getChatMessage('vote_end', 'rasp'),
+                $this->raspState->chatvote->desc,
+                $status,
+                'Server'
+            );
+            $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
+            $this->voteManager->resetVotes();
+        }
+    }
+
+    private function sendMessage(TmContainer $player, string $message): void
+    {
+        $this->client->query('ChatSendServerMessageToLogin', [Aseco::formatColors($message), $player->get('Login')]);
     }
 }

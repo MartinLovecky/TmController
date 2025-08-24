@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Plugins\Karma;
 
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\App\Service\{Aseco, HttpClient};
 use Yuhzel\TmController\Plugins\Karma\State;
-use Yuhzel\TmController\Services\HttpClient;
-use Yuhzel\TmController\Repository\PlayerService;
+use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 use Yuhzel\TmController\Infrastructure\Xml\Parser;
-use Yuhzel\TmController\Repository\ChallengeService;
 use Yuhzel\TmController\Infrastructure\Gbx\ChallMapFetcher;
 
 class Vote

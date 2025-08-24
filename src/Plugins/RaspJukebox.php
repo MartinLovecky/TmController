@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Plugins\Rasp\Vote;
-use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\App\Service\{Aseco, Server};
+use Yuhzel\TmController\Core\TmContainer;
+use Yuhzel\TmController\Plugins\Rasp\{Vote, RaspState};
 use Yuhzel\TmController\Plugins\ManiaLinks;
-use Yuhzel\TmController\Plugins\Rasp\RaspState;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Repository\ChallengeService;
 
@@ -38,9 +37,8 @@ class RaspJukebox
         array_pop($this->buffer);
     }
 
-    public function chatY(array $command): void
+    public function chatY(TmContainer $player): void
     {
-        $player = $command['author'];
         $login  = $player->get('Login');
 
         if ($this->isSpectatorVoteNotAllowed($player, $login)) {

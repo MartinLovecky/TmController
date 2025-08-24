@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\App\Service;
 
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Services\Server;
+use Yuhzel\TmController\App\Service\Server;
 
 class Aseco
 {

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Infrastructure\Tmx;
 
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Services\HttpClient;
+use Yuhzel\TmController\App\Service\{Aseco, HttpClient};
 
 class InfoFetcher
 {

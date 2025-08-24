@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
+use Yuhzel\TmController\App\Service\Server;
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\Karma\{
     Auth,
@@ -12,7 +13,6 @@ use Yuhzel\TmController\Plugins\Karma\{
     State,
     Widget
 };
-use Yuhzel\TmController\Services\Server;
 
 class ManiaKarma
 {

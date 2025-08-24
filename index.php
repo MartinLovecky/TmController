@@ -44,7 +44,7 @@ $dotenv->required([
     'dedi_nation'
 ])->notEmpty();
 
-Yuhzel\TmController\Services\Server::init($container);
+\Yuhzel\TmController\App\Service\Server::init($container);
 
 $fluent = $container->get(\Yuhzel\TmController\Database\Fluent::class);
 $structure = $container->get(\Yuhzel\TmController\Database\Structure::class);

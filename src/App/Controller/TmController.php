@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\App\Controller;
 
-use Yuhzel\TmController\App\Service\Log;
-use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\App\Service\{Aseco, Log, Server};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Services\Server;
 use Yuhzel\TmController\Core\Enums\RestartMode;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Plugins\Manager\PluginManager;
@@ -400,8 +398,7 @@ class TmController
                 'TrackMania.BeginChallenge' => Log::debug('beginRace', $call->toArray(), 'beginRace'),
                 // $this->endRace($call)
                 'TrackMania.EndChallenge' => Log::debug('EndChallenge', $call->toArray(), 'EndChallenge'),
-                // onPlayerLink
-                'TrackMania.PlayerManialinkPageAnswer' => Log::debug('onPlayerLink', $call->toArray(), 'onPlayerLink'),
+                'TrackMania.PlayerManialinkPageAnswer' => $this->pm->callFunctions('onPlayerLink', $call),
                 // onBillUpdated
                 'TrackMania.BillUpdated' => Log::debug('BillUpdated', $call->toArray(), 'BillUpdated'),
                 // onChallengeListModified
@@ -418,7 +415,7 @@ class TmController
                 'TrackMania.ManualFlowControlTransition' => Log::debug('FlowControl', $call->toArray(), 'FlowControl'),
                 // onVoteUpdated
                 'TrackMania.VoteUpdated' => Log::debug('VoteUpdated', $call->toArray(), 'VoteUpdated'),
-                default => dd("Handle:? {$call->get('methodName')}")
+                default => Log::debug("Handle:? {$call->get('methodName')}")
             };
         }
     }

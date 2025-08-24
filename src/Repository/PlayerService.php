@@ -38,7 +38,7 @@ class PlayerService
         if ($this->hasPlayer($login)) {
             return;
         }
-
+        /** @var TmContainer $info */
         $info = $this->getDetailedPlayerInfo($login);
         $info
             ->set('Nation', Aseco::mapCountry($info['Path']))

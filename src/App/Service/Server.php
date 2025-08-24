@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yuhzel\TmController\Services;
+namespace Yuhzel\TmController\App\Service;
 
 use Yuhzel\TmController\Core\TmContainer;
 use League\Container\Container;

@@ -29,19 +29,20 @@ class VoteManager
     public function startVote(TmContainer $player, string $type, string $desc, float $ratio): void
     {
         $login = $player->get('Login');
+        $requiredVotes = $this->calculateRequiredVotes($ratio);
 
         $this->raspState->chatvote = new Vote([
             'login' => $login,
             'nick'  => $player->get('NickName'),
-            'votes' => $this->requiredVotes($ratio),
+            'votes' => $requiredVotes,
             'type'  => $type,
             'desc'  => $desc,
         ]);
 
         $this->raspState->plrvotes = [];
+        $this->raspState->ta_expire_start = $this->track->timePlaying();
         $this->raspState->r_expire_num = 0;
         $this->raspState->ta_show_num = 0;
-        $this->raspState->ta_expire_start = $this->track->timePlaying();
 
         $message = Aseco::formatText(
             Aseco::getChatMessage('vote_start', 'rasp'),
@@ -58,36 +59,24 @@ class VoteManager
         );
     }
 
-    public function resetVotes(?TmContainer $player = null): void
+    public function resetVotes(): void
     {
-        if (!empty($this->raspState->chatvote)) {
-            Aseco::console(
-                'Vote by {1} to {2} reset!',
-                $player->get('Login') ?? $this->raspState->chatvote->login ?? '',
-                $this->raspState->chatvote->desc ?? 'unknown'
-            );
+        if ($this->raspState->chatvote) {
+            $this->client->query('ChatSendServerMessage', ["Vote canceled"]);
+            $this->raspState->chatvote = null;
         }
-
-        $message = Aseco::getChatMessage('vote_cancel', 'rasp');
-        $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
-        $this->raspState->chatvote = null;
         $this->maniaLinks->allVotePanelsOff();
     }
 
-    private function requiredVotes(float $ratio): int
+    private function calculateRequiredVotes(float $ratio): int
     {
         $activePlayers = $this->playerService->getActivePlayersCount($this->raspState->allow_spec_voting);
 
-        if ($activePlayers <= 7) {
-            $votes = (int)round($activePlayers * $ratio);
-        } else {
-            $votes = (int)floor($activePlayers * $ratio);
-        }
+        $votes = $activePlayers <= 7 ? (int)round($activePlayers * $ratio) : (int)floor($activePlayers * $ratio);
+        $votes = max(1, $votes);
 
-        if ($votes === 0) {
-            $votes = 1;
-        // Prevents a single player from being able to pass a vote when there are only 2-3 players
-        } elseif ($activePlayers >= 2 && $activePlayers <= 3 && $votes === 1) {
+        // Prevent 1-player vote when only 2-3 players
+        if ($activePlayers >= 2 && $activePlayers <= 3 && $votes === 1) {
             $votes = 2;
         }
 
