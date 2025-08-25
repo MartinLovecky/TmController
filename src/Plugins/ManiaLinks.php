@@ -7,7 +7,7 @@ namespace Yuhzel\TmController\Plugins;
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Repository\PlayerService;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\App\Service\{Aseco, WidgetBuilder};
+use Yuhzel\TmController\App\Service\{Aseco, Log, WidgetBuilder};
 use Yuhzel\TmController\Plugins\Manager\PageListManager;
 
 class ManiaLinks
@@ -165,15 +165,15 @@ class ManiaLinks
             8  => null, // chat.records->chat_recs(['author' => $login, params => ''])
             9  => null, // chat.dedimania->chat_dedirecs(['author' => $login, params => ''])
             10 => null, // tmxInfo->chat_tmxrecs(['author' => $login, params => ''])
-            11 => $this->mainWindowAndJukebox($login, 'env:Stadium'),
-            12 => $this->mainWindowAndJukebox($login, 'env:Alpine'),
-            13 => $this->mainWindowAndJukebox($login, 'env:Bay'),
-            14 => $this->mainWindowAndJukebox($login, 'env:Coast'),
-            15 => $this->mainWindowAndJukebox($login, 'env:Island'),
-            16 => $this->mainWindowAndJukebox($login, 'env:Rally'),
-            17 => $this->mainWindowAndJukebox($login, 'env:Speed'),
+            11 => $this->mainWindowAndJukebox($login), // NOTE: That was a lot of shit I went through.
+            12 => Log::info('DISABLED env Alpine', channel:'event'),
+            13 => Log::info('DISABLED env Bay', channel:'event'),
+            14 => Log::info('DISABLED env Coast', channel:'event'),
+            15 => Log::info('DISABLED env Island', channel:'event'),
+            16 => Log::info('DISABLED env Rally', channel:'event'),
+            17 => Log::info('DISABLED env Speed', channel:'event'),
             18 => $this->raspJukebox->chatY($player),
-            19 => null, //ignored no
+            19 => null, //ignored chatNo
             20 => $this->mainWindowOff($login), //chatAdmin->chat_admin(['author' => $login, params => 'clearjukebox])
             21 => null, //chatAdmin->chat_admin(['author' => $login, params => 'restartmap])
             22 => null, //chatAdmin->chat_admin(['author' => $login, params => 'endround])
@@ -337,12 +337,11 @@ class ManiaLinks
         $this->renderAndSendToLogin($player->get('Login'), 'costum_ui', ['ui' => '<round_scores visible="True"/>']);
     }
 
-    private function mainWindowAndJukebox($login, $env): void
+    private function mainWindowAndJukebox(string $login): void
     {
         $this->mainWindowOff($login);
-        //$this->raspJukebox->chat_list(['author' => $login, 'params' => "env:$env"]);
+        $this->raspJukebox->chatList($login);
     }
-
 
     private function buildData(TmContainer $player, int $tot): array
     {

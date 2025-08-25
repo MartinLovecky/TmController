@@ -4,142 +4,242 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\App\Service;
 
-use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\ChatCmd;
 use Yuhzel\TmController\Plugins\Manager\EventContext;
 use Yuhzel\TmController\Plugins\Manager\PageListManager;
 use Yuhzel\TmController\Plugins\RaspJukebox;
 use Yuhzel\TmController\Repository\ChallengeService;
+use Yuhzel\TmController\Repository\RecordService;
 
 class RaspHelper
 {
     private $challengeListCache = [];
+    private const MAX_ACTION_ID = 1900;
+    private const MAX_LINES_PER_PAGE = 15;
 
     public function __construct(
+        protected EventContext $eventContext,
         protected ChatCmd $chatCmd,
         protected ChallengeService $challengeService,
         protected PageListManager $pageListManager,
-        protected EventContext $eventContext,
+        protected RecordService $recordService,
     ) {
     }
 
-    public function getAllChallenges(TmContainer $player, string $wildcard, string $env)
+    /**
+     * Show all Stadium challenges, optionally filtered by name/author.
+     *
+     * @param string $login
+     * @param string $search
+     * @return void
+     */
+    public function getAllChallenges(string $login, string $search = '*'): void
     {
-        $this->pageListManager->setPages([], [
-            'title'  => 'Tracks On This Server',
-            'layout' => (SERVER::$packmask !== 'Stadium')
-                ? [1.39, 0.12, 0.1, 0.6, 0.4, 0.17]
-                : [1.22, 0.12, 0.1, 0.6, 0.4],
+        $this->pageListManager->setPages($login, [], [
+            'title'  => 'Stadium Tracks',
+            'layout' => [1.22, 0.12, 0.1, 0.6, 0.4],
             'icon'   => ['Icons128x128_1', 'NewTrack', 0.02],
         ]);
 
-        $rec = $this->chatCmd->getRecs();
-        $jb_buffer = $this->eventContext->data[RaspJukebox::class]->buffer;
+        $tracklist = $this->getChallengesCache();
+        $uids      = array_column($tracklist, 'UId');
 
-        if (!$rec->isEmpty()) {
-            $newlist = $this->getChallengesCache();
-            $tid   = 1;
-            $lines = 0;
-            $headerRow = (SERVER::$packmask !== 'Stadium')
-                ? ['Id','Rec','Name','Author','Env']
-                : ['Id','Rec','Name','Author'];
+        // Fetch top times for all Stadium tracks
+        $recordsByUid = $this->recordService->getTopTimes($uids);
+        $jbBuffer     = $this->eventContext->data[RaspJukebox::class]->buffer;
 
-            $currentPage = [$headerRow];
-            $envids = [
-                'Stadium' => 11,
-                'Alpine'  => 12,
-                'Bay'     => 13,
-                'Coast'   => 14,
-                'Island'  => 15,
-                'Rally'   => 16,
-                'Speed'   => 17
+        $headerRow = ['Id', 'Rec', 'Name', 'Author'];
+        $allRows   = [];
+        $trackId   = 1;
+
+        foreach ($tracklist as $row) {
+            if (($row['Environnement'] ?? '') !== 'Stadium') {
+                continue;
+            }
+
+            if (!$this->matchesSearch($row, $search)) {
+                continue;
+            }
+
+            $uid = $row['UId'];
+
+            $this->pageListManager->addTrack($login, [
+                'name'        => $row['Name'],
+                'author'      => $row['Author'] ?? null,
+                'environment' => $row['Environnement'],
+                'filename'    => $row['FileName'],
+                'uid'         => $uid,
+            ]);
+
+            $trackName   = $this->formatTrackName($row['Name'], $uid, $jbBuffer, $trackId);
+            $trackAuthor = $this->formatAuthor($row['Author'] ?? 'Unknown', $trackId);
+
+            // Calculate actual leaderboard rank
+            $pos = '-- ';
+            if (!empty($recordsByUid[$uid])) {
+                $topTime = $recordsByUid[$uid][0]['time'] ?? null;
+                if ($topTime !== null) {
+                    // The rank is the index of the top time + 1
+                    $rank = 1;
+                    foreach ($recordsByUid[$uid] as $idx => $entry) {
+                        if ($entry['time'] === $topTime) {
+                            $rank = $idx + 1;
+                            break;
+                        }
+                    }
+                    $pos = str_pad((string)$rank, 2, '0', STR_PAD_LEFT);
+                }
+            }
+
+            $allRows[] = [
+                sprintf('%03d.%s.', $trackId, $pos),
+                $trackName,
+                $trackAuthor,
             ];
 
-            foreach ($newlist as $row) {
-                $match = (
-                    $wildcard === '*'
-                    || stripos(Aseco::stripColors($row['Name']), $wildcard) !== false
-                    || stripos($row['Author'], $wildcard) !== false);
-                $envMatch = ($env === '*' || stripos($row['Environnement'], $env) !== false);
+            $trackId++;
+        }
 
-                if (!$match || !$envMatch) {
-                    continue;
-                }
-
-                $this->pageListManager->addTrack([
-                    'name'        => $row['Name'],
-                    'author'      => $row['Author'] ?? null,
-                    'environment' => $row['Environnement'],
-                    'filename'    => $row['FileName'],
-                    'uid'         => $row['UId'],
-                ]);
-
-                $trackname = Aseco::stripColors($row['Name']);
-                $trackname = in_array($row['UId'], $jb_buffer) ? '{#grey}' . $trackname : '{#black}' . $trackname;
-
-                if (Aseco::getSetting('clickable_lists') && $tid <= 1900 && !in_array($row['UId'], $jb_buffer)) {
-                    $trackname = [$trackname, $tid + 100];
-                }
-            }
+        // Pagination
+        foreach (array_chunk($allRows, self::MAX_LINES_PER_PAGE) as $pageRows) {
+            $this->pageListManager->addPage($login, array_merge([$headerRow], $pageRows));
         }
     }
 
+    /**
+     * Check if track matches search string (name or author).
+     *
+     * @param array $row
+     * @param string $search
+     * @return boolean
+     */
+    private function matchesSearch(array $row, string $search): bool
+    {
+        if ($search === '*') {
+            return true;
+        }
+
+        $name   = Aseco::stripColors($row['Name'] ?? '');
+        $author = $row['Author'] ?? '';
+
+        return stripos($name, $search) !== false || stripos($author, $search) !== false;
+    }
+
+    /**
+     * Format track name for display (color + clickable id if enabled).
+     *
+     * @param string $name
+     * @param string $uid
+     * @param array $jbBuffer
+     * @param integer $trackId
+     * @return string|array
+     */
+    private function formatTrackName(string $name, string $uid, array $jbBuffer, int $trackId): string|array
+    {
+        $trackName = Aseco::stripColors($name);
+        $inHistory = in_array($uid, $jbBuffer, true);
+
+        $colorCode = $inHistory ? '{#grey}' : '{#black}';
+        $trackName = $colorCode . $trackName;
+
+        if (!$inHistory && Aseco::getSetting('clickable_lists') && $trackId <= self::MAX_ACTION_ID) {
+            return [$trackName, $trackId + 100];
+        }
+
+        return $trackName;
+    }
+
+    /**
+     * Format track author for display (clickable if enabled).
+     *
+     * @param string $author
+     * @param integer $trackId
+     * @return string|array
+     */
+    private function formatAuthor(string $author, int $trackId): string|array
+    {
+        if (Aseco::getSetting('clickable_lists') && $trackId <= self::MAX_ACTION_ID) {
+            return [$author, -100 - $trackId];
+        }
+
+        return $author;
+    }
+
+    /**
+     *
+     * @return array
+     */
     private function getChallengesCache(): array
     {
-        if (!$this->challengeListCache) {
-            $newlist = [];
-            $done = false;
-            $size = 300;
-            $i = 0;
+        if ($this->challengeListCache) {
+            return $this->challengeListCache;
+        }
 
-            while (!$done) {
-                $tracks = $this->challengeService->getChallengeList($size, $i);
-                foreach ($tracks as $throw) {
-                    $trackInfo = $this->getChallengeData(Server::$trackDir . $throw['FileName']);
-                    if ($trackInfo['name'] != 'file not found') {
-                        $trow['Author'] = $trackInfo['author'];
-                        $trow['AuthorTime']  = $trackInfo['authortime'];
-                        $trow['AuthorScore'] = $trackInfo['authorscore'];
-                        $newlist[$trow['UId']] = $trow;
-                    }
-                }
-                if (count($tracks) < $size) {
-                    $done = true;
-                } else {
-                    $i += $size;
+        $cache = [];
+        $size = 300;
+        $i = 0;
+        $done = false;
+
+        while (!$done) {
+            $tracks = $this->challengeService->getChallengeList($size, $i);
+            foreach ($tracks as $track) {
+                $info = $this->getChallengeData(Server::$trackDir . $track['FileName']);
+                if ($info['name'] !== 'file not found') {
+                    $cache[$info['uid']] = [
+                        'UId'           => $info['uid'],
+                        'Name'          => $info['name'],
+                        'Author'        => $info['author'],
+                        'Environnement' => $info['environment'],
+                        'AuthorTime'    => $info['authortime'],
+                        'AuthorScore'   => $info['authorscore'],
+                        'FileName'      => $track['FileName'],
+                        'Coppers'       => $info['coppers'],
+                    ];
                 }
             }
 
-            $this->challengeListCache = $newlist;
+            if (count($tracks) < $size) {
+                $done = true;
+            } else {
+                $i += $size;
+            }
         }
 
-        return $this->challengeListCache;
+        $this->challengeListCache = $cache;
+        return $cache;
     }
 
+    /**
+     * gets gbx data in array
+     *
+     * @param string $fileName
+     * @return array
+     */
     private function getChallengeData(string $fileName): array
     {
-        $ret = [];
-
         if (!file_exists($fileName)) {
-            $ret['name'] = 'file not found';
-            $ret['votes'] = 500;
-            return $ret;
+            return [
+            'uid' => '',
+            'name' => 'file not found',
+            'author' => 'unknown',
+            'environment' => '',
+            'authortime' => 0,
+            'authorscore' => 0,
+            'coppers' => 0,
+            ];
         }
 
         $gbx = $this->challengeService->getGBX();
         $gbx->processFile($fileName);
-        $ret['uid'] = $gbx->UId;
-        $ret['name'] = str_replace(
-            ["\n\n", "\r", "\n"],
-            [' ', '', ''],
-            $gbx->name
-        );
-        $ret['author'] = $gbx->author;
-        $ret['environment'] = $gbx->envir;
-        $ret['authortime'] = $gbx->authorTime;
-        $ret['authorscore'] = $gbx->authorScore;
-        $ret['coppers'] = $gbx->cost;
 
-        return $ret;
+        return [
+            'uid' => $gbx->UId,
+            'name' => str_replace(["\n\n", "\r", "\n"], ' ', $gbx->name),
+            'author' => $gbx->author,
+            'environment' => $gbx->envir,
+            'authortime' => $gbx->authorTime,
+            'authorscore' => $gbx->authorScore,
+            'coppers' => $gbx->cost,
+        ];
     }
 }

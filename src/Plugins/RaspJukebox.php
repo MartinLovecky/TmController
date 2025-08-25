@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Service\{Aseco, Server};
+use Yuhzel\TmController\App\Service\{Aseco, RaspHelper, Server};
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\Rasp\{Vote, RaspState};
 use Yuhzel\TmController\Plugins\ManiaLinks;
@@ -21,6 +21,7 @@ class RaspJukebox
         protected Client $client,
         protected ManiaLinks $maniaLinks,
         protected RaspState $raspState,
+        protected RaspHelper $raspHelper,
     ) {
     }
 
@@ -63,6 +64,12 @@ class RaspJukebox
         }
 
         $this->sendNoVoteMessage($login);
+    }
+
+    public function chatList(string $login): void
+    {
+        $this->raspHelper->getAllChallenges($login);
+        $this->maniaLinks->eventManiaLink(TmContainer::fromArray(['login' => $login, 'message' => 1]));
     }
 
     private function isSpectatorVoteNotAllowed($player, string $login): bool

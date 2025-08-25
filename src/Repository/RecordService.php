@@ -6,86 +6,137 @@ namespace Yuhzel\TmController\Repository;
 
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Database\Table;
-use Yuhzel\TmController\Repository\{ChallengeService, RepositoryManager};
+use Yuhzel\TmController\Repository\{RepositoryManager};
 
 class RecordService
 {
-    private string $uid = '';
+    private const DEFAULT_TOP_LIMIT = 30;
 
-    public function __construct(
-        protected RepositoryManager $repository,
-        //protected ChallengeService $challengeService
-    ) {
-        //$this->uid = //$this->challengeService->getUid();
-        //$this->createRecord($this->uid, TmContainer::fromArray(['ChallengeId' => $this->uid]));
+    public function __construct(protected RepositoryManager $repository)
+    {
     }
 
+    /**
+     * Update a leaderboard for a given challenge.
+     * Keeps only top N times (default 30).
+     *
+     * @param string $challengeId
+     * @param string $playerId
+     * @param integer $newTime
+     * @return void
+     */
     public function updateLeaderboard(
         string $challengeId,
         string $playerId,
         int $newTime
     ): void {
-        $times = $this->repository->fetch(Table::RECORDS, 'ChallengeId', $challengeId);
+        $record = $this->fetchSingle($challengeId);
+        $times = $record->get('Times', []);
 
-        // Filter out existing player's entry if it exists
-        $times = array_filter($times, fn ($entry) => $entry['playerId'] !== $playerId);
+        // Remove any existing entry for this player
+        $times = array_filter($times, fn($entry) => $entry['playerId'] !== $playerId);
 
-        // Determine if the new time qualifies for top 30
-        if (count($times) >= 30) {
+        // Only add if qualifies for top N
+        if (count($times) >= self::DEFAULT_TOP_LIMIT) {
             $maxTime = max(array_column($times, 'time'));
-
-            // If new time is worse than the worst in top 30
             if ($newTime >= $maxTime) {
                 return;
             }
         }
 
-        // Add the new or improved time
         $times[] = ['playerId' => $playerId, 'time' => $newTime];
 
-        // keep only top 30
-        usort($times, fn ($a, $b) => $a['time'] <=> $b['time']);
-        $times = array_slice($times, 0, 30);
+        // Keep top N sorted
+        usort($times, fn($a, $b) => $a['time'] <=> $b['time']);
+        $times = array_slice($times, 0, self::DEFAULT_TOP_LIMIT);
 
-        //TODO : Checkpoints
-        $record = [
-            'Times' => $times
+        $recordData = [
+            'Times' => json_encode($times),
+            'Checkpoints' => json_encode($record->get('Checkpoints', []))
         ];
 
-        $this->repository->update(Table::RECORDS, $record, $challengeId);
+        $this->repository->update(Table::RECORDS, $recordData, $challengeId);
     }
 
-    public function getRecord(string $challengeId): TmContainer
+    /**
+     * Fetch a record for a single challenge.
+     *
+     * @param string $challengeId
+     * @return TmContainer
+     */
+    public function fetchSingle(string $challengeId): TmContainer
     {
-        /** @var ?array $record */
         $record = $this->repository->fetch(Table::RECORDS, 'ChallengeId', $challengeId);
 
-        if (!isset($record)) {
+        if (!$record) {
             return TmContainer::fromArray([]);
         }
 
-        $record['Times'] = json_decode($record['Times'], true);
-        $record['Checkpoints'] = json_decode($record['Checkpoints'], true);
+        $record['Times'] = json_decode($record['Times'] ?? '[]', true);
+        $record['Checkpoints'] = json_decode($record['Checkpoints'] ?? '[]', true);
 
         return TmContainer::fromArray($record);
     }
 
-    public function getRecordForPlayer(string $challengeId, string $playerId): array
+    /**
+     * Fetch leaderboard for multiple challenges (batch).
+     *
+     * @param string[] $challengeIds
+     * @param int $limit
+     * @return array<string, array> keyed by challengeId
+     */
+    public function getTopTimes(array $challengeIds, int $limit = self::DEFAULT_TOP_LIMIT): array
     {
-        $record = $this->getRecord($challengeId);
-        if ($record->has("Times.{$playerId}")) {
-            return [$playerId => $record->get("Times.{$playerId}")];
+        $all = [];
+        foreach ($challengeIds as $challengeId) {
+            $record = $this->fetchSingle($challengeId);
+            $times = $record->get('Times', []);
+            usort($times, fn($a, $b) => $a['time'] <=> $b['time']);
+            $all[$challengeId] = array_slice($times, 0, $limit);
         }
-        return [];
+        return $all;
     }
 
+    /**
+     * Get a player's best time on a challenge.
+     *
+     * @param string $challengeId
+     * @param string $playerId
+     * @return array|null
+     */
+    public function getRecordForPlayer(string $challengeId, string $playerId): ?array
+    {
+        $record = $this->fetchSingle($challengeId);
+        $times = $record->get('Times', []);
+
+        foreach ($times as $entry) {
+            if ($entry['playerId'] === $playerId) {
+                return $entry;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Create an empty record for a challenge if none exists.
+     *
+     * @param string $challengeId
+     * @return void
+     */
     public function createEmptyRecord(string $challengeId): void
     {
+        $existing = $this->repository->fetch(Table::RECORDS, 'ChallengeId', $challengeId);
+        if ($existing) {
+            return;
+        }
+
         $data = [
-            'challengeId' => $challengeId,
-            'Times' => '{}',
-            'Checkpoints' => '{}'
+            'ChallengeId' => $challengeId,
+            'Times' => json_encode([]),
+            'Checkpoints' => json_encode([])
         ];
+
         $this->repository->insert(Table::RECORDS, $data, $challengeId);
     }
 }

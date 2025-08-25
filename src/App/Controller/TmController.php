@@ -292,7 +292,7 @@ class TmController
 
     private function buildRecordMessage(TmContainer $challenge): string
     {
-        $curRecordTmContainer = $this->recordService->getRecord($this->challengeService->getUid());
+        $curRecordTmContainer = $this->recordService->fetchSingle($this->challengeService->getUid());
         $gbx = $this->challengeService->getGBX();
 
         if (!$curRecordTmContainer->isEmpty()) {

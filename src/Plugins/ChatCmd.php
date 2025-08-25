@@ -58,7 +58,7 @@ class ChatCmd
 
     public function getRecs(): TmContainer
     {
-        return $this->recordService->getRecord($this->challengeService->getUid());
+        return $this->recordService->fetchSingle($this->challengeService->getUid());
     }
 
     public function chatRecs()
