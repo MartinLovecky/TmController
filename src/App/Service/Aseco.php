@@ -441,6 +441,41 @@ class Aseco
         return null;
     }
 
+    public static function getSetting(string $key, string $jsonFile = 'config'): mixed
+    {
+        $filePath = Server::$jsonDir . "{$jsonFile}.json";
+
+        // Get file contents safely
+        $fileContents = self::safeFileGetContents($filePath);
+        if (!$fileContents) {
+            self::console("[X8seco] File not found or empty: {$filePath}");
+            return null;
+        }
+
+        // Decode JSON safely
+        $data = self::safeJsonDecode($fileContents);
+        if (empty($data)) {
+            self::console("[X8seco] JSON decode failed or empty for file: {$filePath}");
+            return null;
+        }
+
+        // Support nested keys with dot notation
+        $keys = explode('.', $key);
+        $value = $data;
+
+        foreach ($keys as $k) {
+            if (is_array($value) && array_key_exists($k, $value)) {
+                $value = $value[$k];
+            } else {
+                self::console("[X8seco] Key '{$key}' not found in JSON file: {$filePath}");
+                return null;
+            }
+        }
+
+        return $value;
+    }
+
+
     public static function safeFileGetContents(string $filename): ?string
     {
         if (!is_readable($filename) && !is_file($filename)) {

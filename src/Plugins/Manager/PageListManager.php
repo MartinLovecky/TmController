@@ -9,23 +9,26 @@ use Yuhzel\TmController\Repository\PlayerService;
 
 class PageListManager
 {
-    protected TmContainer $player;
+    protected array $players = [];
 
     public function __construct(protected PlayerService $playerService)
     {
         $this->playerService->eachPlayer(function (TmContainer $x) {
-            $this->player = $x;
-            $this->player->set('page.index', 0);
-            $this->player->set('page.data', TmContainer::fromArray([]));
-            $this->player->set('page.config', TmContainer::fromArray([]));
-            $this->player->set('tracklist', TmContainer::fromArray([]));
+            $login = $x->get('Login');
+            $x->set('page.index', 0);
+            $x->set('page.data', TmContainer::fromArray([]));
+            $x->set('page.config', TmContainer::fromArray([]));
+            $x->set('tracklist', TmContainer::fromArray([]));
+
+            $this->players[$login] = $x;
         });
     }
 
-    public function navigate(int $command): void
+    public function navigate(string $login, int $command): void
     {
-        $total = count($this->player['page.data']) - 1;
-        $current = $this->player->get('page.index', 0);
+        $player  = $this->player($login);
+        $total   = count($player['page.data']) - 1;
+        $current = $player->get('page.index', 0);
 
         switch ($command) {
             case -4:
@@ -50,38 +53,54 @@ class PageListManager
                 break;
         }
 
-        $current = max(0, min($current, $total));
-        $this->player['page.index'] = $current;
+        $player['page.index'] = max(0, min($current, $total));
     }
 
-    public function currentPage(): array|string
+    public function currentPage(string $login): array|string
     {
-        $index = $this->player->get('page.index', 0);
-        return $this->player->get("page.data.$index", []);
+        $player = $this->player($login);
+        $index = $player->get('page.index', 0);
+        return $player->get("page.data.$index", []);
     }
 
-    public function setPages(array $pages, array $config = []): void
+    public function goLastPage(string $login): void
     {
-        $this->player['page.data']   = TmContainer::fromArray($pages);
-        $this->player['page.config'] = TmContainer::fromArray($config);
+        $player = $this->player($login);
+        $total   = count($player->get('page.data', [])) - 1;
+        $player['page.index'] = max(0, $total);
     }
 
-    public function addPage($page): void
+    public function setPages(string $login, array $pages, array $config = []): void
     {
-        $pages = $this->player->get('page.data', TmContainer::fromArray([]));
+        $player = $this->player($login);
+        $player['page.data']   = TmContainer::fromArray($pages);
+        $player['page.config'] = TmContainer::fromArray($config);
+    }
+
+    public function addPage(string $login, $page): void
+    {
+        $player = $this->player($login);
+        $pages = $player->get('page.data', TmContainer::fromArray([]));
         $pages[] = $page;
-        $this->player['page.data'] = $pages;
+        $player['page.data'] = $pages;
     }
 
-    public function addTrack(array $track): void
+    public function addTrack(string $login, array $track): void
     {
-        $tracklist = $this->player->get('tracklist', TmContainer::fromArray([]));
+        $player = $this->player($login);
+        $tracklist = $player->get('tracklist', TmContainer::fromArray([]));
         $tracklist[] = $track;
-        $this->player['tracklist'] = $tracklist;
+        $player['tracklist'] = $tracklist;
     }
 
-    public function getConfig(): array
+    public function getConfig(string $login): array
     {
-        return $this->player->get('page.config', []);
+        $player = $this->player($login);
+        return $player->get('page.config', []);
+    }
+
+    protected function player(string $login): TmContainer
+    {
+        return $this->players[$login];
     }
 }

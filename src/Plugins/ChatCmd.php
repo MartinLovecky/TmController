@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\App\Service\Aseco;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Repository\{ChallengeService, RecordService};
@@ -53,5 +54,14 @@ class ChatCmd
         } else {
             dd($records);
         }
+    }
+
+    public function getRecs(): TmContainer
+    {
+        return $this->recordService->getRecord($this->challengeService->getUid());
+    }
+
+    public function chatRecs()
+    {
     }
 }

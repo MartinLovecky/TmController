@@ -8,6 +8,7 @@ use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Repository\PlayerService;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\App\Service\{Aseco, WidgetBuilder};
+use Yuhzel\TmController\Plugins\Manager\PageListManager;
 
 class ManiaLinks
 {
@@ -15,6 +16,7 @@ class ManiaLinks
 
     public function __construct(
         protected Client $client,
+        protected PageListManager $pageListManager,
         protected PlayerService $playerService,
         protected RaspJukebox $raspJukebox,
         protected WidgetBuilder $widgetBuilder,
@@ -132,7 +134,7 @@ class ManiaLinks
     //     $this->eventManiaLink([0, $player, 1]);
     // }
 
-    public function eventManiaLink(TmContainer $manialink)
+    public function eventManiaLink(TmContainer $manialink): void
     {
         $message = $manialink->get('message');
         if ($message < -6 || $message > 36) {
@@ -146,33 +148,30 @@ class ManiaLinks
             return;
         }
 
-        $total = count($player->get('page.data')) - 1;
-        $current = $player->get('page.index', 0);
-
         match ($message) {
             -6 => null, // rasp->chat_top100(['author' => $login])
             -5 => null, // rasp->chat_active(['author' => $login])
-            -4 => $player->set('msgs', 1),
-            -3 => $player->set('msgs', -5),
-            -2 => $player->set('msgs', -1),
+            -4 => $this->pageListManager->navigate($login, $message),
+            -3 => $this->pageListManager->navigate($login, $message),
+            -2 => $this->pageListManager->navigate($login, $message),
             0  => $this->mainWindowOff($login),
-            1  => null, // stay on current page
-            2  => $player->set('msgs', 1),
-            3  => $player->set('msgs', 5),
-            4  => null, // $player->set('msgs', count($player->msgs)),
+            1  => $this->pageListManager->navigate($login, $message), // stays on current page
+            2  => $this->pageListManager->navigate($login, $message),
+            3  => $this->pageListManager->navigate($login, $message),
+            4  => $this->pageListManager->goLastPage($login),
             5  => null, // chat.records2->chat_toprecs(['author' => $login])
             6  => null, // rasp->chat_topwins(['author' => $login])
             7  => null, // chat.records2->chat_topsums(['author' => $login])
             8  => null, // chat.records->chat_recs(['author' => $login, params => ''])
             9  => null, // chat.dedimania->chat_dedirecs(['author' => $login, params => ''])
             10 => null, // tmxInfo->chat_tmxrecs(['author' => $login, params => ''])
-            11 => $this->mainWindowOff($login), //rasp.jukebox->chat_list(['author' => $login, params => 'env:Stadium'])
-            // 12 => $this->mainWindowOff($login), rasp.jukebox->chat_list(['author' => $login, params => 'env:Alpine'])
-            // 13 => $this->mainWindowOff($login), rasp.jukebox->chat_list(['author' => $login, params => 'env:Bay'])
-            // 14 => $this->mainWindowOff($login), rasp.jukebox->chat_list(['author' => $login, params => 'env:Coast'])
-            // 15 => $this->mainWindowOff($login), rasp.jukebox->chat_list(['author' => $login, params => 'env:Island'])
-            // 16 => $this->mainWindowOff($login), rasp.jukebox->chat_list(['author' => $login, params => 'env:Rally'])
-            // 17 => $this->mainWindowOff($login), rasp.jukebox->chat_list(['author' => $login, params => 'env:Speed'])
+            11 => $this->mainWindowAndJukebox($login, 'env:Stadium'),
+            12 => $this->mainWindowAndJukebox($login, 'env:Alpine'),
+            13 => $this->mainWindowAndJukebox($login, 'env:Bay'),
+            14 => $this->mainWindowAndJukebox($login, 'env:Coast'),
+            15 => $this->mainWindowAndJukebox($login, 'env:Island'),
+            16 => $this->mainWindowAndJukebox($login, 'env:Rally'),
+            17 => $this->mainWindowAndJukebox($login, 'env:Speed'),
             18 => $this->raspJukebox->chatY($player),
             19 => null, //ignored no
             20 => $this->mainWindowOff($login), //chatAdmin->chat_admin(['author' => $login, params => 'clearjukebox])
@@ -195,7 +194,7 @@ class ManiaLinks
             default => null
         };
 
-        $tot = count($player->get('msg'));
+        $tot = max(0, count($player->get('page.data', [])) - 1);
 
         $template = $this->widgetBuilder->render(
             'maniaLinks' . DIRECTORY_SEPARATOR . 'event_manialink',
@@ -338,6 +337,47 @@ class ManiaLinks
         $this->renderAndSendToLogin($player->get('Login'), 'costum_ui', ['ui' => '<round_scores visible="True"/>']);
     }
 
+    private function mainWindowAndJukebox($login, $env): void
+    {
+        $this->mainWindowOff($login);
+        //$this->raspJukebox->chat_list(['author' => $login, 'params' => "env:$env"]);
+    }
+
+
+    private function buildData(TmContainer $player, int $tot): array
+    {
+        $index   = $player->get('page.index');
+        $pages   = $player->get('page.data');
+        $config  = $player->get('page.config');
+        $style   = $player->get('style');
+
+        // current page lines (or empty if missing)
+        $lines = $pages[$index] ?? [];
+        $linesCount = count($lines);
+
+        // make sure multipage windows have consistent height
+        if ($tot > 1) {
+            $linesCount = max($linesCount, count($pages[1] ?? []));
+        }
+
+        return [
+            'id'         => 1,
+            'ptr'        => $index,
+            'tot'        => $tot,
+            'header'     => $config['header'],
+            'widths'     => $config['widths'],
+            'icon'       => $config['icon'],
+            'lines'      => $lines,
+            'linesCount' => $linesCount,
+            'hsize'      => $style->get('header.textsize'),
+            'bsize'      => $style->get('body.textsize'),
+            'style'      => $style,
+            'hasPrev'    => $index > 0,
+            'hasNext'    => $index < $tot,
+            'add5'       => $tot > 5,
+        ];
+    }
+
     /**
      * sends xml created by twig to login
      *
@@ -397,37 +437,5 @@ class ManiaLinks
         bool $hideOld = false
     ): void {
         $this->client->query('SendDisplayManialinkPage', [$xml, $timeout, $hideOld]);
-    }
-
-    private function buildData(TmContainer $player, int $tot): array
-    {
-        $ptr = $player['msgs'][0][0];
-        $header = Aseco::validateUTF8($player['msgs'][0][1]);
-        $widths = $player['msgs'][0][2];
-        $icon = $player['msgs'][0][3];
-        $style = $player->get('style');
-        $lines = $player['msgs'][$ptr];
-        $linesCount = count($lines);
-
-        if ($tot > 1) {
-            $linesCount = max($linesCount, count($player['msgs'][1] ?? []));
-        }
-
-        return [
-            'id' => 1,
-            'ptr' => $ptr,
-            'tot' => $tot,
-            'header' => $header,
-            'widths' => $widths,
-            'icon' => $icon,
-            'lines' => $lines,
-            'linesCount' => $linesCount,
-            'hsize' => $style->get('header.textsize'),
-            'bsize' => $style->get('body.textsize'),
-            'style' => $style,
-            'hasPrev' => $ptr > 1,
-            'hasNext' => $ptr < $tot,
-            'add5' => $tot > 5,
-        ];
     }
 }

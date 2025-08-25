@@ -92,7 +92,6 @@ class ChallengeService
     public function getCurrentChallengeInfo(): TmContainer
     {
         $c = $this->client->query('GetCurrentChallengeInfo');
-        // Windows|Linux path fix
         $c
             ->set('FileName', str_replace('\\', DIRECTORY_SEPARATOR, $c->get('FileName')))
             ->set('Options', $this->gameInfo->getCurrentGameInfo());
@@ -107,7 +106,12 @@ class ChallengeService
     public function getNextUid(): string
     {
         $next = $this->client->query('GetNextChallengeIndex')->get('value');
-        return $this->client->query('GetChallengeList', [1, $next])->get('value.0.UId');
+        return $this->getChallengeList(index:$next)->get('0.UId');
+    }
+
+    public function getChallengeList(int $size = 1, int $index = 1): TmContainer
+    {
+        return $this->client->query('GetChallengeList', [$size, $index])->get('value');
     }
 
     public function getNextChallengeInfo(): TmContainer

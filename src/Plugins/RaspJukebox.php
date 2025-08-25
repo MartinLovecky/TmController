@@ -215,7 +215,7 @@ class RaspJukebox
         $this->raspState->jukebox = array_reverse($this->raspState->jukebox, true);
     }
 
-// Vote action methods
+    // Vote action methods
     private function endRound(string $login): void
     {
         Aseco::console('Vote by {1} forced round end!', $login);
