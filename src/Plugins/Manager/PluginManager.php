@@ -13,6 +13,7 @@ use Yuhzel\TmController\Plugins\{
     ChatDedimania,
     Checkpoints,
     Cpll,
+    Donate,
     ManiaKarma,
     ManiaLinks,
     Panels,
@@ -25,86 +26,71 @@ use Yuhzel\TmController\Plugins\{
 
 class PluginManager
 {
-    /** @var object[] $plugins*/
-    private array $plugins = [];
     public function __construct(
-        public EventContext $eventContext,
-        private CpLiveAdvanced $cpLiveAdvanced,
-        private Cpll $cpll,
-        private Dedimania $dedimania,
-        private FufiMenu $fufiMenu,
-        private ChatAdmin $chatAdmin,
-        private ChatCmd $chatCmd,
-        private ChatDedimania $chatDedimania,
-        private Checkpoints $checkpoints,
-        private ManiaKarma $maniaKarma,
-        private ManiaLinks $maniaLinks,
-        private Panels $panels,
-        private RaspJukebox $raspJukebox,
-        private RaspVotes $raspVotes,
-        private Styles $styles,
-        private Tmxv $tmxv,
-        private Track $track
+        public CpLiveAdvanced $cpLiveAdvanced,
+        public Cpll $cpll,
+        public Dedimania $dedimania,
+        public Donate $donate,
+        public FufiMenu $fufiMenu,
+        public ChatAdmin $chatAdmin,
+        public ChatCmd $chatCmd,
+        public ChatDedimania $chatDedimania,
+        public Checkpoints $checkpoints,
+        public ManiaKarma $maniaKarma,
+        public ManiaLinks $maniaLinks,
+        public Panels $panels,
+        public RaspJukebox $raspJukebox,
+        public RaspVotes $raspVotes,
+        public Styles $styles,
+        public Tmxv $tmxv,
+        public Track $track
     ) {
-        foreach (get_object_vars($this) as $propertyName => $pluginInstance) {
-            if ($propertyName === 'plugins') {
-                continue;
-            }
-            if (is_object($pluginInstance)) {
-                $this->plugins[$propertyName] = $pluginInstance;
-                $this->eventContext->saveToContext($pluginInstance);
-            }
-        }
+        // if you need read docs/PluginManager.txt
+        $this->callFunctions('setRegistry', $this);
     }
 
     /**
-     * Calls a method on a specific plugin if it exists.
+     * Calls a method on a specific plugin by class name.
      *
-     * @param string $pluginName Plugin property name in camelCase
-     * @param string $functionName camelCase method name to call
+     * @param string|object $pluginClass Fully qualified class name of the plugin
+     * @param string $functionName Method name to call
      * @param mixed ...$args Arguments to pass to the method
-     *
-     * @return mixed|null Returns the method result or null
+     * @return mixed|null Returns method result or null if plugin/method not found
      */
-    public function callPluginFunction(string $pluginName, string $functionName, ...$args): mixed
+    public function callPluginFunction(string|object $pluginClass, string $functionName, ...$args): mixed
     {
-        $plugin = $this->getPlugin($pluginName);
+        $plugin = null;
+
+        // Find plugin instance by class
+        foreach (get_object_vars($this) as $property) {
+            if ($property instanceof $pluginClass) {
+                $plugin = $property;
+                break;
+            }
+        }
+
         if (!$plugin || !method_exists($plugin, $functionName)) {
             return null;
         }
 
-        $result = $plugin->$functionName(...$args);
-        $this->eventContext->saveToContext($plugin);
-
-        return $result;
+        return $plugin->$functionName(...$args);
     }
 
     /**
      * Calls a method on all plugins that implement it.
      *
-     * @param string $functionName The method name to call
-     * @param mixed ...$args Arguments to pass to the method
-     *
-     * @return void
+     * @param string $functionName Method name to call
+     * @param mixed ...$args Arguments to pass
      */
     public function callFunctions(string $functionName, ...$args): void
     {
-        foreach ($this->plugins as $plugin) {
+        foreach (get_object_vars($this) as $plugin) {
+            if (!is_object($plugin)) {
+                continue;
+            }
             if (method_exists($plugin, $functionName)) {
                 $plugin->$functionName(...$args);
-                $this->eventContext->saveToContext($plugin);
             }
         }
-    }
-
-    /**
-     * Retrieves a plugin instance by its camelCase property name.
-     *
-     * @param string $pluginName Plugin property name in camelCase
-     * @return object|null The plugin instance or null if not found
-     */
-    private function getPlugin(string $pluginName): ?object
-    {
-        return $this->plugins[$pluginName] ?? null;
     }
 }

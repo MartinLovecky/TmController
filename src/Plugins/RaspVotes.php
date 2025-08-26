@@ -6,35 +6,34 @@ namespace Yuhzel\TmController\Plugins;
 
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\Repository\ChallengeService;
-use Yuhzel\TmController\Plugins\Rasp\{RaspState, VoteCommandHandler, VoteType, VoteManager};
-use Yuhzel\TmController\Plugins\{ManiaLinks, Track, RaspJukebox};
 use Yuhzel\TmController\Repository\PlayerService;
+use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\Plugins\Manager\PluginManager;
+use Yuhzel\TmController\Repository\ChallengeService;
+use Yuhzel\TmController\Plugins\Track;
+use Yuhzel\TmController\Plugins\Rasp\{RaspState, VoteCommandHandler, VoteType, VoteManager};
 
 class RaspVotes
 {
-    private VoteCommandHandler $voteHandler;
+    protected ?Track $track = null;
 
     public function __construct(
         protected Client $client,
         protected ChallengeService $challengeService,
         protected PlayerService $playerService,
-        protected ManiaLinks $maniaLinks,
-        protected RaspJukebox $raspJukebox,
         protected RaspState $raspState,
+        protected VoteCommandHandler $voteHandler,
         protected VoteManager $voteManager,
-        protected Track $track,
     ) {
-        $this->voteHandler = new VoteCommandHandler(
-            $this->voteManager,
-            $this->raspState,
-            $this->client,
-            $this->challengeService,
-            $this->playerService,
-            $this->maniaLinks,
-            $this->track
-        );
+    }
+
+    public function setRegistry(PluginManager $pluginManager): void
+    {
+        $this->track = $pluginManager->track;
+        // TODO (yuha) Refactor if plugin grows, as smaller subcomponents may still depend on other plugins.
+        // That is bit complicated and I dont want deal with it
+        $this->voteHandler->setDependecy($pluginManager->maniaLinks, $pluginManager->track);
+        $this->voteManager->setDependecy($pluginManager->maniaLinks, $pluginManager->track);
     }
 
     public function handleChatCommand(TmContainer $player): void

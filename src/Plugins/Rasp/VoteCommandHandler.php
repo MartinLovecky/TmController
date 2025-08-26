@@ -11,15 +11,22 @@ use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class VoteCommandHandler
 {
+    protected ?ManiaLinks $maniaLinks = null;
+    protected ?Track $track = null;
+
     public function __construct(
-        private VoteManager $voteManager,
-        private RaspState $raspState,
-        private Client $client,
-        private ChallengeService $challengeService,
-        private PlayerService $playerService,
-        private ManiaLinks $maniaLinks,
-        private Track $track
+        protected Client $client,
+        protected ChallengeService $challengeService,
+        protected PlayerService $playerService,
+        protected RaspState $raspState,
+        protected VoteManager $voteManager,
     ) {
+    }
+
+    public function setDependecy(ManiaLinks $maniaLinks, Track $track): void
+    {
+        $this->maniaLinks = $maniaLinks;
+        $this->track = $track;
     }
 
     public function handleSkip(TmContainer $player): bool

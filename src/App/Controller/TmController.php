@@ -55,7 +55,7 @@ class TmController
             $starttime = microtime(true);
             $this->executeCallbacks();
             usleep(100_000);
-            //$this->pm->callFunctions('onMainLoop');
+            $this->pm->callFunctions('onMainLoop');
 
             $this->currsecond = time();
             if ($this->prevsecond !== $this->currsecond) {
@@ -159,6 +159,7 @@ class TmController
         $this->pm->callFunctions('onSync');
         $this->playerService->eachPlayer(function (TmContainer $player) {
             $this->playerConnect($player);
+            dd($player);
         });
     }
 

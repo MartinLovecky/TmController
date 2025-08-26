@@ -4,26 +4,30 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Rasp;
 
-use Yuhzel\TmController\Plugins\Track;
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Plugins\Rasp\Vote;
-use Yuhzel\TmController\Plugins\ManiaLinks;
-use Yuhzel\TmController\Plugins\Rasp\RaspState;
-use Yuhzel\TmController\Repository\PlayerService;
+use Yuhzel\TmController\Plugins\Rasp\{Vote, RaspState};
+use Yuhzel\TmController\Plugins\{ManiaLinks, Track};
+use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\Repository\ChallengeService;
 
 class VoteManager
 {
+    protected ?ManiaLinks $maniaLinks = null;
+    protected ?Track $track = null;
+
     public function __construct(
-        private RaspState $raspState,
-        private Client $client,
-        private ChallengeService $challengeService,
-        private PlayerService $playerService,
-        private Track $track,
-        private ManiaLinks $maniaLinks
+        protected Client $client,
+        protected ChallengeService $challengeService,
+        protected PlayerService $playerService,
+        protected RaspState $raspState,
     ) {
+    }
+
+    public function setDependecy(ManiaLinks $maniaLinks, Track $track): void
+    {
+        $this->maniaLinks = $maniaLinks;
+        $this->track = $track;
     }
 
     public function startVote(TmContainer $player, string $type, string $desc, float $ratio): void

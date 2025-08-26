@@ -17,6 +17,7 @@ class ChatCmd
         protected RecordService $recordService
     ) {
     }
+
     //TODO : this is mess in old code
     public function trackrecs(?string $login = null, string $mode): void
     {

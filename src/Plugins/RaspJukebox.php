@@ -4,25 +4,32 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Service\{Aseco, RaspHelper, Server};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Plugins\Rasp\{Vote, RaspState};
 use Yuhzel\TmController\Plugins\ManiaLinks;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Repository\ChallengeService;
+use Yuhzel\TmController\Plugins\Manager\PluginManager;
+use Yuhzel\TmController\Plugins\Rasp\{Vote, RaspState};
+use Yuhzel\TmController\App\Service\{Aseco, RaspHelper, Server};
 
 class RaspJukebox
 {
-    private array $buffer = [];
+    public array $buffer = [];
     private int $bufferSize = 0;
+    protected ?ManiaLinks $maniaLinks = null;
 
     public function __construct(
         protected ChallengeService $challengeService,
         protected Client $client,
-        protected ManiaLinks $maniaLinks,
         protected RaspState $raspState,
         protected RaspHelper $raspHelper,
     ) {
+    }
+
+    public function setRegistry(PluginManager $registry)
+    {
+        $this->maniaLinks = $registry->maniaLinks;
+        $this->raspHelper->setDependecy($this);
     }
 
     public function onSync(): void

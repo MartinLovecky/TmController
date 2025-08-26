@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Service\{Aseco, DedimaniaClient, Server};
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\ManiaLinks;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\Plugins\Manager\EventContext;
+use Yuhzel\TmController\Plugins\Manager\PluginManager;
+use Yuhzel\TmController\App\Service\{Aseco, DedimaniaClient, Server};
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class Dedimania
@@ -19,15 +19,22 @@ class Dedimania
     private bool $requestDone = false;
     private const DOCS = 'https://www.gamers.org/tmf/docs/ListDedimania.html';
 
+    protected ?ManiaLinks $maniaLinks = null;
+    protected ?Checkpoints $checkpoints = null;
+
     public function __construct(
         protected Client $client,
         protected DedimaniaClient $dedimaniaClient,
-        protected EventContext $eventContext,
         protected ChallengeService $challengeService,
-        protected ManiaLinks $maniaLinks,
         protected PlayerService $playerService,
     ) {
         $this->dediLastSent = time();
+    }
+
+    public function setRegistry(PluginManager $registry): void
+    {
+        $this->maniaLinks = $registry->maniaLinks;
+        $this->checkpoints = $registry->checkpoints;
     }
 
     /**
@@ -119,7 +126,7 @@ class Dedimania
         }
 
         /** @var array<string,array> $checkpoints */
-        $checkpoints = $this->eventContext->data[Checkpoints::class]['checkpoints'];
+        $checkpoints = $this->checkpoints->checkpoints;
         /** @var array<int,TmContainer> $records */
         $records = $response->get('1.Records');
 
@@ -156,7 +163,7 @@ class Dedimania
             : Aseco::formatTime($cp['bestFin']);
 
             // Store in ManiaLinks global
-            $maniaLinks = $this->eventContext->data[ManiaLinks::class]['mlRecords'];
+            $maniaLinks = $this->maniaLinks->mlRecords;
             $maniaLinks['dedi'] = $time;
 
             // Get player object
@@ -176,7 +183,7 @@ class Dedimania
 
     public function onEndRace(TmContainer $data)
     {
-        $maniaLinks = $this->eventContext->data[ManiaLinks::class]['mlRecords'];
+        $maniaLinks = $this->maniaLinks->mlRecords;
         $maniaLinks['dedi'] = $this->challengeService->getGameMode() === 'stunts' ? '  ---' : '   --.--';
         if ($this->challengeService->getGameMode() === 'stunts') {
             return;

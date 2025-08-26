@@ -1,0 +1,44 @@
++-------------------+
+|   PluginManager   |
+|-------------------|
+| - cpLiveAdvanced  |
+| - dedimania       |
+| - maniaLinks      |
+| ...other plugins  |
++-------------------+
+        |
+        | callFunctions('someMethod', args...)
+        v
++-------------------+       +-------------------+       +-------------------+
+|  Plugin Instance 1|       |  Plugin Instance 2|       |  Plugin Instance 3|
+|-------------------|       |-------------------|       |-------------------|
+| someMethod()?     |       | someMethod()?     |       | someMethod()?     |
++-------------------+       +-------------------+       +-------------------+
+        | Yes                     | No                     | Yes
+        v                         v                        v
+ Execute method                Skipped                 Execute method
+        |
+        | callPluginFunction(TargetPluginClass, 'method', args...)
+        v
++-------------------+
+| Target Plugin     |
+|-------------------|
+| method()?         |
++-------------------+
+        | Yes
+        v
+  Execute method
+
+Explanation:
+
+PluginManager: Holds all plugin instances and manages their interactions.
+
+callFunctions('someMethod', args…): Calls the method on all plugins that implement it.
+
+Plugin Instance: Executes the method if it exists; skipped otherwise.
+
+callPluginFunction(TargetPluginClass, 'method', args…): Calls a method on a specific plugin by class.
+
+$this->callFunctions('setRegistry', $this);
+: Passes the PluginManager to each plugin that implement it so they can access shared resources and other plugins.
+: This help avoid circular dependencies

@@ -4,26 +4,28 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\App\Service;
 
-use Yuhzel\TmController\Plugins\ChatCmd;
-use Yuhzel\TmController\Plugins\Manager\EventContext;
-use Yuhzel\TmController\Plugins\Manager\PageListManager;
+use Yuhzel\TmController\Plugins\Manager\{PageListManager};
 use Yuhzel\TmController\Plugins\RaspJukebox;
-use Yuhzel\TmController\Repository\ChallengeService;
-use Yuhzel\TmController\Repository\RecordService;
+use Yuhzel\TmController\Repository\{ChallengeService, RecordService};
 
 class RaspHelper
 {
     private $challengeListCache = [];
     private const MAX_ACTION_ID = 1900;
     private const MAX_LINES_PER_PAGE = 15;
+    protected ?RaspJukebox $raspJukebox = null;
+
 
     public function __construct(
-        protected EventContext $eventContext,
-        protected ChatCmd $chatCmd,
         protected ChallengeService $challengeService,
         protected PageListManager $pageListManager,
         protected RecordService $recordService,
     ) {
+    }
+
+    public function setDependecy($registry): void
+    {
+        $this->raspJukebox = $registry;
     }
 
     /**
@@ -46,7 +48,7 @@ class RaspHelper
 
         // Fetch top times for all Stadium tracks
         $recordsByUid = $this->recordService->getTopTimes($uids);
-        $jbBuffer     = $this->eventContext->data[RaspJukebox::class]->buffer;
+        $jbBuffer     = $this->raspJukebox->buffer ?? [];
 
         $headerRow = ['Id', 'Rec', 'Name', 'Author'];
         $allRows   = [];
