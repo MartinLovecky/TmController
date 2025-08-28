@@ -336,11 +336,6 @@ class TmController
 
     private function formatScore(int $score): string
     {
-        $mode = $this->challengeService->getGameMode();
-
-        if ($mode === 'stunts') {
-            return str_pad((string)$score, 5, ' ', STR_PAD_LEFT);
-        }
 
         return Aseco::formatTime($score);
     }
@@ -453,7 +448,8 @@ class TmController
             $params = explode(' ', $cmd, 2);
             $name = ucfirst(str_replace(['+', '-'], ['plus', 'dash'], $params[0]));
             // must be string dont change it
-            $params[1] = isset($params[1]) ? trim($params[1]) : '';
+            $params[1] = isset($params[1]) ? trim(strtolower($params[1])) : '';
+
             $player = $this->playerService->getPlayerByLogin($login);
 
             if ($player instanceof TmContainer) {

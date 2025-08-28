@@ -157,10 +157,7 @@ class Dedimania
             $cp['bestFin'] = $record->get('Best');    // Best time
             $cp['bestCps'] = $record->get('Checks');  // Checkpoints
 
-            // Format time
-            $time = $this->challengeService->getGameMode() === 'stunts'
-            ? str_pad($cp['bestFin'], 5, ' ', STR_PAD_LEFT)
-            : Aseco::formatTime($cp['bestFin']);
+            $time = Aseco::formatTime($cp['bestFin']);
 
             // Store in ManiaLinks global
             $maniaLinks = $this->maniaLinks->mlRecords;
@@ -171,10 +168,8 @@ class Dedimania
 
             // Determine player's own record time
             $ownRecordTime = $record && $record->get('Best') > 0
-            ? ($this->challengeService->getGameMode() === 'stunts'
-                ? str_pad($record->get('Best'), 5, ' ', STR_PAD_LEFT)
-                : Aseco::formatTime($record->get('Best')))
-                : ($this->challengeService->getGameMode() === 'stunts' ? '  ---' : '   --.--');
+                ? Aseco::formatTime($record->get('Best'))
+                : ('   --.--');
 
             // Display panel
             $this->maniaLinks->displayRecPanel($player, $ownRecordTime);
@@ -184,7 +179,7 @@ class Dedimania
     public function onEndRace(TmContainer $data)
     {
         $maniaLinks = $this->maniaLinks->mlRecords;
-        $maniaLinks['dedi'] = $this->challengeService->getGameMode() === 'stunts' ? '  ---' : '   --.--';
+        $maniaLinks['dedi'] = '   --.--';
         if ($this->challengeService->getGameMode() === 'stunts') {
             return;
         }

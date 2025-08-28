@@ -42,7 +42,6 @@ class PlayerService
         $info = $this->getDetailedPlayerInfo($login);
         $info
             ->set('Nation', Aseco::mapCountry($info['Path']))
-            ->set('Donation', [100, 200, 500, 1000, 2000])
             ->set('panels.admin', $this->panels->adminPanel)
             ->set('panels.donate', $this->panels->donatePanel)
             ->set('panels.records', $this->panels->recordsPanel)

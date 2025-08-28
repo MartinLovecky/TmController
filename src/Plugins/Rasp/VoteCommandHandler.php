@@ -42,7 +42,7 @@ class VoteCommandHandler
     public function handleEndRound(TmContainer $player): bool
     {
         $mode = $this->challengeService->getGameMode();
-        if (in_array($mode, ['time_attack', 'laps', 'stunts'], true)) {
+        if (in_array($mode, ['time_attack', 'laps',], true)) {
             return $this->sendError($player->get('Login'), 'Mode does not support /endround vote!');
         }
 

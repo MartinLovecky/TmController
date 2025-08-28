@@ -41,9 +41,7 @@ class Widget
 
     public function sendInitialWidgets(): void
     {
-        $widgetKey = ($this->challengeService->getGameMode() === 'score') ? 'skeleton_score' : 'skeleton_race';
-
-        $this->sendWidgetCombination([$widgetKey, 'cups_values']);
+        $this->sendWidgetCombination(['skeleton_race', 'cups_values']);
 
         $this->playerService->eachPlayer(function (TmContainer $player) {
             $this->sendWidgetCombination(['player_marker'], $player);
@@ -54,8 +52,7 @@ class Widget
 
     public function updatePlayerWidgets(TmContainer $player): void
     {
-        $widgetKey = ($this->challengeService->getGameMode() === 'score') ? 'skeleton_score' : 'skeleton_race';
-        $this->sendWidgetCombination([$widgetKey, 'cups_values', 'player_marker'], $player);
+        $this->sendWidgetCombination(['skeleton_race', 'cups_values', 'player_marker'], $player);
     }
 
     public function sendWelcomeMessage(TmContainer $player): void

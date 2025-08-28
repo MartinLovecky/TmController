@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
+use Yuhzel\TmController\App\Service\{Arr, Aseco, Log, WidgetBuilder};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Repository\PlayerService;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\Plugins\Manager\PluginManager;
-use Yuhzel\TmController\App\Service\{Aseco, Log, WidgetBuilder};
-use Yuhzel\TmController\Plugins\Manager\PageListManager;
+use Yuhzel\TmController\Plugins\{Donate, ChatAdmin, RaspJukebox};
+use Yuhzel\TmController\Plugins\Manager\{PageListManager, PluginManager};
+use Yuhzel\TmController\Repository\PlayerService;
 
 class ManiaLinks
 {
     public array $mlRecords = ['local' => '   --.--', 'dedi' => '   --.--', 'tmx' => '   --.--'];
 
+    protected ?Donate $donate = null;
+    protected ?ChatAdmin $chatAdmin = null;
     protected ?RaspJukebox $raspJukebox = null;
 
     public function __construct(
@@ -27,6 +29,8 @@ class ManiaLinks
 
     public function setRegistry(PluginManager $registry): void
     {
+        $this->donate = $registry->donate;
+        $this->chatAdmin = $registry->chatAdmin;
         $this->raspJukebox = $registry->raspJukebox;
     }
 
@@ -167,32 +171,32 @@ class ManiaLinks
             8  => null, // chat.records->chat_recs(['author' => $login, params => ''])
             9  => null, // chat.dedimania->chat_dedirecs(['author' => $login, params => ''])
             10 => null, // tmxInfo->chat_tmxrecs(['author' => $login, params => ''])
-            11 => $this->mainWindowAndJukebox($login), // NOTE: That was a lot of shit I went through.
+            11 => $this->mainWindowAndJukebox($login),
             12 => Log::info('DISABLED env Alpine', channel:'event'),
             13 => Log::info('DISABLED env Bay', channel:'event'),
             14 => Log::info('DISABLED env Coast', channel:'event'),
             15 => Log::info('DISABLED env Island', channel:'event'),
             16 => Log::info('DISABLED env Rally', channel:'event'),
             17 => Log::info('DISABLED env Speed', channel:'event'),
-            //18 => $this->raspJukebox->chatY($player),
+            18 => $this->raspJukebox->chatY($player),
             19 => null, //ignored chatNo
-            20 => $this->mainWindowOff($login), //chatAdmin->chat_admin(['author' => $login, params => 'clearjukebox])
-            21 => null, //chatAdmin->chat_admin(['author' => $login, params => 'restartmap])
-            22 => null, //chatAdmin->chat_admin(['author' => $login, params => 'endround])
-            23 => null, //chatAdmin->chat_admin(['author' => $login, params => 'nextmap])
-            24 => null, //chatAdmin->chat_admin(['author' => $login, params => 'replaymap])
-            25 => null, //chatAdmin->chat_admin(['author' => $login, params => 'pass])
-            26 => null, //chatAdmin->chat_admin(['author' => $login, params => 'cancel])
-            27 => null, //chatAdmin->chat_admin(['author' => $login, params => 'players live])
-            28 => null, //donate->admin_pay($login, true)
-            29 => null, //donate->admin_pay($login, false)
-            30 => null, //donate->chat_donate($login, params => $donation_values[0]])
-            31 => null, //donate->chat_donate($login, params => $donation_values[1]])
-            32 => null, //donate->chat_donate($login, params => $donation_values[2]])
-            33 => null, //donate->chat_donate($login, params => $donation_values[3]])
-            34 => null, //donate->chat_donate($login, params => $donation_values[4]])
-            35 => null, //donate->chat_donate($login, params => $donation_values[5]])
-            36 => null, //donate->chat_donate($login, params => $donation_values[6]])
+            20 => $this->sendCommand($player, 'clearjukebox', false), //from admin panel?
+            21 => $this->sendCommand($player, 'restartmap'),
+            22 => $this->sendCommand($player, 'endround'),
+            23 => $this->sendCommand($player, 'nextmap'),
+            24 => $this->sendCommand($player, 'replaymap'),
+            25 => $this->sendCommand($player, 'pass'),
+            26 => $this->sendCommand($player, 'cancel'),
+            27 => $this->sendCommand($player, 'players live'),
+            28 => $this->donate->adminPay($login, true),
+            29 => $this->donate->adminPay($login, false),
+            30 => $this->donate->chatDonate($player, $this->donate->values[0]),
+            31 => $this->donate->chatDonate($player, $this->donate->values[1]),
+            32 => $this->donate->chatDonate($player, $this->donate->values[2]),
+            33 => $this->donate->chatDonate($player, $this->donate->values[3]),
+            34 => $this->donate->chatDonate($player, $this->donate->values[4]),
+            35 => $this->donate->chatDonate($player, $this->donate->values[5]),
+            36 => $this->donate->chatDonate($player, $this->donate->values[6]),
             default => null
         };
 
@@ -339,10 +343,26 @@ class ManiaLinks
         $this->renderAndSendToLogin($player->get('Login'), 'costum_ui', ['ui' => '<round_scores visible="True"/>']);
     }
 
+    private function sendCommand(
+        TmContainer $player,
+        string $command,
+        bool $window = true
+    ): void {
+        if (!$window) {
+            $this->mainWindowOff($player->get('Login'));
+        }
+
+        $parts = explode(' ', $command, 2);
+        $params = array_values(Arr::except($parts, [0]));
+        $player->set('command.name', $parts[0])->set('command.params', $params);
+
+        $this->chatAdmin->handleChatCommand($player);
+    }
+
     private function mainWindowAndJukebox(string $login): void
     {
         $this->mainWindowOff($login);
-        //$this->raspJukebox->chatList($login);
+        $this->raspJukebox->chatList($login);
     }
 
     private function buildData(TmContainer $player, int $tot): array
