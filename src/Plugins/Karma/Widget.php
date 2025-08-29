@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Plugins\Karma;
 
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\App\Service\{Aseco, Server, WidgetBuilder};
+use Yuhzel\TmController\App\Service\{Aseco, Sender, Server, WidgetBuilder};
 use Yuhzel\TmController\Plugins\Karma\State;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
@@ -25,11 +25,12 @@ class Widget
     private const TOTAL_CUPS = 10;
 
     public function __construct(
-        protected Client $client,
-        protected ChallengeService $challengeService,
-        protected PlayerService $playerService,
-        protected State $stateService,
-        protected WidgetBuilder $widgetBuilder,
+        private Client $client,
+        private ChallengeService $challengeService,
+        private PlayerService $playerService,
+        private Sender $sender,
+        private State $stateService,
+        private WidgetBuilder $widgetBuilder,
     ) {
         $this->file = 'karma' . DIRECTORY_SEPARATOR;
     }
@@ -76,23 +77,25 @@ class Widget
 
     public function closeReminderWindow(?TmContainer $player = null): void
     {
-        $xml = $this->widgetBuilder->render("{$this->file}manialink");
+        $file = "{$this->file}manialink";
 
         if ($player) {
             if ($player->get('ManiaKarma.ReminderWindow')) {
                 $player->set('ManiaKarma.ReminderWindow', false);
-                $this->client->query('SendDisplayManialinkPageToLogin', [
-                    $player->get('Login'),
-                    $xml,
-                    0,
-                    false
-                ]);
+                $this->sender->sendRenderToLogin(
+                    login: $player->get('Login'),
+                    template: $file,
+                    formatMode: Sender::FORMAT_NONE
+                );
             }
         } else {
             $this->playerService->eachPlayer(function (TmContainer $player) {
                 $player->set('ManiaKarma.ReminderWindow', false);
             });
-            $this->client->query('SendDisplayManialinkPage', [$xml, 0, false]);
+            $this->sender->sendRenderToAll(
+                template: $file,
+                formatMode: Sender::FORMAT_NONE
+            );
         }
     }
 
@@ -247,49 +250,57 @@ class Widget
     ): void {
         $gameMode = $this->challengeService->getGameMode();
         $playerMarker = $player ? $this->buildPlayerVoteMarker($player, $gameMode) : '';
-
-        $xml = $this->widgetBuilder->render("{$this->file}combination", [
+        $file = "{$this->file}combination";
+        $contex = [
             'widgets' => $widgets,
             'race' => $this->buildKarmaWidget($gameMode),
             'score' => $this->buildKarmaWidget('score'),
             'cups' => $this->buildKarmaCupsValue($gameMode),
             'marker' => $playerMarker
-        ]);
+        ];
 
         if ($player) {
-            $this->client->query('SendDisplayManialinkPageToLogin', [
-                $player->get('Login'),
-                $xml,
-                0,
-                false
-            ]);
+            $this->sender->sendRenderToLogin(
+                login: $player->get('Login'),
+                template: $file,
+                context: $contex,
+                formatMode: Sender::FORMAT_NONE
+            );
         } else {
-            $this->client->query('SendDisplayManialinkPage', [$xml, 0, false]);
+            $this->sender->sendRenderToAll(
+                template: $file,
+                context: $contex,
+                formatMode: Sender::FORMAT_NONE
+            );
         }
     }
 
     public function sendConnectionStatus(bool $status, string $gameMode): void
     {
-        $xml = $this->widgetBuilder->render("{$this->file}connection", array_merge(
-            $this->getWidgetConfig($gameMode),
-            ['status' => $status]
-        ));
-
         if (!$status) {
             $this->sendLoadingIndicator($status, $gameMode);
-        }
+        } else {
+            $file = "{$this->file}connection";
+            $contex = array_merge(['status' => $status], $this->getWidgetConfig($gameMode));
 
-        $this->client->query('SendDisplayManialinkPage', [$xml, 0, false]);
+            $this->sender->sendRenderToAll(
+                template: $file,
+                context: $contex,
+                formatMode: Sender::FORMAT_NONE
+            );
+        }
     }
 
     private function sendLoadingIndicator(bool $status, string $gameMode): void
     {
-        $xml = $this->widgetBuilder->render("{$this->file}loading_indicator", array_merge(
-            $this->getWidgetConfig($gameMode),
-            ['status' => $status]
-        ));
+        $file = "{$this->file}loading_indicator";
+        $contex = array_merge(['status' => $status], $this->getWidgetConfig($gameMode));
 
-        $this->client->query('SendDisplayManialinkPage', [$xml, 0, false]);
+        $this->sender->sendRenderToAll(
+            template: $file,
+            context: $contex,
+            formatMode: Sender::FORMAT_NONE
+        );
     }
 
     private function cfg(): TmContainer

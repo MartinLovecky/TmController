@@ -5,22 +5,21 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Plugins;
 
 use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\App\Service\Sender;
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
 
 class Cpll
 {
-    public function __construct(protected Client $client)
+    public function __construct(private Sender $sender)
     {
     }
 
     public function onPlayerConnect(TmContainer $player): void
     {
-        $message = Aseco::getChatMessage('cpll_info', 'rasp');
-
-        $this->client->query('ChatSendServerMessageToLogin', [
-                Aseco::formatColors($message),
-                $player->get('Login')
-        ]);
+        $this->sender->sendChatMessageToLogin(
+            login: $player->get('Login'),
+            message: Aseco::getChatMessage('cpll_info', 'rasp'),
+            formatMode: Sender::FORMAT_COLORS
+        );
     }
 }

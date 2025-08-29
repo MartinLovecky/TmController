@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Service\{Arr, Aseco, Log, WidgetBuilder};
+use Yuhzel\TmController\App\Service\{Arr, Aseco, Log, Sender};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Plugins\{Donate, ChatAdmin, RaspJukebox};
 use Yuhzel\TmController\Plugins\Manager\{PageListManager, PluginManager};
 use Yuhzel\TmController\Repository\PlayerService;
@@ -14,17 +13,17 @@ use Yuhzel\TmController\Repository\PlayerService;
 class ManiaLinks
 {
     public array $mlRecords = ['local' => '   --.--', 'dedi' => '   --.--', 'tmx' => '   --.--'];
-
+    private string $path = '';
     protected ?Donate $donate = null;
     protected ?ChatAdmin $chatAdmin = null;
     protected ?RaspJukebox $raspJukebox = null;
 
     public function __construct(
-        protected Client $client,
-        protected PageListManager $pageListManager,
-        protected PlayerService $playerService,
-        protected WidgetBuilder $widgetBuilder,
+        private PageListManager $pageListManager,
+        private PlayerService $playerService,
+        private Sender $sender
     ) {
+        $this->path = 'maniaLinks' . DIRECTORY_SEPARATOR;
     }
 
     public function setRegistry(PluginManager $registry): void
@@ -92,11 +91,14 @@ class ManiaLinks
             'bsize'   => $style->get('body.textsize'),
         ];
 
-        $file = 'maniaLinks' . DIRECTORY_SEPARATOR . 'display';
-        $xml = $this->widgetBuilder->render($file, $templateVars);
-        $xml = str_replace('{#black}', $style->get('window.blackcolor'), $xml);
-
-        $this->sendXmlToLogin($login, Aseco::formatColors($xml), 0, true);
+        $this->sender->sendRenderToLogin(
+            login: $login,
+            template: "{$this->path}display",
+            context: $templateVars,
+            formatMode: Sender::FORMAT_COLORS,
+            hideOnEsc: true
+        );
+        //$xml = str_replace('{#black}', $style->get('window.blackcolor'), $xml);
     }
 
     /**
@@ -137,7 +139,13 @@ class ManiaLinks
             'bsize' => $style->get('body.textsize', 2),
         ];
 
-        $this->renderAndSendToLogin($login, 'display_track', $vars, 0, true);
+        $this->sender->sendRenderToLogin(
+            login: $login,
+            template: "{$this->path}display_track",
+            context: $vars,
+            formatMode: Sender::FORMAT_COLORS,
+            hideOnEsc: true
+        );
     }
 
     public function eventManiaLink(TmContainer $manialink): void
@@ -202,52 +210,62 @@ class ManiaLinks
 
         $tot = max(0, count($player->get('page.data', [])) - 1);
 
-        $template = $this->widgetBuilder->render(
-            'maniaLinks' . DIRECTORY_SEPARATOR . 'event_manialink',
-            $this->buildData($player, $tot)
+        $this->sender->sendRenderToLogin(
+            login: $login,
+            template: "{$this->path}event_manialink",
+            context: $this->buildData($player, $tot),
+            formatMode: Sender::FORMAT_COLORS,
         );
-        $xml = str_replace('{#black}', $player->get('style.window.blackcolor'), $template);
-        $this->sendXmlToLogin($login, $xml);
     }
 
     public function displayPayment(string $login, string $serverName, string $label): void
     {
-        $this->renderAndSendToLogin($login, 'payment', ['server' => $serverName, 'label' => $label]);
+        $this->sender->sendRenderToLogin(
+            login: $login,
+            template: "{$this->path}payment",
+            context: ['server' => $serverName, 'label' => $label],
+            formatMode: Sender::FORMAT_COLORS
+        );
     }
 
     public function mainWindowOff(string $login): void
     {
-        $this->sendXmlToLogin($login, '<manialink id="1"></manialink>');
+        $this->sender->sendXmlToLogin(login: $login, xml: '<manialink id="1"></manialink>');
     }
 
     public function allWindowsOff(): void
     {
-        $this->renderAndSendToAll('off');
+        $this->sender->sendRenderToAll(template: "{$this->path}off", formatMode: Sender::FORMAT_NONE);
     }
 
     public function displayCpsPanel(string $login, int $cp, string $diff): void
     {
-        $this->renderAndSendToLogin($login, 'cps_panel', ['cp' => $cp, 'diff' => $diff]);
+        $this->sender->sendRenderToLogin(
+            login: $login,
+            template: "{$this->path}cps_panel",
+            context: ['cp' => $cp, 'diff' => $diff],
+            formatMode: Sender::FORMAT_COLORS
+        );
     }
 
     public function cpsPanelOff(string $login): void
     {
-        $this->sendXmlToLogin($login, '<manialink id="2"></manialink>');
+        $this->sender->sendXmlToLogin(login: $login, xml: '<manialink id="2"></manialink>');
     }
 
     public function allCpsPanelsOff(): void
     {
-        $this->sendXmlToAll('<manialink id="2"></manialink>');
+        $this->sender->sendXmlToAll(xml: '<manialink id="2"></manialink>');
     }
 
     public function displayAdmPanel(TmContainer $player): void
     {
-        $this->sendXmlToLogin($player->get('Login'), $player->get('panels.admin'));
+        $this->sender->sendXmlToLogin(login: $player->get('Login'), xml: $player->get('panels.admin'));
     }
 
     public function admPanelOff(string $login): void
     {
-        $this->sendXmlToLogin($login, '<manialink id="3"></manialink>');
+        $this->sender->sendXmlToLogin(login: $login, xml: '<manialink id="3"></manialink>');
     }
 
     public function displayDonPanel(TmContainer $player, array $coppers): void
@@ -257,12 +275,12 @@ class ManiaLinks
             $xml = str_replace('%COP' . $i . '%', $coppers[$i - 1], $xml);
         }
 
-        $this->sendXmlToLogin($player->get('Login'), $xml);
+        $this->sender->sendXmlToLogin(login: $player->get('Login'), xml: $xml);
     }
 
     public function donPanelOff(string $login): void
     {
-        $this->sendXmlToLogin($login, '<manialink id="6"></manialink>');
+        $this->sender->sendXmlToLogin(login: $login, xml: '<manialink id="6"></manialink>');
     }
 
     public function displayRecPanel(TmContainer $player, $pb): void
@@ -273,12 +291,12 @@ class ManiaLinks
             $player->get('panels.records')
         );
 
-        $this->sendXmlToLogin($player->get('Login'), $xml);
+        $this->sender->sendXmlToLogin(login: $player->get('Login'), xml: $xml);
     }
 
     public function recPanelOff(string $login): void
     {
-        $this->sendXmlToLogin($login, '<manialink id="4"></manialink>');
+        $this->sender->sendXmlToLogin(login: $login, xml: '<manialink id="4"></manialink>');
     }
 
     public function displayVotePanel(
@@ -292,29 +310,37 @@ class ManiaLinks
             [$yes, $no],
             $player->get('panels.vote')
         );
-
-        $this->sendXmlToLogin($player->get('Login'), $xml, $timeout);
+        $this->sender->sendXmlToLogin(login: $player->get('Login'), xml: $xml, timeout: $timeout);
     }
 
     public function votePanelOff(string $login): void
     {
-        $this->sendXmlToLogin($login, '<manialink id="5"></manialink>');
+        $this->sender->sendXmlToLogin(login: $login, xml: '<manialink id="5"></manialink>');
     }
 
     public function allVotePanelsOff(): void
     {
-        $this->sendXmlToAll('<manialink id="5"></manialink>');
+        $this->sender->sendXmlToAll(xml: '<manialink id="5"></manialink>');
     }
 
     public function displayMsgWindow(array $msgs, int $timeout = 0): void
     {
         $validated = array_map([Aseco::class, 'validateUTF8'], $msgs);
-        $this->renderAndSendToAll('msgwindow', ['msgs' => $validated], $timeout);
+
+        $this->sender->sendRenderToAll(
+            template: "{$this->path}msgwindow",
+            context: ['msgs' => $validated],
+            timeout: $timeout
+        );
     }
 
     public function msgLogButton(string $login): void
     {
-        $this->renderAndSendToLogin($login, 'log_button');
+        $this->sender->sendRenderToLogin(
+            login: $login,
+            template: "{$this->path}log_button",
+            formatMode: Sender::FORMAT_COLORS
+        );
     }
 
     //display_statspanel |statspanels_off -> disabled
@@ -322,25 +348,41 @@ class ManiaLinks
     public function scorePanelOff(bool $panel = true): void
     {
         if (!$panel) {
-            $this->renderAndSendToAll('costum_ui', ['ui' => '<scoretable visible="False"/>']);
+            $this->sender->sendRenderToAll(
+                template: "{$this->path}costum_ui",
+                context: ['ui' => '<scoretable visible="False"/>']
+            );
         }
     }
 
     public function scorePanelOn(): void
     {
-        $this->renderAndSendToAll('costum_ui', ['ui' => '<scoretable visible="True"/>']);
+        $this->sender->sendRenderToAll(
+            template: "{$this->path}costum_ui",
+            context: ['ui' => '<scoretable visible="True"/>'],
+            formatMode: Sender::FORMAT_NONE
+        );
     }
 
     public function roundsPanelOff(bool $panel = true): void
     {
         if (!$panel) {
-            $this->renderAndSendToAll('costum_ui', ['ui' => '<round_scores visible="False"/>']);
+            $this->sender->sendRenderToAll(
+                template: "{$this->path}costum_ui",
+                context: ['ui' => '<round_scores visible="False"/>'],
+                formatMode: Sender::FORMAT_NONE
+            );
         }
     }
 
     public function roundsPanelOn(TmContainer $player): void
     {
-        $this->renderAndSendToLogin($player->get('Login'), 'costum_ui', ['ui' => '<round_scores visible="True"/>']);
+        $this->sender->sendRenderToLogin(
+            login: $player->get('Login'),
+            template: "{$this->path}costum_ui",
+            context: ['ui' => '<round_scores visible="True"/>'],
+            formatMode: Sender::FORMAT_COLORS
+        );
     }
 
     private function sendCommand(
@@ -397,66 +439,5 @@ class ManiaLinks
             'hasNext'    => $index < $tot,
             'add5'       => $tot > 5,
         ];
-    }
-
-    /**
-     * sends xml created by twig to login
-     *
-     * @param string $login
-     * @param string $file
-     * @param array $vars
-     * @param integer $timeout
-     * @param boolean $hideOld
-     * @return void
-     */
-    private function renderAndSendToLogin(
-        string $login,
-        string $file,
-        array $vars = [],
-        int $timeout = 0,
-        bool $hideOld = false
-    ): void {
-        $xml = $this->widgetBuilder->render('maniaLinks' . DIRECTORY_SEPARATOR . $file, $vars);
-        $this->client->query('SendDisplayManialinkPageToLogin', [
-            $login,
-            Aseco::formatColors($xml),
-            $timeout,
-            $hideOld
-        ]);
-    }
-
-    /**
-     *
-     * @param string $file
-     * @param array $vars
-     * @param integer $timeout
-     * @param boolean $hideOld
-     * @return void
-     */
-    private function renderAndSendToAll(
-        string $file,
-        array $vars = [],
-        int $timeout = 0,
-        bool $hideOld = false
-    ): void {
-        $xml = $this->widgetBuilder->render('maniaLinks' . DIRECTORY_SEPARATOR . $file, $vars);
-        $this->client->query('SendDisplayManialinkPage', [$xml, $timeout, $hideOld]);
-    }
-
-    private function sendXmlToLogin(
-        string $login,
-        string $xml,
-        int $timeout = 0,
-        bool $hideOld = false
-    ): void {
-        $this->client->query('SendDisplayManialinkPageToLogin', [$login, $xml, $timeout, $hideOld]);
-    }
-
-    private function sendXmlToAll(
-        string $xml,
-        int $timeout = 0,
-        bool $hideOld = false
-    ): void {
-        $this->client->query('SendDisplayManialinkPage', [$xml, $timeout, $hideOld]);
     }
 }

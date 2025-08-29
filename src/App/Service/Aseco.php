@@ -50,7 +50,6 @@ class Aseco
         return ($clean !== false && $clean !== '') ? $clean : $invalidRepl;
     }
 
-
     public static function isStartup(): bool
     {
         return self::$startupPhase;

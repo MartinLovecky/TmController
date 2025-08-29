@@ -6,7 +6,7 @@
  *
  * @category Controller
  * @package  Trackmania
- * @author   yuhzel <yuhzel@gmail.com>
+ * @author   yuhzel <yuhzel@gmail.com
  * @license  MIT LICENCE
  * @version  GIT: 5ba0430ef3c51a38ac5e9f86b0cac60dc5bddcd9
  * @link     https://example.com
@@ -22,15 +22,6 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'a
 $publicPath = __DIR__ . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR;
 
 $container = new \League\Container\Container();
-$container->add('config.paths', [
-    'root'      => __DIR__,
-    'game'      => dirname(__DIR__, 1),
-    'public'    => $publicPath,
-    'json'      => $publicPath . 'json' . DIRECTORY_SEPARATOR,
-    'templates' => $publicPath . 'templates' . DIRECTORY_SEPARATOR,
-    'sql'       => $publicPath . 'sql' . DIRECTORY_SEPARATOR,
-    'logs'      => __DIR__ . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR
-]);
 $container->delegate(new \League\Container\ReflectionContainer(true));
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -44,7 +35,7 @@ $dotenv->required([
     'dedi_nation'
 ])->notEmpty();
 
-\Yuhzel\TmController\App\Service\Server::init($container);
+\Yuhzel\TmController\App\Service\Server::setPaths();
 
 $fluent = $container->get(\Yuhzel\TmController\Database\Fluent::class);
 $structure = $container->get(\Yuhzel\TmController\Database\Structure::class);

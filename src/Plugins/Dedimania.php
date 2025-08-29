@@ -6,9 +6,8 @@ namespace Yuhzel\TmController\Plugins;
 
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\ManiaLinks;
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Plugins\Manager\PluginManager;
-use Yuhzel\TmController\App\Service\{Aseco, DedimaniaClient, Server};
+use Yuhzel\TmController\App\Service\{Aseco, DedimaniaClient, Sender, Server};
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class Dedimania
@@ -23,10 +22,10 @@ class Dedimania
     protected ?Checkpoints $checkpoints = null;
 
     public function __construct(
-        protected Client $client,
-        protected DedimaniaClient $dedimaniaClient,
-        protected ChallengeService $challengeService,
-        protected PlayerService $playerService,
+        private DedimaniaClient $dedimaniaClient,
+        private ChallengeService $challengeService,
+        private PlayerService $playerService,
+        private Sender $sender,
     ) {
         $this->dediLastSent = time();
     }
@@ -80,9 +79,12 @@ class Dedimania
             $message = "{#server}{$this->config->get('database.welcome')}";
             $message = str_replace('{br}', "\n", $message);
             $message = str_replace('www.dedimania.com', '$l[http://www.dedimania.com/]www.dedimania.com$l', $message);
-            $this->client->query('ChatSendServerMessageToLogin', [
-            Aseco::formatColors($message), $player->get('Login')
-            ]);
+
+            $this->sender->sendChatMessageToLogin(
+                login: $player->get('Login'),
+                message: $message,
+                formatMode: Sender::FORMAT_COLORS
+            );
         }
         //NOTE: idk if this will ever happen
         if ($response->has('1.data')) {

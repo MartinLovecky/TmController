@@ -48,24 +48,20 @@ class Server
     public static array $muteList = [];
 
     /**
-     * init global vars
-     *
-     * @param Container $container
+     * init dir paths
      * @return void
      */
-    public static function init(Container $container): void
+    public static function setPaths(): void
     {
-        $paths = $container->get('config.paths');
-
-        self::$gamePath  = $paths['game'] . DIRECTORY_SEPARATOR;
+        self::$rootDir   = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR;
+        self::$gamePath  = dirname(__DIR__, 4) . DIRECTORY_SEPARATOR;
+        self::$publicDir = self::$rootDir . 'public' . DIRECTORY_SEPARATOR;
         self::$gameDir   = self::$gamePath . 'GameData' . DIRECTORY_SEPARATOR;
         self::$trackDir  = self::$gameDir . 'Tracks' . DIRECTORY_SEPARATOR;
-        self::$rootDir   = $paths['root'];
-        self::$publicDir = $paths['public'];
-        self::$jsonDir   = $paths['json'];
-        self::$twigDir   = $paths['templates'];
-        self::$sqlDir    = $paths['sql'];
-        self::$logsDir   = $paths['logs'];
+        self::$jsonDir   = self::$publicDir . 'json' . DIRECTORY_SEPARATOR;
+        self::$twigDir   = self::$publicDir . 'templates' . DIRECTORY_SEPARATOR;
+        self::$sqlDir    = self::$publicDir . 'sql' . DIRECTORY_SEPARATOR;
+        self::$logsDir   = self::$rootDir . 'logs' . DIRECTORY_SEPARATOR;
         self::$login     = $_ENV['admin_login'];
         self::$pass      = $_ENV['admin_password'];
         self::$ip        = $_ENV['server_ip'];
