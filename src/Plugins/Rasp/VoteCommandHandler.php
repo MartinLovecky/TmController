@@ -5,21 +5,21 @@ namespace Yuhzel\TmController\Plugins\Rasp;
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\{ManiaLinks, Track};
 use Yuhzel\TmController\Plugins\Rasp\{VoteType, RaspState};
-use Yuhzel\TmController\App\Service\{Aseco, Log};
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\App\Service\{Aseco, Log, Sender};
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class VoteCommandHandler
 {
-    protected ?ManiaLinks $maniaLinks = null;
-    protected ?Track $track = null;
+    private ?ManiaLinks $maniaLinks = null;
+    private ?Track $track = null;
 
     public function __construct(
-        protected Client $client,
-        protected ChallengeService $challengeService,
-        protected PlayerService $playerService,
-        protected RaspState $raspState,
-        protected VoteManager $voteManager,
+        //protected Client $client,
+        private ChallengeService $challengeService,
+        private PlayerService $playerService,
+        private RaspState $raspState,
+        private Sender $sender,
+        private VoteManager $voteManager,
     ) {
     }
 
@@ -260,10 +260,7 @@ class VoteCommandHandler
 
     private function sendError(string $login, string $message): bool
     {
-        $this->client->query('ChatSendServerMessageToLogin', [
-            Aseco::formatColors("{#server}> {#error}{$message}"),
-            $login
-        ]);
+        $this->sender->sendChatMessageToLogin(login: $login, message: $message, formatMode: Sender::FORMAT_COLORS);
         return false;
     }
 
@@ -276,10 +273,10 @@ class VoteCommandHandler
     private function checkRoundsPointsLimit(string $voteType, string $login, bool $isMinCheck = false): bool
     {
         //NOTE: No clue what GetCurrentRanking query result is, so be safe
-        $info = $this->client->query('GetCurrentRanking', [1, 0]);
+        $info = $this->sender->query('GetCurrentRanking', [1, 0]);
         $points = $info->has('score') ? $info->get('score') : 0;
         /** @var int $limit */
-        $limit = $this->client->query('GetRoundPointsLimit')->get('CurrentValue');
+        $limit = $this->sender->query('GetRoundPointsLimit')->get('CurrentValue');
         $thresholdProperty = "r_{$voteType}_" . ($isMinCheck ? 'min' : 'max');
         $threshold = $this->raspState->$thresholdProperty ?? 0;
         $shouldBlock = $isMinCheck ? ($points < ($limit * $threshold)) : ($points > ($limit * $threshold));
@@ -299,7 +296,7 @@ class VoteCommandHandler
     {
         $played = $this->track->timePlaying();
         /** @var int $limit */
-        $limit = $this->client->query('GetRoundPointsLimit')->get('CurrentValue');
+        $limit = $this->sender->query('GetRoundPointsLimit')->get('CurrentValue');
 
         if ($limit > 0) {
             $limitSeconds = $limit / 1000;

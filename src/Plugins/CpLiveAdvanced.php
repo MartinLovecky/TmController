@@ -12,7 +12,7 @@ class CpLiveAdvanced
     private int $numberCps = 0;
     private float $lastUpdate = 0.0;
 
-    public function __construct(protected ChallengeService $challengeService)
+    public function __construct(private ChallengeService $challengeService)
     {
     }
 

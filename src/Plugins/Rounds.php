@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\App\Service\{Aseco, Sender};
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService, RecordService};
 
 class Rounds
@@ -15,10 +14,10 @@ class Rounds
     private array $roundPbs = [];
 
     public function __construct(
-        protected Client $client,
-        protected ChallengeService $challengeService,
-        protected PlayerService $playerService,
-        protected RecordService $recordService,
+        private ChallengeService $challengeService,
+        private PlayerService $playerService,
+        private RecordService $recordService,
+        private Sender $sender,
     ) {
     }
 
@@ -98,9 +97,7 @@ class Rounds
             }
 
             $message = substr($message, 0, strlen($message) - 2);
-            $message = Aseco::formatColors($message);
-            Aseco::consoleText(Aseco::stripColors($message, false));
-            $this->client->query('ChatSendServerMessage', [$message]);
+            $this->sender->sendChatMessageToAll(message: $message, formatMode: Sender::FORMAT_COLORS);
             $this->roundTimes = [];
         }
     }

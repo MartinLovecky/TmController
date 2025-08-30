@@ -17,8 +17,8 @@ class Checkpoints
     private array $speccers = [];
 
     public function __construct(
-        protected ChallengeService $challengeService,
-        protected RepositoryManager $repositoryManager,
+        private ChallengeService $challengeService,
+        private RepositoryManager $repositoryManager,
     ) {
     }
 

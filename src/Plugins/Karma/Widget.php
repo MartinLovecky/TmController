@@ -7,7 +7,6 @@ namespace Yuhzel\TmController\Plugins\Karma;
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\App\Service\{Aseco, Sender, Server, WidgetBuilder};
 use Yuhzel\TmController\Plugins\Karma\State;
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class Widget
@@ -25,7 +24,6 @@ class Widget
     private const TOTAL_CUPS = 10;
 
     public function __construct(
-        private Client $client,
         private ChallengeService $challengeService,
         private PlayerService $playerService,
         private Sender $sender,
@@ -69,10 +67,11 @@ class Widget
         );
         $message = str_replace('{br}', "\n", $message);
 
-        $this->client->query('ChatSendServerMessageToLogin', [
-            Aseco::formatColors($message),
-            $player->get('Login')
-        ]);
+        $this->sender->sendChatMessageToLogin(
+            login: $player->get('Login'),
+            message: $message,
+            formatMode: Sender::FORMAT_COLORS
+        );
     }
 
     public function closeReminderWindow(?TmContainer $player = null): void

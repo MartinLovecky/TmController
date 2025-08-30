@@ -11,7 +11,7 @@ class PageListManager
 {
     protected array $players = [];
 
-    public function __construct(protected PlayerService $playerService)
+    public function __construct(private PlayerService $playerService)
     {
         $this->playerService->eachPlayer(function (TmContainer $x) {
             $login = $x->get('Login');

@@ -14,9 +14,9 @@ class ManiaLinks
 {
     public array $mlRecords = ['local' => '   --.--', 'dedi' => '   --.--', 'tmx' => '   --.--'];
     private string $path = '';
-    protected ?Donate $donate = null;
-    protected ?ChatAdmin $chatAdmin = null;
-    protected ?RaspJukebox $raspJukebox = null;
+    private ?Donate $donate = null;
+    private ?ChatAdmin $chatAdmin = null;
+    private ?RaspJukebox $raspJukebox = null;
 
     public function __construct(
         private PageListManager $pageListManager,
@@ -303,14 +303,16 @@ class ManiaLinks
         TmContainer $player,
         string $yes,
         string $no,
-        int $timeout = 0
+        array $formatArgs = [],
+        string $formatMode = Sender::FORMAT_NONE,
+        int $timeout = 0,
     ): void {
         $xml = str_replace(
             ['%YES%', '%NO%'],
             [$yes, $no],
             $player->get('panels.vote')
         );
-        $this->sender->sendXmlToLogin(login: $player->get('Login'), xml: $xml, timeout: $timeout);
+        $this->sender->sendXmlToLogin($player->get('Login'), $xml, $formatArgs, $formatMode, $timeout);
     }
 
     public function votePanelOff(string $login): void

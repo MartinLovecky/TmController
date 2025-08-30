@@ -9,7 +9,7 @@ use Yuhzel\TmController\Plugins\Rasp\RaspState;
 
 class Rasp
 {
-    public function __construct(protected RaspState $raspState)
+    public function __construct(private RaspState $raspState)
     {
     }
 

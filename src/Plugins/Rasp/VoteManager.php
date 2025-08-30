@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Rasp;
 
+use Yuhzel\TmController\App\Service\{Aseco, Sender};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Plugins\Rasp\{Vote, RaspState};
 use Yuhzel\TmController\Plugins\{ManiaLinks, Track};
+use Yuhzel\TmController\Plugins\Rasp\{Vote, RaspState};
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
 
 class VoteManager
 {
-    protected ?ManiaLinks $maniaLinks = null;
-    protected ?Track $track = null;
+    private ?ManiaLinks $maniaLinks = null;
+    private ?Track $track = null;
 
     public function __construct(
-        protected Client $client,
-        protected ChallengeService $challengeService,
-        protected PlayerService $playerService,
-        protected RaspState $raspState,
+        private ChallengeService $challengeService,
+        private PlayerService $playerService,
+        private RaspState $raspState,
+        private Sender $sender,
     ) {
     }
 
@@ -48,25 +47,28 @@ class VoteManager
         $this->raspState->r_expire_num = 0;
         $this->raspState->ta_show_num = 0;
 
-        $message = Aseco::formatText(
-            Aseco::getChatMessage('vote_start', 'rasp'),
-            Aseco::stripColors($this->raspState->chatvote->nick),
-            $desc,
-            $this->raspState->chatvote->votes
+        $this->sender->sendChatMessageToAll(
+            message: Aseco::getChatMessage('vote_start', 'rasp'),
+            formatArgs: [
+                $this->raspState->chatvote->nick,
+                $desc,
+                $this->raspState->chatvote->votes
+            ],
+            formatMode: Sender::FORMAT_BOTH
         );
 
-        $this->client->query('ChatSendServerMessage', [Aseco::formatColors(str_replace('{br}', "\n", $message))]);
         $this->maniaLinks->displayVotePanel(
-            $player,
-            Aseco::formatColors('{#vote}Yes - F5'),
-            '$333No - F6'
+            player: $player,
+            yes: '{#vote}Yes - F5',
+            no: '$333No - F6',
+            formatMode: Sender::FORMAT_COLORS
         );
     }
 
     public function resetVotes(): void
     {
         if ($this->raspState->chatvote) {
-            $this->client->query('ChatSendServerMessage', ["Vote canceled"]);
+            $this->sender->query('ChatSendServerMessage', ["Vote canceled"]);
             $this->raspState->chatvote = null;
         }
         $this->maniaLinks->allVotePanelsOff();

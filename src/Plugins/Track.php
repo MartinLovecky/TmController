@@ -8,7 +8,7 @@ use Yuhzel\TmController\Repository\ChallengeService;
 
 class Track
 {
-    public function __construct(protected ChallengeService $challengeService)
+    public function __construct(private ChallengeService $challengeService)
     {
     }
 

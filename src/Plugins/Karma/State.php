@@ -16,9 +16,9 @@ class State
     ];
 
     public function __construct(
-        protected ChallengeService $challengeService,
-        protected PlayerService $playerService,
-        protected RecordService $recordService,
+        private ChallengeService $challengeService,
+        private PlayerService $playerService,
+        private RecordService $recordService,
     ) {
     }
 

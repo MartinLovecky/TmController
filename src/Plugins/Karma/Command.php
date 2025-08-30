@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Karma;
 
-use Yuhzel\TmController\App\Service\{Aseco, HttpClient, Server};
+use Yuhzel\TmController\App\Service\{Aseco, HttpClient, Sender, Server};
 use Yuhzel\TmController\Core\TmContainer;
+use Yuhzel\TmController\Infrastructure\Xml\Parser;
 use Yuhzel\TmController\Plugins\Karma\Vote;
 use Yuhzel\TmController\Repository\PlayerService;
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\Infrastructure\Xml\Parser;
 
 class Command
 {
     public function __construct(
-        protected Client $client,
-        protected HttpClient $httpClient,
-        protected PlayerService $playerService,
-        protected Vote $vote,
+        private HttpClient $httpClient,
+        private PlayerService $playerService,
+        private Sender $sender,
+        private Vote $vote,
     ) {
     }
 
@@ -100,10 +99,11 @@ class Command
 
     private function sendChatMessage(TmContainer $player, string $message): void
     {
-        $this->client->query('ChatSendServerMessageToLogin', [
-            Aseco::formatColors($message),
-            $player->get('Login')
-        ]);
+        $this->sender->sendChatMessageToLogin(
+            login: $player->get('Login'),
+            message: $message,
+            formatMode: Sender::FORMAT_COLORS
+        );
     }
 
     private function uptodateCheck(TmContainer $player): void

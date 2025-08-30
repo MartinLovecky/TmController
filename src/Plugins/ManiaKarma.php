@@ -17,11 +17,11 @@ use Yuhzel\TmController\Plugins\Karma\{
 class ManiaKarma
 {
     public function __construct(
-        protected Auth $auth,
-        protected Command $command,
-        protected State $state,
-        protected Vote $vote,
-        protected Widget $widget,
+        private Auth $auth,
+        private Command $command,
+        private State $state,
+        private Vote $vote,
+        private Widget $widget,
     ) {
     }
 

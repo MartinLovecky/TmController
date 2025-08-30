@@ -5,53 +5,42 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Plugins;
 
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\App\Service\{Aseco, Sender};
 use Yuhzel\TmController\Repository\{ChallengeService, RecordService};
 
 class ChatCmd
 {
     public function __construct(
-        protected Client $client,
-        protected ChallengeService $challengeService,
-        protected RecordService $recordService
+        private ChallengeService $challengeService,
+        private RecordService $recordService,
+        private Sender $sender,
     ) {
     }
 
     //TODO : this is mess in old code
-    public function trackrecs(?string $login = null, string $mode): void
+    public function trackrecs(?string $login = null, string $mode): null
     {
         $tmxUrl = $this->challengeService->getTMX()->pageurl;
         $challName = $this->challengeService->getGBX()->name;
         $name = '$l[' . $tmxUrl . ']' . Aseco::stripColors($challName) . '$l';
 
         if (!isset($login)) {
-            $message = Aseco::formatText(
-                Aseco::getChatMessage('ranking'),
-                $name,
-                $mode
+            return $this->sender->sendChatMessageToAll(
+                message: Aseco::getChatMessage('ranking'),
+                formatArgs: [$name, $mode],
+                formatMode: Sender::FORMAT_BOTH
             );
-            $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
-            return;
         }
 
-        $records = $this->recordService->getRecordForPlayer(
-            $this->challengeService->getUid(),
-            $login
-        );
+        $records = $this->recordService->getRecordForPlayer($this->challengeService->getUid(), $login);
 
         if (empty($records)) {
-            $message = Aseco::formatText(
-                Aseco::getChatMessage('ranking_none'),
-                $name,
-                'before'
+            return $this->sender->sendChatMessageToLogin(
+                login: $login,
+                message: Aseco::getChatMessage('ranking_none'),
+                formatArgs: [$name, 'before'],
+                formatMode: Sender::FORMAT_BOTH
             );
-            $this->client->query('ChatSendServerMessageToLogin', [
-                Aseco::formatColors($message),
-                $login
-            ]);
-            Aseco::console($message);
-            return;
         } else {
             dd($records);
         }

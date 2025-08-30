@@ -4,26 +4,24 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
+use Yuhzel\TmController\App\Service\{Aseco, Sender};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\App\Service\Aseco;
-use Yuhzel\TmController\Repository\PlayerService;
-use Yuhzel\TmController\Infrastructure\Gbx\Client;
-use Yuhzel\TmController\Plugins\Manager\PluginManager;
-use Yuhzel\TmController\Repository\ChallengeService;
 use Yuhzel\TmController\Plugins\Track;
+use Yuhzel\TmController\Plugins\Manager\PluginManager;
 use Yuhzel\TmController\Plugins\Rasp\{RaspState, VoteCommandHandler, VoteType, VoteManager};
+use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class RaspVotes
 {
-    protected ?Track $track = null;
+    private ?Track $track = null;
 
     public function __construct(
-        protected Client $client,
-        protected ChallengeService $challengeService,
-        protected PlayerService $playerService,
-        protected RaspState $raspState,
-        protected VoteCommandHandler $voteHandler,
-        protected VoteManager $voteManager,
+        private ChallengeService $challengeService,
+        private PlayerService $playerService,
+        private RaspState $raspState,
+        private Sender $sender,
+        private VoteCommandHandler $voteHandler,
+        private VoteManager $voteManager,
     ) {
     }
 
@@ -52,7 +50,7 @@ class RaspVotes
 
     public function onSync(): void
     {
-        $this->client->query('SetCallVoteRatios', [[['Command' => '*', 'Ratio' => -1.0]]]);
+        $this->sender->query('SetCallVoteRatios', [[['Command' => '*', 'Ratio' => -1.0]]]);
         $this->voteManager->resetVotes();
     }
 
@@ -95,7 +93,11 @@ class RaspVotes
             return;
         }
 
-        $this->sendMessage($player, Aseco::getChatMessage('vote_explain', 'rasp'));
+        $this->sender->sendChatMessageToLogin(
+            login: $player->get('Login'),
+            message: Aseco::getChatMessage('vote_explain', 'rasp'),
+            formatMode: Sender::FORMAT_COLORS
+        );
     }
 
     public function onPlayerDisconnect(TmContainer $player): void
@@ -114,13 +116,9 @@ class RaspVotes
                 $status,
                 'Server'
             );
-            $this->client->query('ChatSendServerMessage', [Aseco::formatColors($message)]);
+
+            $this->sender->sendChatMessageToAll(message: $message, formatMode: Sender::FORMAT_COLORS);
             $this->voteManager->resetVotes();
         }
-    }
-
-    private function sendMessage(TmContainer $player, string $message): void
-    {
-        $this->client->query('ChatSendServerMessageToLogin', [Aseco::formatColors($message), $player->get('Login')]);
     }
 }

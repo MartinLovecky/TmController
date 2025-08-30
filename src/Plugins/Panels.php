@@ -13,7 +13,7 @@ class Panels
     public ?string $recordsPanel = null;
     public ?string $votePanel = null;
 
-    public function __construct(protected WidgetBuilder $widgetBuilder)
+    public function __construct(private WidgetBuilder $widgetBuilder)
     {
         $folder = 'panels' . DIRECTORY_SEPARATOR;
         //Admin panel

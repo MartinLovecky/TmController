@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Karma;
 
-use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\App\Service\{Aseco, HttpClient};
-use Yuhzel\TmController\Plugins\Karma\State;
-use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Infrastructure\Xml\Parser;
 use Yuhzel\TmController\Infrastructure\Gbx\ChallMapFetcher;
+use Yuhzel\TmController\Plugins\Karma\State;
+use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class Vote
 {
@@ -25,10 +25,10 @@ class Vote
     ];
 
     public function __construct(
-        protected ChallengeService $challengeService,
-        protected HttpClient $httpClient,
-        protected PlayerService $playerService,
-        protected State $state,
+        private ChallengeService $challengeService,
+        private HttpClient $httpClient,
+        private PlayerService $playerService,
+        private State $state,
     ) {
     }
 

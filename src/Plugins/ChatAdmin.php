@@ -10,7 +10,7 @@ use Yuhzel\TmController\Plugins\Manager\PluginManager;
 
 class ChatAdmin
 {
-    protected ?RaspJukebox $raspJukebox = null;
+    private ?RaspJukebox $raspJukebox = null;
     private array $pmBuff = [];
     private int $pmLen = 30;
     private int $lnLen = 40;
