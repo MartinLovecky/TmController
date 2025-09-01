@@ -26,6 +26,12 @@ class WidgetBuilder
         $this->twig->addFilter(new \Twig\TwigFilter('sum', function ($array) {
             return array_sum($array);
         }));
+        $this->twig->addFilter(new \Twig\TwigFilter('format_time', function ($seconds) {
+            $seconds = intval($seconds);
+            $minutes = floor($seconds / 60);
+            $secs = $seconds % 60;
+            return sprintf('%02d:%02d', $minutes, $secs);
+        }));
 
         if ($this->twig->isDebug()) {
             $this->twig->addExtension(new DebugExtension());

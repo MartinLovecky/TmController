@@ -7,7 +7,7 @@ namespace Yuhzel\TmController\Plugins\Rasp;
 /**
  * Enum representing different types of votes.
  */
-enum VoteType: string
+enum RaspVoteType: string
 {
     case ENDROUND = 'endround';
     case LADDER   = 'ladder';

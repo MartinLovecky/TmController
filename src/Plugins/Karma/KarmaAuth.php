@@ -8,7 +8,7 @@ use Yuhzel\TmController\App\Service\{Aseco, HttpClient, Server};
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Infrastructure\Xml\Parser;
 
-class Auth
+class KarmaAuth
 {
     public string $api = 'http://worldwide.mania-karma.com/api/tmforever-trackmania-v4.php';
     public int $retryTime = 0;
@@ -26,18 +26,19 @@ class Auth
             $this->performAuthentication();
         } else {
             Aseco::console(' => Successfully started with async communication.');
-            Aseco::console('**********************************************************');
         }
-    }
-
-    public function shouldRetry(): bool
-    {
-        return $this->retryTime > 0;
     }
 
     private function performAuthentication(): void
     {
-        $response = $this->httpClient->get($this->api, $this->getAuthParams());
+        $response = $this->httpClient->get($this->api, [
+            'Action' => 'Auth',
+            'login' => $_ENV['server_login'],
+            'name' => Server::$name,
+            'game' => Server::$game,
+            'zone' => Server::$zone,
+            'nation' => $_ENV['dedi_nation']
+        ]);
 
         $output = Parser::fromXMLString($response);
 
@@ -48,30 +49,13 @@ class Auth
         }
     }
 
-    private function getAuthParams(): array
-    {
-        return [
-           'Action' => 'Auth',
-           'login' => $_ENV['server_login'],
-           'name' => Server::$name,
-           'game' => Server::$game,
-           'zone' => Server::$zone,
-           'nation' => $_ENV['dedi_nation'],
-        ];
-    }
-
     private function handleAuthenticationFailure(TmContainer $output): void
     {
         $this->mode = 'local';
         $this->retryTime = time() + $this->retryWait;
 
-        Aseco::console(
-            ' => Connection failed with {1} for url {2}',
-            $output->get('status'),
-            $this->api
-        );
-        Aseco::console("Please check Auth variables");
-        Aseco::console('**********************************************************');
+        Aseco::console(' => Connection failed with {1} for url {2}', $output->get('status'), $this->api);
+        Aseco::console('Please check Auth variables');
     }
 
     private function handleAuthenticationSuccess(TmContainer $output): void
@@ -82,7 +66,11 @@ class Auth
         Aseco::updateEnvFile('KarmaHash', $output->get('authcode'));
 
         Aseco::console(' => Successfully started with async communication.');
-        Aseco::console(' => The API set the Request-URL to: {1}', $output->get('api_url'));
-        Aseco::console('**********************************************************');
+        Aseco::console(' => API Request-URL: {1}', $output->get('api_url'));
+    }
+
+    public function shouldRetry(): bool
+    {
+        return $this->retryTime > 0 && time() >= $this->retryTime;
     }
 }

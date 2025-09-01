@@ -1,0 +1,28 @@
+<manialink id="1928379">
+    {% set y = 22.8 %}
+    {% set pos = 1 %}
+
+    {% for player in players %}
+        {% set nickname = player.get('NickName.WhiteNick') %}
+        <frame scale="1" posn="-64.4 {{ y }}">
+            {% if (player.get('NickName.CPNumber') - 1) == numberCPs %}
+                <label scale="0.48" posn="1.8 0.1 0.1" halign="left" valign="center"
+                       style="TextRaceMessage" text="$F93CP-"/>
+                <quad posn="4 0 0" sizen="1.6 1.6" halign="left" valign="center"
+                      style="BgRaceScore2" substyle="Warmup"/>
+            {% else %}
+                <label scale="0.48" posn="1.8 0.1 0.1" halign="left" valign="center"
+                       style="TextRaceMessage" text="$F93CP-$F93{{ player.get('NickName.CPNumber') }}"/>
+            {% endif %}
+
+            <label scale="0.48" posn="10.4 0.1 0.1" halign="right" valign="center"
+                   style="TextRaceMessage" text="$FFC{{ player.get('NickName.Time')|format_time }}"/>
+
+            <label scale="0.48" posn="10.6 0.1 0.1" sizen="21 2" halign="left" valign="center"
+                   style="TextRaceMessage" text="{{ nickname }}"/>
+        </frame>
+
+        {% set y = y - 1.8 %}
+        {% set pos = pos + 1 %}
+    {% endfor %}
+</manialink>

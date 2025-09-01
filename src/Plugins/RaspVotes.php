@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Service\{Aseco, Sender};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Plugins\Track;
-use Yuhzel\TmController\Plugins\Manager\PluginManager;
-use Yuhzel\TmController\Plugins\Rasp\{RaspState, VoteCommandHandler, VoteType, VoteManager};
+use Yuhzel\TmController\App\Service\{Aseco, Sender};
+use Yuhzel\TmController\Plugins\Rasp\{RaspCommandHandler, RaspState, RaspManager, RaspVoteType};
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
+use Yuhzel\TmController\Plugins\Manager\PluginManager;
 
 class RaspVotes
 {
@@ -18,10 +17,10 @@ class RaspVotes
     public function __construct(
         private ChallengeService $challengeService,
         private PlayerService $playerService,
+        private RaspCommandHandler $voteHandler,
+        private RaspManager $voteManager,
         private RaspState $raspState,
         private Sender $sender,
-        private VoteCommandHandler $voteHandler,
-        private VoteManager $voteManager,
     ) {
     }
 
@@ -37,7 +36,7 @@ class RaspVotes
     public function handleChatCommand(TmContainer $player): void
     {
         $command = strtolower($player->get('command.name'));
-        foreach (VoteType::cases() as $voteType) {
+        foreach (RaspVoteType::cases() as $voteType) {
             if ($voteType->value === $command) {
                 $method = 'handle' . ucfirst($voteType->value);
                 if (method_exists($this->voteHandler, $method)) {
@@ -70,7 +69,7 @@ class RaspVotes
             return;
         }
 
-        $this->checkVoteExpiry(VoteType::ENDROUND->value, 'expired');
+        $this->checkVoteExpiry(RaspVoteType::ENDROUND->value, 'expired');
     }
 
     public function onCheckpoint(): void

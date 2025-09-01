@@ -4,22 +4,21 @@ namespace Yuhzel\TmController\Plugins\Rasp;
 
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\{ManiaLinks, Track};
-use Yuhzel\TmController\Plugins\Rasp\{VoteType, RaspState};
 use Yuhzel\TmController\App\Service\{Aseco, Log, Sender};
+use Yuhzel\TmController\Plugins\Rasp\{RaspManager, RaspVoteType, RaspState};
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
-class VoteCommandHandler
+class RaspCommandHandler
 {
     private ?ManiaLinks $maniaLinks = null;
     private ?Track $track = null;
 
     public function __construct(
-        //protected Client $client,
         private ChallengeService $challengeService,
         private PlayerService $playerService,
+        private RaspManager $raspManager,
         private RaspState $raspState,
         private Sender $sender,
-        private VoteManager $voteManager,
     ) {
     }
 
@@ -119,17 +118,17 @@ class VoteCommandHandler
         $data = [];
         $data[] = ['Ratio', '{#black}Command', ''];
         $voteTypes = [
-            VoteType::ENDROUND,
-            VoteType::LADDER,
-            VoteType::REPLAY,
-            VoteType::SKIP
+            RaspVoteType::ENDROUND,
+            RaspVoteType::LADDER,
+            RaspVoteType::REPLAY,
+            RaspVoteType::SKIP
         ];
 
         if ($this->raspState->allow_ignorevotes) {
-            $voteTypes[] = VoteType::IGNORE;
+            $voteTypes[] = RaspVoteType::IGNORE;
         }
         if ($this->raspState->allow_kickvotes) {
-            $voteTypes[] = VoteType::KICK;
+            $voteTypes[] = RaspVoteType::KICK;
         }
 
         foreach ($voteTypes as $voteType) {
@@ -171,8 +170,8 @@ class VoteCommandHandler
             }
         }
         $this->incrementVoteCounter($type);
-        $voteTypeEnum = VoteType::from($type);
-        $this->voteManager->startVote(
+        $voteTypeEnum = RaspVoteType::from($type);
+        $this->raspManager->startVote(
             $player,
             $voteTypeEnum->value,
             $voteTypeEnum->description(),
@@ -213,7 +212,7 @@ class VoteCommandHandler
             return false;
         }
 
-        $this->voteManager->resetVotes();
+        $this->raspManager->resetVotes();
         return true;
     }
 

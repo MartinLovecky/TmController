@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Rasp;
 
-use Yuhzel\TmController\Plugins\Rasp\Vote;
+use Yuhzel\TmController\Plugins\Rasp\RaspVoteDTO;
 
-//TODO - CONVER THIS INTO JSON CONFIG THAT CAN BE CHANGED ALSO CHANGE NAMES
 class RaspState
 {
-    public ?Vote $chatvote = null;
+    public ?RaspVoteDTO $chatvote = null;
     public array $plrvotes = [];
     public array $tmxadd = [];
     public array $jukebox = [];

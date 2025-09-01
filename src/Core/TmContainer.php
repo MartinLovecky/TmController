@@ -40,7 +40,20 @@ class TmContainer extends ArrayObject implements ContainerInterface
     public function set(string $path, mixed $value): static
     {
         [$parent, $lastKey] = $this->navigateToParent($path, true);
-        $parent[$lastKey] = $value;
+
+        if ($parent === null) {
+            return $this;
+        }
+
+        if (ctype_digit((string)$lastKey)) {
+            $lastKey = (int)$lastKey;
+        }
+
+        if ($parent instanceof self) {
+            $parent[$lastKey] = $value;
+        } elseif (is_array($parent)) {
+            $parent[$lastKey] = $value;
+        }
 
         return $this;
     }
@@ -64,7 +77,15 @@ class TmContainer extends ArrayObject implements ContainerInterface
             $lastKey = (int)$lastKey;
         }
 
-        return $parent->offsetExists($lastKey) ? $parent[$lastKey] : $default;
+        if ($parent instanceof self) {
+            return $parent->offsetExists($lastKey) ? $parent[$lastKey] : $default;
+        }
+
+        if (is_array($parent)) {
+            return array_key_exists($lastKey, $parent) ? $parent[$lastKey] : $default;
+        }
+
+        return $default;
     }
 
     /**
@@ -100,7 +121,24 @@ class TmContainer extends ArrayObject implements ContainerInterface
     public function has(string $path): bool
     {
         [$parent, $lastKey] = $this->navigateToParent($path, false);
-        return $parent !== null && $parent->offsetExists($lastKey);
+
+        if ($parent === null) {
+            return false;
+        }
+
+        if (ctype_digit((string)$lastKey)) {
+            $lastKey = (int)$lastKey;
+        }
+
+        if ($parent instanceof self) {
+            return $parent->offsetExists($lastKey);
+        }
+
+        if (is_array($parent)) {
+            return array_key_exists($lastKey, $parent);
+        }
+
+        return false;
     }
 
     /**
@@ -152,7 +190,18 @@ class TmContainer extends ArrayObject implements ContainerInterface
     public function delete(string $path): static
     {
         [$parent, $lastKey] = $this->navigateToParent($path, false);
-        if ($parent?->offsetExists($lastKey)) {
+
+        if ($parent === null) {
+            return $this;
+        }
+
+        if (ctype_digit((string)$lastKey)) {
+            $lastKey = (int)$lastKey;
+        }
+
+        if ($parent instanceof self) {
+            unset($parent[$lastKey]);
+        } elseif (is_array($parent)) {
             unset($parent[$lastKey]);
         }
 
@@ -217,6 +266,10 @@ class TmContainer extends ArrayObject implements ContainerInterface
         $container = new static();
 
         foreach ($data as $k => $v) {
+            if (ctype_digit((string)$k)) {
+                $k = (int) $k;
+            }
+
             $container[$k] = is_array($v)
             ? static::fromArray($v)
             : $v;

@@ -159,7 +159,6 @@ class TmController
         $this->pm->callFunctions('onSync');
         $this->playerService->eachPlayer(function (TmContainer $player) {
             $this->playerConnect($player);
-            dd($player);
         });
     }
 
@@ -435,8 +434,6 @@ class TmController
         $login = $call->get('login');
         $command = $call->get('message');
 
-        $this->pm->callFunctions('onChat', $call);
-
         if ($command == '' || $command == '???') {
             Aseco::console(
                 '{1} attempted to use chat command "{2}"',
@@ -446,9 +443,8 @@ class TmController
         } elseif (str_starts_with($command, '/')) {
             $cmd = substr($command, 1);
             $params = explode(' ', $cmd, 2);
-            $name = ucfirst(str_replace(['+', '-'], ['plus', 'dash'], $params[0]));
-            // must be string dont change it
-            $params[1] = isset($params[1]) ? trim(strtolower($params[1])) : '';
+            $name = ucfirst(str_replace(['+', '-'], ['plus', 'minus'], $params[0]));
+            $onlyParams = isset($params[1]) ? trim(strtolower($params[1])) : '';
 
             $player = $this->playerService->getPlayerByLogin($login);
 
@@ -456,17 +452,18 @@ class TmController
                 Aseco::console(
                     'player {1} used chat command "/{2} {3}"',
                     $login,
-                    $params[0],
-                    $params[1]
+                    $name,
+                    $onlyParams
                 );
-                $player->set('command.name', $name)->set('command.params', $params[1]);
+                $player->set('command.name', $name)->set('command.params', $onlyParams);
+                $this->pm->callFunctions('onChat', $player);
                 $this->pm->callFunctions("handleChatCommand", $player);
             } else {
                 Aseco::console(
                     'player {1} attempted to use chat command "/{2} {3}"',
                     $login,
-                    $params[0],
-                    $params[1]
+                    $name,
+                    $onlyParams
                 );
             }
         }

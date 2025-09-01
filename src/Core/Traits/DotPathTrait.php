@@ -26,7 +26,12 @@ trait DotPathTrait
 
         $segments = preg_split('/(?<!\\\\)\./', $path);
         $segments = array_map(fn($seg) => str_replace('\.', '.', $seg), $segments);
+
         $lastKey = array_pop($segments);
+        if (ctype_digit((string)$lastKey)) {
+            $lastKey = (int)$lastKey;
+        }
+
         $current = $this;
 
         foreach ($segments as $segment) {
@@ -34,15 +39,7 @@ trait DotPathTrait
                 $segment = (int)$segment;
             }
 
-            if (is_array($current)) {
-                if (!array_key_exists($segment, $current)) {
-                    if ($createMissing) {
-                        $current[$segment] = [];
-                    } else {
-                        return [null, $lastKey];
-                    }
-                }
-            } elseif ($current instanceof self) {
+            if ($current instanceof self) {
                 if (!$current->offsetExists($segment)) {
                     if ($createMissing) {
                         $current[$segment] = new self();
@@ -50,11 +47,19 @@ trait DotPathTrait
                         return [null, $lastKey];
                     }
                 }
+                $current = $current[$segment];
+            } elseif (is_array($current)) {
+                if (!array_key_exists($segment, $current)) {
+                    if ($createMissing) {
+                        $current[$segment] = [];
+                    } else {
+                        return [null, $lastKey];
+                    }
+                }
+                $current = $current[$segment];
             } else {
                 return [null, $lastKey];
             }
-
-            $current = is_array($current) ? $current[$segment] : $current[$segment];
         }
 
         return [$current, $lastKey];

@@ -105,7 +105,7 @@
         }
     },
     "messages": {
-		"welcome": "{#server}*** This Server uses the ManiaKarma world Track vote system at {#highlite}$l[{1}]{2}$l{br}{#server}*** Type {#highlite}/karma help{#server} for more info.",
+		"welcome": "{#server}*** This Server uses the ManiaKarma world Track vote system at {#highlite}$l[{1}]{2}$l\n{#server}*** Type {#highlite}/karma help{#server} for more info.",
         "uptodate_ok":"{#emotic}*** This ManiaKarma plugin version {#highlite}{1}{#emotic} is up to date.",
 		"uptodate_new":"{#emotic}*** New ManiaKarma plugin version {#highlite}{1}{#emotic} available from {#highlite}{2}",
 		"uptodate_failed":"{#error}*** Could not check plugin version, connection failed.",
@@ -120,7 +120,7 @@
 		"karma_require_finish>":"{#server}> {#error}You need to finish this Track at least {#highlite}$I {1}{#error} time{2} before being able to vote!",
 		"karma_no_public":"{#server}> {#error}Public karma votes disabled, use $i{#highlite}{1}{#error} instead!",
 		"karma_list_help":"{#server}> {#emotic}Use {#highlite}/list{#emotic} first - Type {#highlite}/list help{#emotic} for more info.",
-		"karma_help":"{#server}This is the World Track vote System, with this system all votes are stored in a central Database and not only at this Server. The Karma of each Track {#server}are from all votes Worldwide.{br}{br}The Track-Authors and the Server-Admins need to know how good the Tracks are, so please vote all Tracks!{br}{br}{#server}You can vote with:{br}  {#highlite}/+++{#server} for fantastic{br}  {#highlite}/++{#server}   for beautiful{br}  {#highlite}/+{#server}     for good{br}  {#highlite}/-{#server}      for bad{br}  {#highlite}/--{#server}     for poor{br}  {#highlite}/---{#server}    for waste{br}{br}{#server}You can also use the {#highlite}Karma-Widget{#server} or the {#highlite}Reminder-Window{#server} at the Scoretable.{br}{br}{#server}Enter {#highlite}/karma{#server} to see the Karma of the current Track.{br}{br}{#server}Enter {#highlite}/karma details{#server} to see the detailed Karma of the current Track.",
+		"karma_help":"{#server}This is the World Track vote System, with this system all votes are stored in a central Database and not only at this Server. The Karma of each Track {#server}are from all votes Worldwide.\n\nThe Track-Authors and the Server-Admins need to know how good the Tracks are, so please vote all Tracks!\n\n{#server}You can vote with:\n  {#highlite}/+++{#server} for fantastic\n  {#highlite}/++{#server}   for beautiful\n  {#highlite}/+{#server}     for good\n  {#highlite}/-{#server}      for bad\n  {#highlite}/--{#server}     for poor\n  {#highlite}/---{#server}    for waste\n\n{#server}You can also use the {#highlite}Karma-Widget{#server} or the {#highlite}Reminder-Window{#server} at the Scoretable.\n\n{#server}Enter {#highlite}/karma{#server} to see the Karma of the current Track.\n\n{#server}Enter {#highlite}/karma details{#server} to see the detailed Karma of the current Track.",
 		"karma_reminder_at_score":"How did you like this Track?",
 		"karma_vote_singular":"vote",
 		"karma_vote_plural":"votes",
@@ -134,12 +134,12 @@
 		"karma_waste":"waste",
 		"karma_show_opinion":"{#server}>> {#highlite}[{1}]{#server} thinks this Track is {#highlite}{2}{#server}! What do you think?",
 		"karma_show_undecided":"{#server}>> {#highlite}[{1}]{#server} is {#highlite}undecided{#server} about this Track. What do you think?",
-		"lottery_mail_body":"{br}{#karma}Congratulations! You have won at the ManiaKarma lottery on {#highlite}{1}{#karma}!{br}You won {#highlite}{2} Coppers{#karma}!!!{br}{br}$L[tmtp://#addfavourite={3}]Click here to add this server to your favorites!$L",
+		"lottery_mail_body":"\n{#karma}Congratulations! You have won at the ManiaKarma lottery on {#highlite}{1}{#karma}!\nYou won {#highlite}{2} Coppers{#karma}!!!\n\n$L[tmtp://#addfavourite={3}]Click here to add this server to your favorites!$L",
 		"lottery_player_won":"{#server}> {1}$Z$S{#karma} won the ManiaKarma lottery and got {#highlite}{2} Coppers{#karma}!!! Congratulations!",
 		"lottery_low_coppers":"{#server}> {#message}The ManiaKarma lottery has too few Coppers, please donate some Coppers to enable lottery.",
 		"lottery_to_few_players":"{#server}> {#message}The ManiaKarma lottery did not draw a winner, because there are not enough players online or too few voted.",
 		"lottery_total_player_win":"{#server}> {#karma}You have won a total of {#highlite}{1} Coppers{#karma} until now.>",
-		"lottery_help":"{br}{br}{#server}Enter {#highlite}/karma lottery{#server} to see your current total win at ManiaKarma lottery (lottery only available for TMU players)."
+		"lottery_help":"\n\n{#server}Enter {#highlite}/karma lottery{#server} to see your current total win at ManiaKarma lottery (lottery only available for TMU players)."
     },
     "images": {
         "widget_open_left":"http://maniacdn.net/undef.de/xaseco1/mania-karma/edge-open-ld-dark.png",

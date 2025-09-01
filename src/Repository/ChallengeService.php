@@ -106,10 +106,10 @@ class ChallengeService
     public function getNextUid(): string
     {
         $next = $this->client->query('GetNextChallengeIndex')->get('value');
-        return $this->getChallengeList(index:$next)->get('0.UId');
+        return $this->getChallengeList(index:$next)[0]['UId'];
     }
 
-    public function getChallengeList(int $size = 1, int $index = 1): TmContainer
+    public function getChallengeList(int $size = 1, int $index = 1): array
     {
         return $this->client->query('GetChallengeList', [$size, $index])->get('value');
     }

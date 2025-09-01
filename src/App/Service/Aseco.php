@@ -420,58 +420,34 @@ class Aseco
 
     public static function getChatMessage(string $message, string $jsonFile = 'messages'): ?string
     {
-        $file = self::safeFileGetContents(Server::$jsonDir . "{$jsonFile}.json");
+        $msg = TmContainer::fromJsonFile(Server::$jsonDir . "{$jsonFile}.json");
 
-        if (!$file) {
+        if ($msg->isEmpty()) {
             return null;
         }
 
-        $arr = self::safeJsonDecode($file);
-
-        if (empty($arr)) {
-            return null;
-        }
-
-        if (array_key_exists($message, $arr)) {
-            return htmlspecialchars_decode($arr[$message]);
+        if ($msg->has($message)) {
+            return $msg->getTyped($message, 'string');
         }
 
         self::console('[X8seco] Invalid message in getChatMessage [{1}]', $message);
         return null;
     }
 
-    public static function getSetting(string $key, string $jsonFile = 'config'): mixed
+    public static function getSetting(string $path, string $jsonFile = 'config'): mixed
     {
-        $filePath = Server::$jsonDir . "{$jsonFile}.json";
+        $config = TmContainer::fromJsonFile(Server::$jsonDir . "{$jsonFile}.json");
 
-        // Get file contents safely
-        $fileContents = self::safeFileGetContents($filePath);
-        if (!$fileContents) {
-            self::console("[X8seco] File not found or empty: {$filePath}");
+        if ($config->isEmpty()) {
             return null;
         }
 
-        // Decode JSON safely
-        $data = self::safeJsonDecode($fileContents);
-        if (empty($data)) {
-            self::console("[X8seco] JSON decode failed or empty for file: {$filePath}");
-            return null;
+        if ($config->has($path)) {
+            return $config->get($path);
         }
 
-        // Support nested keys with dot notation
-        $keys = explode('.', $key);
-        $value = $data;
-
-        foreach ($keys as $k) {
-            if (is_array($value) && array_key_exists($k, $value)) {
-                $value = $value[$k];
-            } else {
-                self::console("[X8seco] Key '{$key}' not found in JSON file: {$filePath}");
-                return null;
-            }
-        }
-
-        return $value;
+        self::console('[X8seco] Invalid setting in getSetting [{1}]', $path);
+        return null;
     }
 
 

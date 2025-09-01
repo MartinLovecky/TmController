@@ -10,7 +10,7 @@ use Yuhzel\TmController\Plugins\{ManiaLinks, Track};
 use Yuhzel\TmController\Plugins\Rasp\{Vote, RaspState};
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
-class VoteManager
+class RaspManager
 {
     private ?ManiaLinks $maniaLinks = null;
     private ?Track $track = null;
@@ -34,7 +34,7 @@ class VoteManager
         $login = $player->get('Login');
         $requiredVotes = $this->calculateRequiredVotes($ratio);
 
-        $this->raspState->chatvote = new Vote([
+        $this->raspState->chatvote = new RaspVoteDTO([
             'login' => $login,
             'nick'  => $player->get('NickName'),
             'votes' => $requiredVotes,

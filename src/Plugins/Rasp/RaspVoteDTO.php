@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Rasp;
 
-class Vote
+class RaspVoteDTO
 {
     public string $login;
     public string $nick;
