@@ -66,7 +66,7 @@ class Checkpoints
         unset($this->checkpoints[$login]);
     }
 
-    public function onNewChallenge(ChallengeService $challengeService)
+    public function onNewChallenge()
     {
         foreach ($this->checkpoints as $login => $_) {
             $this->checkpoints[$login]['bestCps'] = $this->bestCps;

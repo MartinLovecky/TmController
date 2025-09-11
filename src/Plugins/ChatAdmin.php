@@ -28,7 +28,7 @@ class ChatAdmin
         $commandName = $player->get('command.name');
         $type  = $player->get('command.params');
 
-        if ($commandName !== 'admin' && !Aseco::isAnyAdmin($login)) {
+        if ($commandName !== '/' && !Aseco::isAnyAdmin($login)) {
             return;
         }
 

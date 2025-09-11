@@ -8,7 +8,7 @@ use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\ManiaLinks;
 use Yuhzel\TmController\Repository\ChallengeService;
 use Yuhzel\TmController\Plugins\Manager\PluginManager;
-use Yuhzel\TmController\Plugins\Rasp\{Vote, RaspState};
+use Yuhzel\TmController\Plugins\Rasp\{RaspState, RaspVoteDTO};
 use Yuhzel\TmController\App\Service\{Aseco, RaspHelper, Sender, Server};
 
 class RaspJukebox
@@ -114,7 +114,7 @@ class RaspJukebox
         return !empty($this->raspState->chatvote) && $this->raspState->chatvote['votes'] >= 0;
     }
 
-    private function processVote(Vote &$vote, string $login, callable $onPass): void
+    private function processVote(RaspVoteDTO &$vote, string $login, callable $onPass): void
     {
         $vote['votes']--;
         if ($vote['votes'] > 0) {
@@ -159,7 +159,7 @@ class RaspJukebox
         };
     }
 
-    private function sendVoteReminder(Vote $vote): void
+    private function sendVoteReminder(RaspVoteDTO $vote): void
     {
         $messageKey = isset($vote['tmx']) ? 'jukebox_y' : 'vote_y';
         $desc       = isset($vote['tmx']) ? Aseco::stripColors($vote['name']) : $vote['desc'];

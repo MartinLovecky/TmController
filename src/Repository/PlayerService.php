@@ -17,16 +17,12 @@ class PlayerService
     public int $numPlayers = 0;
 
     public function __construct(
-        protected Client $client,
-        protected TmContainer $container,
-        protected Panels $panels,
-        protected RepositoryManager $repository,
-        protected Styles $styles,
+        private Client $client,
+        private TmContainer $container,
+        private Panels $panels,
+        private RepositoryManager $repository,
+        private Styles $styles,
     ) {
-        // master admin is allways frist result
-        if ($firstLogin = $this->getFirstPlayerLogin()) {
-            $this->addPlayer($firstLogin, true);
-        }
     }
 
     /**
@@ -38,6 +34,7 @@ class PlayerService
         if ($this->hasPlayer($login)) {
             return;
         }
+
         /** @var TmContainer $info */
         $info = $this->getDetailedPlayerInfo($login);
         $info
@@ -61,7 +58,7 @@ class PlayerService
 
         $this->numPlayers = $this->container->count();
 
-        // Save to DB
+        // Save to DB only if not exist
         $this->repository->insert(Table::PLAYERS, $this->playerData($info), $login);
         $this->repository->insert(Table::PLAYERS_EXTRA, $this->extraPlayerData($login), $login);
     }
@@ -166,21 +163,9 @@ class PlayerService
     /**
      * Get a list of players from server.
      */
-    private function getPlayerList(int $limit = 300, int $start = 0, int $type = 2): array
+    public function getPlayerList(int $limit = 30, int $start = 0, int $type = 2): array
     {
         return $this->client->query('GetPlayerList', [$limit, $start, $type], false)->get('value');
-    }
-
-    /**
-     * Get first player's login if exists.
-     */
-    private function getFirstPlayerLogin(): ?string
-    {
-        $list = $this->getPlayerList(1); // fetch just 1 player
-        if (empty($list)) {
-            return null;
-        }
-        return $list[0]->get('Login');
     }
 
     private function playerData(TmContainer $player): array

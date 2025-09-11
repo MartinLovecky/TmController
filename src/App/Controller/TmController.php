@@ -157,9 +157,9 @@ class TmController
 
         $this->playerService->syncFromServer();
         $this->pm->callFunctions('onSync');
-        $this->playerService->eachPlayer(function (TmContainer $player) {
-            $this->playerConnect($player);
-        });
+
+        $masterAdmin = $this->playerService->getPlayerList(1)[0];
+        $this->playerService->addPlayer($masterAdmin->get('Login'), true);
     }
 
     private function playerConnect(TmContainer $player)
@@ -265,11 +265,11 @@ class TmController
             return;
         }
 
-        $this->pm->callFunctions('onNewChallenge', $this->challengeService);
+        $this->pm->callFunctions('onNewChallenge');
         $message = $this->buildRecordMessage($challenge);
         $this->sendRecordMessage($message);
 
-        $this->pm->callFunctions('onNewChallenge2', $this->challengeService->getGBX());
+        $this->pm->callFunctions('onNewChallenge2');
         $this->pm->callPluginFunction('chatCmd', 'trackrecs', null, 'before');
     }
 
@@ -417,16 +417,17 @@ class TmController
 
     private function callBackConnect(TmContainer $call): void
     {
-        $player = $this->playerService->getPlayerInfo($call['chatType']);
-        $this->playerService->addPlayer($player->get('Login'));
-        $this->playerConnect($this->playerService->getPlayerByLogin($player->get('Login')));
+        $playerInfo = $this->playerService->getPlayerInfo($call['chatType']);
+        $this->playerService->addPlayer($playerInfo->get('Login'));
+        $player = $this->playerService->getPlayerByLogin($playerInfo->get('Login'));
+        $this->playerConnect($player);
     }
 
     private function callBackDisconnect(TmContainer $call): void
     {
-        $player = $this->playerService->getPlayerByLogin($call['chatType']);
-        $this->playerDisconnect($player);
-        $this->playerService->removePlayer($player);
+        dd('Disconect', $call);
+        $this->playerDisconnect($call['chatType']);
+        $this->playerService->removePlayer($call['chatType']);
     }
 
     private function playerChat(TmContainer $call): void
@@ -443,7 +444,7 @@ class TmController
         } elseif (str_starts_with($command, '/')) {
             $cmd = substr($command, 1);
             $params = explode(' ', $cmd, 2);
-            $name = ucfirst(str_replace(['+', '-'], ['plus', 'minus'], $params[0]));
+            $name = str_replace(['+', '-'], ['plus', 'minus'], $params[0]);
             $onlyParams = isset($params[1]) ? trim(strtolower($params[1])) : '';
 
             $player = $this->playerService->getPlayerByLogin($login);
@@ -451,20 +452,12 @@ class TmController
             if ($player instanceof TmContainer) {
                 Aseco::console(
                     'player {1} used chat command "/{2} {3}"',
-                    $login,
+                    $player->get('NickName'),
                     $name,
                     $onlyParams
                 );
                 $player->set('command.name', $name)->set('command.params', $onlyParams);
-                $this->pm->callFunctions('onChat', $player);
                 $this->pm->callFunctions("handleChatCommand", $player);
-            } else {
-                Aseco::console(
-                    'player {1} attempted to use chat command "/{2} {3}"',
-                    $login,
-                    $name,
-                    $onlyParams
-                );
             }
         }
     }

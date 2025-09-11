@@ -63,9 +63,9 @@ class CpLiveAdvanced
         $params = $player->get('command.params');
 
         match ($comandName) {
-            'color' => '',
-            'toggle' => '',
-            default => ''
+            'color' => null,
+            'toggle' => null,
+            default => null
         };
     }
 

@@ -13,28 +13,28 @@ class Aseco
     public static int $restarting = 0;
     public static bool $startupPhase = false;
     public static array $colors = [
-        'Welcome ' => '$f00',
-        'Server ' => '$ff0',
-        'Highlite ' => '$fff',
-        'Timelite ' => '$bbb',
-        'Record ' => '$0f3',
-        'Emotic ' => '$fa0',
-        'Music ' => '$d80',
+        'Welcome' => '$f00',
+        'Server' => '$ff0',
+        'Highlite' => '$fff',
+        'Timelite' => '$bbb',
+        'Record' => '$0f3',
+        'Emotic' => '$fa0',
+        'Music' => '$d80',
         'Message ' => '$39f',
-        'Rank ' => '$ff3',
-        'Vote ' => '$f8f',
-        'karma ' => '$ff0',
-        'Donate ' => '$f0f',
-        'Admin ' => '$ff0',
-        'Black ' => '$000',
-        'Grey ' => '$888',
-        'Login ' => '$00f',
-        'Logina ' => '$0c0',
-        'Nick ' => '$f00',
-        'interact ' => '$ff0$i',
-        'dedimsg ' => '$28b',
-        'dedirec ' => '$0b3',
-        'Error ' => '$f00$i'
+        'Rank' => '$ff3',
+        'Vote' => '$f8f',
+        'karma' => '$ff0',
+        'Donate' => '$f0f',
+        'Admin' => '$ff0',
+        'Black' => '$000',
+        'Grey' => '$888',
+        'Login' => '$00f',
+        'Logina' => '$0c0',
+        'Nick' => '$f00',
+        'interact' => '$ff0$i',
+        'dedimsg' => '$28b',
+        'dedirec' => '$0b3',
+        'Error' => '$f00$i'
     ];
 
     /**
@@ -91,8 +91,8 @@ class Aseco
     {
         $text = (string)array_shift($args);
 
-        foreach ($args as $i => $param) {
-            $text = str_replace('{' . ($i + 1) . '}', (string)$param, $text);
+        foreach ($args as $index => $arg) {
+            $text = str_replace('{' . ($index + 1) . '}', (string)$arg, $text);
         }
 
         return $text;

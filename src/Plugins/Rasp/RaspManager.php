@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Rasp;
 
-use Yuhzel\TmController\App\Service\{Aseco, Sender};
+use Yuhzel\TmController\App\Service\{Aseco, Log, Sender};
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\{ManiaLinks, Track};
-use Yuhzel\TmController\Plugins\Rasp\{Vote, RaspState};
+use Yuhzel\TmController\Plugins\Rasp\{RaspState};
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 
 class RaspManager
@@ -53,15 +53,16 @@ class RaspManager
                 $this->raspState->chatvote->nick,
                 $desc,
                 $this->raspState->chatvote->votes
-            ],
-            formatMode: Sender::FORMAT_BOTH
+            ]
         );
+
+        Log::debug('Rasp', [Aseco::getChatMessage('vote_start', 'rasp')], 'Rasp');
 
         $this->maniaLinks->displayVotePanel(
             player: $player,
-            yes: '{#vote}Yes - F5',
+            yes: '$333Yes - F5',
             no: '$333No - F6',
-            formatMode: Sender::FORMAT_COLORS
+            formatMode: Sender::FORMAT_NONE
         );
     }
 

@@ -28,14 +28,31 @@ class RaspCommandHandler
         $this->track = $track;
     }
 
-    public function handleSkip(TmContainer $player): bool
+    public function skip(TmContainer $player): void
     {
-        return $this->tryStartVote(
-            $player,
-            'skip',
-            $this->raspState->max_skipvotes,
-            fn($type, $login) => $this->checkModeLimits($type, $login)
-        );
+        $gamemode = $this->challengeService->getGameMode();
+        $login = $player->get('Login');
+        Log::debug('Hanlde', $player->toArray(), 'handle');
+        if ($gamemode == 'cup') {
+            $this->sender->query('NextChallenge', [true]);
+        } else {
+            $this->sender->query('NextChallenge');
+            Aseco::console('Player [{2}] skips challenge!', $login);
+            $this->sender->sendChatMessageToLogin(
+                login: $login,
+                message:  '{#server}>> {#player}Player$z$s {#highlite}{2}$z$s{#player} skips challenge!',
+                formatArgs: [$player->get('NickName')],
+                formatMode: Sender::FORMAT_BOTH
+            );
+        }
+
+        // LOG::debug('SKIP', $player->toArray(), 'SKIP');
+        // return $this->tryStartVote(
+        //     $player,
+        //     'skip',
+        //     $this->raspState->max_skipvotes,
+        //     fn($type, $login) => $this->checkModeLimits($type, $login)
+        // );
     }
 
     public function handleEndRound(TmContainer $player): bool
@@ -107,9 +124,10 @@ class RaspCommandHandler
         return $this->tryStartVote($player, 'kick');
     }
 
-    public function handleHelp(TmContainer $player): bool
+    public function help(TmContainer $player): bool
     {
         $login = $player->get('Login');
+
         if (!$this->raspState->feature_votes) {
             return $this->sendError($login, Aseco::getChatMessage('no_vote', 'rasp'));
         }
@@ -149,45 +167,6 @@ class RaspCommandHandler
         return true;
     }
 
-    private function tryStartVote(
-        TmContainer $player,
-        string $type,
-        ?int $maxVotes = null,
-        ?callable $modeCheck = null
-    ): bool {
-        $login = $player->get('Login');
-        if ($this->handleVoteCancel($player)) {
-            return false;
-        }
-        $error = $this->canStartVote($player, $type, $maxVotes);
-        if ($error) {
-            return $this->sendError($login, $error);
-        }
-        if ($modeCheck) {
-            $modeError = $modeCheck($type, $login);
-            if ($modeError) {
-                return false;
-            }
-        }
-        $this->incrementVoteCounter($type);
-        $voteTypeEnum = RaspVoteType::from($type);
-        $this->raspManager->startVote(
-            $player,
-            $voteTypeEnum->value,
-            $voteTypeEnum->description(),
-            $voteTypeEnum->defaultRatio()
-        );
-        return true;
-    }
-
-    private function incrementVoteCounter(string $type): void
-    {
-        $counterKey = "num_{$type}votes";
-        if (property_exists($this->raspState, $counterKey)) {
-            $this->raspState->$counterKey++;
-        }
-    }
-
     /**
      * Undocumented function
      *
@@ -214,6 +193,45 @@ class RaspCommandHandler
 
         $this->raspManager->resetVotes();
         return true;
+    }
+
+    private function tryStartVote(
+        TmContainer $player,
+        string $type,
+        ?int $maxVotes = null,
+        ?callable $modeCheck = null
+    ): bool {
+        // $login = $player->get('Login');
+        // if ($this->handleVoteCancel($player)) {
+        //     return false;
+        // }
+        // $error = $this->canStartVote($player, $type, $maxVotes);
+        // if ($error) {
+        //     return $this->sendError($login, $error);
+        // }
+        // if ($modeCheck) {
+        //     $modeError = $modeCheck($type, $login);
+        //     if ($modeError) {
+        //         return false;
+        //     }
+        // }
+        $this->incrementVoteCounter($type);
+        $voteTypeEnum = RaspVoteType::from($type);
+        $this->raspManager->startVote(
+            $player,
+            $voteTypeEnum->value,
+            $voteTypeEnum->description(),
+            $voteTypeEnum->defaultRatio()
+        );
+        return true;
+    }
+
+    private function incrementVoteCounter(string $type): void
+    {
+        $counterKey = "num_{$type}votes";
+        if (property_exists($this->raspState, $counterKey)) {
+            $this->raspState->$counterKey++;
+        }
     }
 
     private function checkModeLimits(string $voteType, string $login, bool $isMinCheck = false): bool

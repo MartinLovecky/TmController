@@ -149,7 +149,7 @@ class HttpClient
                 'method' => $method,
                 'params'   => $params,
                 'headers'  => $headers,
-            ], 'Aseco\HttpClient');
+            ], 'HttpClient');
             return false;
         }
 
@@ -163,7 +163,7 @@ class HttpClient
                 'headers'  => $headers,
                 'httpCode' => $httpCode,
                 'response' => $response,
-            ], 'Aseco\HttpClient');
+            ], 'HttpClient');
             return false;
         }
 

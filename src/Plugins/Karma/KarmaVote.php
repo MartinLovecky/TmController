@@ -4,191 +4,109 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins\Karma;
 
-use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\App\Service\{Aseco, HttpClient};
-use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
+use Yuhzel\TmController\App\Service\HttpClient;
+use Yuhzel\TmController\App\Service\Log;
+use Yuhzel\TmController\Plugins\Karma\KarmaVoteDTO;
+use Yuhzel\TmController\Plugins\Karma\KarmaVoteType;
+use Yuhzel\TmController\Repository\ChallengeService;
+use Yuhzel\TmController\Repository\KarmaService;
 
 class KarmaVote
 {
-    private int $retryTime = 0;
-    private const RETRY_WAIT = 300; // 5 minutes
+    public ?KarmaVoteDTO $vote = null;
+    public const array ALLOWED_COMMANDS = [
+        '/karma', 'karma' , 'plus', 'plusplus', 'plusplusplus',
+        'minus', 'minusminus', 'minusminusminus'
+    ];
+    private const int MAX_VOTES = 10;
 
     public function __construct(
         private ChallengeService $challengeService,
+        private KarmaService $karmaService,
         private HttpClient $httpClient,
-        private PlayerService $playerService,
-        private KarmaState $state
     ) {
     }
 
-    // =================== Handle Chat Commands ===================
-    public function handleChatCommand(TmContainer $chat): void
+    public function startVote(string $type, string $login): void
     {
-        $command = strtolower($chat->get('command.name'));
-        $valid = ['plus','plusplus','plusplusplus','minus','minusminus','minusminusminus'];
+        $voteTypeEnum = KarmaVoteType::from($type);
+        $this->vote ??= new KarmaVoteDTO([
+            'login' => $login,
+            'type'  => $voteTypeEnum->value,
+            'votes' => [],
+            'label' => $voteTypeEnum->label()
+        ]);
 
-        if (!in_array($command, $valid, true)) {
+        if (!$this->vote->addVote($voteTypeEnum)) {
+            // duplicate vote, ignore
             return;
         }
 
-        $player = $this->playerService->getPlayerByLogin($chat->get('Login'));
-        $vote = $this->mapCommandToVote($command);
-
-        if ($vote !== null) {
-            $this->recordVote($player, $vote);
-        }
-    }
-
-    public function handleVoteResponse(TmContainer $answer): void
-    {
-        $login = $answer->get('Login') ?? $answer->get('login') ?? null;
-        if (!$login) {
+        if ($this->vote->count == self::MAX_VOTES) {
             return;
         }
 
-        $action = $this->extractActionFromAnswer($answer);
-        if ($action === null) {
-            return; // nothing to do
-        }
-
-        $vote = $this->mapActionToVote($action);
-        if ($vote === null) {
-            return; // not a karma-related action
-        }
-
-        $player = $this->playerService->getPlayerByLogin($login);
-        if ($player instanceof TmContainer) {
-            $this->recordVote($player, $vote);
+        if ($this->recordLocalVote()) {
+            $this->storeVotesToAPI();
         }
     }
 
-    private function extractActionFromAnswer(TmContainer $a): int|string|null
+    public function recordLocalVote(): bool
     {
-        $keys = [
-        'Action','action','ActionID','actionid','action_id',
-        'manialink.action','id','value'
-        ];
-
-        foreach ($keys as $k) {
-            $v = $a->get($k);
-            if ($v !== null && $v !== '') {
-                return $v;
-            }
+        if (!isset($this->vote) || empty($this->vote->votes)) {
+            return false;
         }
 
-        foreach (['1','2'] as $k) {
-            $v = $a->get($k);
-            if ($v !== null && $v !== '') {
-                return $v;
-            }
+        $challengeId = $this->challengeService->getUid();
+        $currentVote = end($this->vote->votes);
+        $previousDBType = $this->karmaService->getVote($this->vote->login, $challengeId);
+        $previousDBVote = KarmaVoteType::from($previousDBType);
+
+        if ($previousDBVote->value === $currentVote['type']) {
+            return false;
         }
 
-        return null;
+        // Persist vote to DB
+        return $this->karmaService->castVote(
+            $this->vote->login,
+            $challengeId,
+            $currentVote['type'],
+            $currentVote['weight']
+        );
     }
 
-    private function mapCommandToVote(string $command): ?int
+    public function storeVotesToAPI()
     {
-        $numericMapping = KarmaState::VOTE_MAPPING;
-        $symbolMapping = [
-            '+++' => 3,
-            '++'  => 2,
-            '+'   => 1,
-            '-'   => -1,
-            '--'  => -2,
-            '---' => -3,
-        ];
-
-        return $numericMapping[$command] ?? $symbolMapping[$command] ?? null;
-    }
-
-    private function mapActionToVote(int|string $action): ?int
-    {
-        if (is_numeric($action)) {
-            $id = (int) $action;
-            return KarmaState::VOTE_MAPPING[$id] ?? null;
-        }
-
-        $s = strtolower((string) $action);
-
-        $symbolMapping = [
-        '+++' => 3, 'plusplusplus' => 3,
-        '++'  => 2, 'plusplus'     => 2,
-        '+'   => 1, 'plus'         => 1,
-        '-'   => -1, 'minus'       => -1,
-        '--'  => -2, 'minusminus'  => -2,
-        '---' => -3, 'minusminusminus' => -3,
-        ];
-
-        return $symbolMapping[$s] ?? null;
-    }
-
-    // =================== Record Vote ===================
-    public function recordVote(TmContainer $player, int $vote): void
-    {
-        $login = $player->get('Login');
-        $previousVote = $this->state->getPlayerVote($login) ?? 0;
-
-        $this->state->updateVoteCount('global', $previousVote, $vote);
-        $this->state->updatePlayerVote($login, $vote, $previousVote);
-        $this->state->calculateKarma(['global']);
-    }
-
-    // =================== Store Votes to API with Retry ===================
-    public function storeVotesToAPI(): void
-    {
-        if (!$this->shouldRetry()) {
-            return;
-        }
-
-        $karmaState = $this->state->getKarmaState();
-        $players = $karmaState['new']['players'] ?? [];
-
-        if (empty($players)) {
-            return;
-        }
-
-        $votes = [];
-        foreach ($players as $login => $v) {
-            $val = is_array($v) ? (int)($v['vote'] ?? 0) : (int)$v;
-            $votes[] = urlencode($login) . '=' . $val;
+        if (!isset($this->vote) || empty($this->vote->votes)) {
+            return false;
         }
 
         $gbx = $this->challengeService->getGBX();
+        $lastVote = end($this->vote->votes); // get last vote
+        // Decide what API expects: weight, ID, or string
+        $voteValue = $lastVote['weight'];
+        $voteParam = urlencode($this->vote->login) . '=' . $voteValue;
+
         $response = $this->httpClient->get($_ENV['KarmaAPI'], [
             'Action'   => 'Vote',
             'login'    => $_ENV['server_login'],
             'authcode' => $_ENV['authcode'],
-            'uid'      => $karmaState['data']['uid'],
-            'map'      => base64_encode($karmaState['data']['name']),
-            'author'   => urlencode($karmaState['data']['author']),
+            'uid'      => $gbx->UId,
+            'map'      => base64_encode($gbx->name),
+            'author'   => urlencode($gbx->author),
             'atime'    => $gbx->authorTime,
             'ascore'   => $gbx->authorScore,
             'nblaps'   => $gbx->nbLaps,
             'nbchecks' => $gbx->nbChecks,
             'mood'     => $gbx->mood,
-            'env'      => $karmaState['data']['env'],
-            'votes'    => implode('|', $votes),
-            'tmx'      => $karmaState['data']['id'],
+            'env'      => $gbx->envir,
+            'votes'    => $voteParam,
+            'tmx'      => $this->challengeService->getTMX()->id,
         ]);
 
-        if (!$response) {
-            Aseco::consoleText("Failed to send votes. Will retry in " . self::RETRY_WAIT . " seconds.");
-            $this->retryTime = time() + self::RETRY_WAIT;
-            return;
-        }
-
         $output = \Yuhzel\TmController\Infrastructure\Xml\Parser::fromXMLString($response);
-        if ($output->get('status') !== 200) {
-            Aseco::console("Storing votes failed with code {1}", $output->get('status'));
-            $this->retryTime = time() + self::RETRY_WAIT;
-        } else {
-            $this->retryTime = 0;
-            $this->state->clearNewVotes();
-        }
-    }
 
-    private function shouldRetry(): bool
-    {
-        return $this->retryTime === 0 || time() >= $this->retryTime;
+        Log::debug('storeVotesToAPI', $output->toArray(), 'KarmaVote');
+        dd($output);
     }
 }

@@ -18,14 +18,16 @@ class RepositoryManager
      * @param Table $table The table to insert the data into.
      * @param array $insertData Associative array of column => value.
      *              All columns without default values must be provided.
-     * @param string $value of playerID or Uid or playerID|Uid
+     * @param mixed $value of playerID or Uid or playerID|Uid
      * @return void
      */
-    public function insert(Table $table, array $insertData, string $value): void
+    public function insert(Table $table, array $insertData, mixed $conditions): void
     {
-        $check = $this->getCheck($table, $value);
+        $check = $this->getCheck($table, $conditions);
+        $column = $check['where'] ?? $check['column'];
+        $value = $check['value'] ?? null;
 
-        if ($this->exists($table, $check['column'], $check['value'])) {
+        if ($this->exists($table, $column, $value)) {
             return;
         }
 
@@ -38,22 +40,32 @@ class RepositoryManager
      * @param Table $table The table in which the row should be updated
      * @param array $updateData Associative array of column => value.
      *              Only provide the columns you want to update
-     * @param string $value of playerID or Uid or playerID|Uid
+     * @param mixed $value of playerID or Uid or playerID|Uid
      * @return void
      */
-    public function update(Table $table, array $updateData, string $value): void
+    public function update(Table $table, array $updateData, mixed $conditions): void
     {
-        $check = $this->getCheck($table, $value);
+        $check = $this->getCheck($table, $conditions);
+        $column = $check['where'] ?? $check['column'];
+        $value = $check['value'] ?? null;
 
-        if (!$this->exists($table, $check['column'], $check['value'])) {
+        if (!$this->exists($table, $column, $value)) {
             return;
         }
 
-        $this->fluent->query
+        $stmt = $this->fluent->query
             ->update($table->value)
-            ->set($updateData)
-            ->where($check['column'], $check['value'])
-            ->execute();
+            ->set($updateData);
+
+        if (isset($check['where'])) {
+            foreach ($check['where'] as $col => $val) {
+                $stmt->where($col, $val);
+            }
+        } else {
+            $stmt->where($check['column'], $check['value']);
+        }
+
+        $stmt->execute();
     }
 
     public function delete(Table $table, string $column, mixed $value): void
@@ -77,7 +89,7 @@ class RepositoryManager
      * If $column/$value are provided, only the matching row is returned.
      *
      * @param Table       $table   The table to query
-     * @param string|null $column  Optional column to filter by
+     * @param mixed       $column  Optional column to filter by
      * @param mixed       $value   Value to filter by
      * @param array       $item    Columns to return (0=all, 1=single, 2=key-value, >2=selected)
      * @return mixed  Array (rows, key-value pairs, or selected columns),
@@ -85,7 +97,7 @@ class RepositoryManager
      */
     public function fetch(
         Table $table,
-        ?string $column = null,
+        mixed $column = null,
         mixed $value = null,
         array $item = []
     ): mixed {
@@ -112,13 +124,19 @@ class RepositoryManager
         return $column ? $stmt->fetchAll(...$item) : $stmt->fetchAll(...$item);
     }
 
-    private function exists(Table $table, string $column, mixed $value): bool
+    private function exists(Table $table, mixed $column, mixed $value): bool
     {
-        return $this->fluent->query
-            ->from($table->value)
-            ->select($column)
-            ->where($column, $value)
-            ->fetch($column) !== false;
+        $stmt = $this->fluent->query->from($table->value);
+
+        if (is_array($column)) {
+            foreach ($column as $col => $val) {
+                $stmt->where($col, $val);
+            }
+        } elseif ($column !== null) {
+            $stmt->where($column, $value);
+        }
+
+        return $stmt->fetch() !== false;
     }
 
     private function getCheck(Table $table, string $c): array
@@ -152,7 +170,6 @@ class RepositoryManager
         ];
     }
 
-
     private function recordsCheck(string $check): array
     {
         return [
@@ -168,9 +185,18 @@ class RepositoryManager
      */
     private function rsKarmaCheck(string $check): array
     {
+        if (is_string($check)) {
+            [$playerID, $challengeId] = explode('|', $check, 2);
+        } elseif (is_array($check)) {
+            $playerID = $check['playerID'] ?? '';
+            $challengeId = $check['ChallengeId'] ?? '';
+        }
+
         return [
-            'column' => 'playerID',
-            'value'  => $check
+            'where' => [
+                'playerID'    => $playerID,
+                'ChallengeId' => $challengeId
+            ]
         ];
     }
 }

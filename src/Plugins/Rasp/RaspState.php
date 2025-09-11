@@ -19,6 +19,7 @@ class RaspState
     public bool $feature_votes = true;
     public bool $feature_tmxadd = false;
     public bool $ta_time_limits = false;
+    public bool $ta_show_reminder = true;
     public bool $r_points_limits = false;
     public bool $allow_kickvotes = false;
     public bool $allow_admin_kick = false;
@@ -31,9 +32,10 @@ class RaspState
     public int $max_skipvotes = 1;
     public int $max_replayvotes = 2;
     public int $r_expire_num = 0;
-    public int $ta_show_num = 0;
     public int $ta_expire_start = 0;
+    public int $ta_show_interval = 240;
     public int $num_skipvotes = 0;
+    public float $ta_show_num = 0;
     public float $r_skip_max = 0.5;
     public float $r_ladder_max = 0.4;
     public float $ta_skip_max = 1.0;

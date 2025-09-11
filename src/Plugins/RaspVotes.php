@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
+use Yuhzel\TmController\App\Service\Log;
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\App\Service\{Aseco, Sender};
-use Yuhzel\TmController\Plugins\Rasp\{RaspCommandHandler, RaspState, RaspManager, RaspVoteType};
-use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
 use Yuhzel\TmController\Plugins\Manager\PluginManager;
+use Yuhzel\TmController\Repository\{ChallengeService, PlayerService};
+use Yuhzel\TmController\Plugins\Rasp\{RaspCommandHandler, RaspState, RaspManager, RaspVoteType};
 
 class RaspVotes
 {
@@ -35,16 +36,12 @@ class RaspVotes
 
     public function handleChatCommand(TmContainer $player): void
     {
-        $command = strtolower($player->get('command.name'));
-        foreach (RaspVoteType::cases() as $voteType) {
-            if ($voteType->value === $command) {
-                $method = 'handle' . ucfirst($voteType->value);
-                if (method_exists($this->voteHandler, $method)) {
-                    $this->voteHandler->$method($player);
-                }
-                return;
-            }
-        }
+        Log::debug("handleChatCommand - skip", [RaspVoteType::SKIP->value, $player->get('command.name')], 'skip');
+        match ($player->get('command.name')) {
+            RaspVoteType::SKIP->value => $this->voteHandler->skip($player),
+            RaspVoteType::HELP->value => $this->voteHandler->help($player),
+            default => null
+        };
     }
 
     public function onSync(): void
@@ -63,28 +60,6 @@ class RaspVotes
         $this->raspState->disabled_scoreboard = false;
     }
 
-    public function onEndRound(): void
-    {
-        if ($this->challengeService->getGameMode() !== 'rounds') {
-            return;
-        }
-
-        $this->checkVoteExpiry(RaspVoteType::ENDROUND->value, 'expired');
-    }
-
-    public function onCheckpoint(): void
-    {
-        if (!$this->raspState->chatvote) {
-            return;
-        }
-        $type = $this->raspState->chatvote->type;
-        $expireLimit = $this->raspState->ta_expire_limit[$type] ?? 90;
-        $played = $this->track->timePlaying();
-
-        if (($played - $this->raspState->ta_expire_start) >= $expireLimit) {
-            $this->checkVoteExpiry($type, 'expired');
-        }
-    }
 
     public function onPlayerConnect(TmContainer $player): void
     {
@@ -106,6 +81,59 @@ class RaspVotes
         }
     }
 
+    public function onEndRound(): void
+    {
+        if ($this->challengeService->getGameMode() !== 'rounds') {
+            return;
+        }
+
+        $this->checkVoteExpiry(RaspVoteType::ENDROUND->value, 'expired');
+
+        $chatVote = $this->raspState->chatvote;
+
+        if (isset($chatVote)) {
+        }
+    }
+
+    //TODO refactor
+    public function onCheckpoint(): void
+    {
+        $chatVote = $this->raspState->chatvote;
+
+        if (!isset($chatVote)) {
+            return;
+        }
+
+        $gamemode = $this->challengeService->getGameMode();
+
+        if ($gamemode == 'rounds' || $gamemode == 'team' || $gamemode == 'cup') {
+            return;
+        }
+
+        $expireLimit = $this->raspState->ta_expire_limit[$chatVote->type] ?? 90;
+        $played = $this->track->timePlaying();
+
+        if (($played - $this->raspState->ta_expire_start) >= $expireLimit) {
+            $this->checkVoteExpiry($chatVote->type, 'expired');
+        } else {
+            if ($this->raspState->ta_show_reminder) {
+                $intervals = floor(($played - $this->raspState->ta_expire_start) / $this->raspState->ta_show_interval);
+
+                if ($intervals > $this->raspState->ta_show_num) {
+                    $this->raspState->ta_show_num = $intervals;
+                }
+                if (isset($chatVote->votes)) {
+                    $arg = $chatVote->votes == 1 ? '' : 's';
+
+                    $this->sender->sendChatMessageToAll(
+                        message: Aseco::getChatMessage('vote_y', 'rasp'),
+                        formatArgs: [$arg, $chatVote->desc]
+                    );
+                }
+            }
+        }
+    }
+
     private function checkVoteExpiry(string $type, string $status): void
     {
         if ($this->raspState->chatvote?->type === $type) {
@@ -116,7 +144,10 @@ class RaspVotes
                 'Server'
             );
 
-            $this->sender->sendChatMessageToAll(message: $message, formatMode: Sender::FORMAT_COLORS);
+            $this->sender->sendChatMessageToAll(
+                message: $message,
+                formatMode: Sender::FORMAT_COLORS
+            );
             $this->voteManager->resetVotes();
         }
     }

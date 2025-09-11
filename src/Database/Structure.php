@@ -254,7 +254,7 @@ class Structure
                 "Field" => "ChallengeId",
                 "Type" => "varchar(255)",
                 "Null" => "NO",
-                "Key" => "",
+                "Key" => "MUL",
                 "Default" => "",
                 "Extra" => "",
             ],
@@ -267,55 +267,15 @@ class Structure
                 "Extra" => ""
             ],
             [
+                "Field" => "Vote",
+                "Type" => "enum('Plus','PlusPlus','PlusPlusPlus','Minus','MinusMinus','MinusMinusMinus')",
+                "Null" => "NO",
+                "Key" => "",
+                "Default" => "Plus",
+                "Extra" => ""
+            ],
+            [
                 "Field" => "Score",
-                "Type" => "tinyint(1)",
-                "Null" => "NO",
-                "Key" => "",
-                "Default" => "0",
-                "Extra" => ""
-            ],
-            [
-                "Field" => "Plus",
-                "Type" => "tinyint(1)",
-                "Null" => "NO",
-                "Key" => "",
-                "Default" => "0",
-                "Extra" => ""
-            ],
-            [
-                "Field" => "PlusPlus",
-                "Type" => "tinyint(1)",
-                "Null" => "NO",
-                "Key" => "",
-                "Default" => "0",
-                "Extra" => "",
-            ],
-            [
-                "Field" => "PlusPlusPlus",
-                "Type" => "tinyint(1)",
-                "Null" => "NO",
-                "Key" => "",
-                "Default" => "0",
-                "Extra" => ""
-            ],
-            [
-                "Field" => "Minus",
-                "Type" => "tinyint(1)",
-                "Null" => "NO",
-                "Key" => "",
-                "Default" => "0",
-                "Extra" => ""
-            ],
-            [
-                "Field" => "MinusMinus",
-                "Type" => "tinyint(1)",
-                "Null" => "NO",
-                "Key" => "",
-                "Default" => "0",
-                "Extra" => ""
-            ],
-            [
-                "Field" => "MinusMinusMinus",
                 "Type" => "tinyint(1)",
                 "Null" => "NO",
                 "Key" => "",
@@ -366,7 +326,7 @@ class Structure
             ['columns' => ['donations'], 'unique' => false],
         ],
         Table::RS_KARMA->value => [
-            ['columns' => ['playerID'], 'unique' => false],
+            ['columns' => ['playerID', 'ChallengeId'], 'unique' => true],
         ],
         Table::RS_RANK->value => [
             ['columns' => ['playerID'], 'unique' => true],

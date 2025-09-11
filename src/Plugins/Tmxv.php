@@ -11,9 +11,14 @@ class Tmxv
 {
     public array $videos = [];
 
-    public function onNewChallenge(ChallengeService $challengeService): void
+    public function __construct(private ChallengeService $challengeService)
     {
-        $tmx = $challengeService->getTMX();
+        #
+    }
+
+    public function onNewChallenge(): void
+    {
+        $tmx = $this->challengeService->getTMX();
         if (!$tmx->id > 0) {
             return;
         }

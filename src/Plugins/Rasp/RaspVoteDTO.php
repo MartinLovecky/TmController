@@ -6,11 +6,11 @@ namespace Yuhzel\TmController\Plugins\Rasp;
 
 class RaspVoteDTO
 {
-    public string $login;
-    public string $nick;
-    public int $votes;
-    public string $type;
-    public string $desc;
+    public ?string $login = null;
+    public ?string $nick = null;
+    public ?int $votes = null;
+    public ?string $type = null;
+    public ?string $desc = null;
     public ?string $target = null;
 
     public function __construct(array $data)
