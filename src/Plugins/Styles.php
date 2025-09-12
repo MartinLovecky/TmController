@@ -60,7 +60,7 @@ class Styles
             $style = 'DarkBlur';
 
             Aseco::console('player {1} clicked command "/style {2}"', $login, $style);
-            $player->set('command.name', 'style')->set('command.params', $style);
+            $player->set('command.name', 'style')->set('command.params', $style)->set('command.arg', '');
             $this->handleChatCommand($player);
 
             Aseco::console('player {1} clicked command "/style list"', $login);

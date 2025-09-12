@@ -442,10 +442,10 @@ class TmController
                 $command
             );
         } elseif (str_starts_with($command, '/')) {
-            $cmd = substr($command, 1);
-            $params = explode(' ', $cmd, 2);
-            $name = str_replace(['+', '-'], ['plus', 'minus'], $params[0]);
-            $onlyParams = isset($params[1]) ? trim(strtolower($params[1])) : '';
+            $cmd = preg_split('/\s+/', substr($command, 1), 3);
+            $cmdName = str_replace(['+', '-'], ['plus', 'minus'], $cmd[0]);
+            $cmdAction = $cmd[1] ?? '';
+            $cmdArg = $cmd[2] ?? '';
 
             $player = $this->playerService->getPlayerByLogin($login);
 
@@ -453,10 +453,10 @@ class TmController
                 Aseco::console(
                     'player {1} used chat command "/{2} {3}"',
                     $player->get('NickName'),
-                    $name,
-                    $onlyParams
+                    $cmdName,
+                    $cmdAction
                 );
-                $player->set('command.name', $name)->set('command.params', $onlyParams);
+                $player->set('command.name', $cmdName)->set('command.params', $cmdAction)->set('command.arg', $cmdArg);
                 $this->pm->callFunctions("handleChatCommand", $player);
             }
         }

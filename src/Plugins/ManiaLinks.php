@@ -398,7 +398,7 @@ class ManiaLinks
 
         $parts = explode(' ', $command, 2);
         $params = array_values(Arr::except($parts, [0]));
-        $player->set('command.name', $parts[0])->set('command.params', $params);
+        $player->set('command.name', $parts[0])->set('command.params', $params)->set('command.arg', '');
 
         $this->chatAdmin->handleChatCommand($player);
     }
