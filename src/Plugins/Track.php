@@ -16,7 +16,8 @@ class Track
     public function __construct(
         private ChallengeService $challengeService,
         private Sender $sender,
-    ) {}
+    ) {
+    }
 
     public function onSync(): void
     {

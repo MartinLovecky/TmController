@@ -8,6 +8,7 @@ use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Plugins\ManiaLinks;
 use Yuhzel\TmController\Repository\PlayerService;
 use Yuhzel\TmController\App\Service\{Aseco, Server};
+use Yuhzel\TmController\Plugins\Manager\PluginManager;
 use Yuhzel\TmController\Plugins\Manager\PageListManager;
 
 /**
@@ -17,9 +18,9 @@ use Yuhzel\TmController\Plugins\Manager\PageListManager;
 class Styles
 {
     public TmContainer $style;
+    private ?ManiaLinks $maniaLinks = null;
 
     public function __construct(
-        private ManiaLinks $manialink,
         private PageListManager $pageListManager,
         private PlayerService $playerService,
     ) {
@@ -31,6 +32,11 @@ class Styles
             . '.json';
         Aseco::console('Load default style [{1}]', $styleFile);
         $this->style = TmContainer::fromJsonFile($styleFile);
+    }
+
+    public function setRegistry(PluginManager $registry): void
+    {
+        $this->maniaLinks = $registry->maniaLinks;
     }
 
     public function handleChatCommand(TmContainer $player): void
@@ -48,6 +54,11 @@ class Styles
         } elseif ($parms == 'list') {
             $this->showStyleList($player);
         }
+    }
+
+    public function onPlayerConnect(TmContainer $player): void
+    {
+        $player->set('style', $this->style);
     }
 
     public function onPlayerLink(TmContainer $manialink): void
@@ -80,7 +91,7 @@ class Styles
             //['command' => '$f00xxx',     'description' => 'Selects window style xxx'],
         ];
 
-        $this->manialink->displayManialink(
+        $this->maniaLinks->displayManialink(
             $player->get('Login'),
             $header,
             ['Icons64x64_1', 'TrackInfo', -0.01],
@@ -131,6 +142,6 @@ class Styles
             'login'   => $login
         ]);
 
-        $this->manialink->eventManiaLink($manialink);
+        $this->maniaLinks->eventManiaLink($manialink);
     }
 }

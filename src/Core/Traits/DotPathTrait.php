@@ -25,7 +25,7 @@ trait DotPathTrait
         }
 
         $segments = preg_split('/(?<!\\\\)\./', $path);
-        $segments = array_map(fn($seg) => str_replace('\.', '.', $seg), $segments);
+        $segments = array_map(fn ($seg) => str_replace('\.', '.', $seg), $segments);
 
         $lastKey = array_pop($segments);
         if (ctype_digit((string)$lastKey)) {

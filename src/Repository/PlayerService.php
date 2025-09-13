@@ -7,7 +7,6 @@ namespace Yuhzel\TmController\Repository;
 use Yuhzel\TmController\App\Service\Aseco;
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Database\Table;
-use Yuhzel\TmController\Plugins\{Panels, Styles};
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
 use Yuhzel\TmController\Repository\RepositoryManager;
 
@@ -19,9 +18,7 @@ class PlayerService
     public function __construct(
         private Client $client,
         private TmContainer $container,
-        private Panels $panels,
-        private RepositoryManager $repository,
-        private Styles $styles,
+        private RepositoryManager $repository
     ) {
     }
 
@@ -39,11 +36,6 @@ class PlayerService
         $info = $this->getDetailedPlayerInfo($login);
         $info
             ->set('Nation', Aseco::mapCountry($info['Path']))
-            ->set('panels.admin', $this->panels->adminPanel)
-            ->set('panels.donate', $this->panels->donatePanel)
-            ->set('panels.records', $this->panels->recordsPanel)
-            ->set('panels.vote', $this->panels->votePanel)
-            ->set('style', $this->styles->style)
             ->set('created', time());
 
         if ($isMasterAdmin) {

@@ -12,7 +12,7 @@ class RecordService
 {
     private const DEFAULT_TOP_LIMIT = 30;
 
-    public function __construct(protected RepositoryManager $repository)
+    public function __construct(private RepositoryManager $repository)
     {
     }
 
@@ -34,7 +34,7 @@ class RecordService
         $times = $record->get('Times', []);
 
         // Remove any existing entry for this player
-        $times = array_filter($times, fn($entry) => $entry['playerId'] !== $playerId);
+        $times = array_filter($times, fn ($entry) => $entry['playerId'] !== $playerId);
 
         // Only add if qualifies for top N
         if (count($times) >= self::DEFAULT_TOP_LIMIT) {
@@ -47,7 +47,7 @@ class RecordService
         $times[] = ['playerId' => $playerId, 'time' => $newTime];
 
         // Keep top N sorted
-        usort($times, fn($a, $b) => $a['time'] <=> $b['time']);
+        usort($times, fn ($a, $b) => $a['time'] <=> $b['time']);
         $times = array_slice($times, 0, self::DEFAULT_TOP_LIMIT);
 
         $recordData = [
@@ -91,7 +91,7 @@ class RecordService
         foreach ($challengeIds as $challengeId) {
             $record = $this->fetchSingle($challengeId);
             $times = $record->get('Times', []);
-            usort($times, fn($a, $b) => $a['time'] <=> $b['time']);
+            usort($times, fn ($a, $b) => $a['time'] <=> $b['time']);
             $all[$challengeId] = array_slice($times, 0, $limit);
         }
         return $all;

@@ -75,7 +75,7 @@ class RaspCommandHandler
             $player,
             'ladder',
             $this->raspState->max_laddervotes,
-            fn($type, $login) => $this->checkModeLimits($type, $login)
+            fn ($type, $login) => $this->checkModeLimits($type, $login)
         );
     }
 
@@ -99,7 +99,7 @@ class RaspCommandHandler
             $player,
             'replay',
             $this->raspState->max_replayvotes,
-            fn($type, $login) => $this->checkModeLimits($type, $login, true)
+            fn ($type, $login) => $this->checkModeLimits($type, $login, true)
         );
     }
 

@@ -18,6 +18,7 @@ use Yuhzel\TmController\Plugins\{
     ManiaLinks,
     Panels,
     RaspJukebox,
+    RaspVotes,
     Styles,
     Tmxv,
     Track
@@ -38,6 +39,7 @@ class PluginManager
         public ManiaKarma $maniaKarma,
         public ManiaLinks $maniaLinks,
         public Panels $panels,
+        public RaspVotes $raspVotes,
         public RaspJukebox $raspJukebox,
         public Styles $styles,
         public Tmxv $tmxv,

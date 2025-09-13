@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
+use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\App\Service\{Aseco, WidgetBuilder};
 
 class Panels
@@ -32,5 +33,14 @@ class Panels
         $voteFile = "{$folder}{$_ENV['vote_panel']}";
         Aseco::console('Default vote panel [{1}]', $_ENV['vote_panel']);
         $this->votePanel = $this->widgetBuilder->render($voteFile);
+    }
+
+    public function onPlayerConnect(TmContainer $player): void
+    {
+        $player
+            ->set('panels.admin', $this->adminPanel)
+            ->set('panels.donate', $this->donatePanel)
+            ->set('panels.records', $this->recordsPanel)
+            ->set('panels.vote', $this->votePanel);
     }
 }

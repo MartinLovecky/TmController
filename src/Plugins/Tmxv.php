@@ -4,26 +4,31 @@ declare(strict_types=1);
 
 namespace Yuhzel\TmController\Plugins;
 
-use Yuhzel\TmController\App\Service\{Aseco, HttpClient, Sender};
 use Yuhzel\TmController\Core\TmContainer;
-use Yuhzel\TmController\Plugins\Manager\PageListManager;
+use Yuhzel\TmController\Plugins\Manager\{PageListManager, PluginManager};
 use Yuhzel\TmController\Plugins\ManiaLinks;
 use Yuhzel\TmController\Repository\ChallengeService;
+use Yuhzel\TmController\App\Service\{Aseco, HttpClient, Sender};
 
 class Tmxv
 {
+    public array $videos = [];
     private const VIDEOS_PER_PAGE = 16;
     private const YOUTUBE_URL = 'http://youtu.be/';
-
-    public array $videos = [];
+    private ?ManiaLinks $maniaLinks = null;
 
     public function __construct(
         private ChallengeService $challengeService,
         private HttpClient $httpClient,
         private PageListManager $pageListManager,
-        private ManiaLinks $manialinks,
         private Sender $sender,
-    ) {}
+    ) {
+    }
+
+    public function setRegistry(PluginManager $registry): void
+    {
+        $this->maniaLinks = $registry->maniaLinks;
+    }
 
     public function onNewChallenge(): void
     {
@@ -105,7 +110,7 @@ class Tmxv
             ['$000/video',  '', 'Same as /gps'],
         ];
 
-        $this->manialinks->displayManialink(
+        $this->maniaLinks->displayManialink(
             $login,
             $header,
             ['Icons64x64_1', 'TrackInfo', -0.01],
@@ -172,7 +177,7 @@ class Tmxv
             'icon'   => ['Icons64x64_1', 'TrackInfo']
         ]);
 
-        $this->manialinks->eventManiaLink(TmContainer::fromArray([
+        $this->maniaLinks->eventManiaLink(TmContainer::fromArray([
             'message' => 1,
             'login'   => $login
         ]));
@@ -212,6 +217,6 @@ class Tmxv
 
     private function sortVideosByPublishedDate(array &$videos): void
     {
-        usort($videos, fn($a, $b) => strtotime($b['PublishedAt']) <=> strtotime($a['PublishedAt']));
+        usort($videos, fn ($a, $b) => strtotime($b['PublishedAt']) <=> strtotime($a['PublishedAt']));
     }
 }

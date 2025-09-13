@@ -78,7 +78,7 @@ class Rounds
                         $nick,
                         Aseco::formatTime($tm['score'])
                     );
-                //show_min_recs = 8
+                    //show_min_recs = 8
                 } elseif ($pos <= 8) {
                     $message .= Aseco::formatText(
                         Aseco::getChatMessage('ranking_record'),
@@ -97,7 +97,10 @@ class Rounds
             }
 
             $message = substr($message, 0, strlen($message) - 2);
-            $this->sender->sendChatMessageToAll(message: $message, formatMode: Sender::FORMAT_COLORS);
+            $this->sender->sendChatMessageToAll(
+                message: $message,
+                formatMode: Sender::FORMAT_COLORS
+            );
             $this->roundTimes = [];
         }
     }

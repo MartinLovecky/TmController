@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Yuhzel\TmController\Plugins;
 
 use Yuhzel\TmController\App\Service\Aseco;
+use Yuhzel\TmController\App\Service\Log;
 use Yuhzel\TmController\App\Service\Sender;
 use Yuhzel\TmController\Core\TmContainer;
 
@@ -21,5 +22,20 @@ class Cpll
             message: Aseco::getChatMessage('cpll_info', 'rasp'),
             formatMode: Sender::FORMAT_COLORS
         );
+    }
+
+    public function onPlayerDisconnect()
+    {
+    }
+
+
+    public function onCheckpoint(TmContainer $call)
+    {
+        Log::debug('cpllOnCheckpoint', $call->toArray(), 'cpll');
+    }
+
+    public function onPlayerFinish(TmContainer $call)
+    {
+        Log::debug('onPlayerFinish', $call->toArray(), 'cpll');
     }
 }

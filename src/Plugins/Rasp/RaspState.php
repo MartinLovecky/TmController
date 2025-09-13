@@ -24,8 +24,11 @@ class RaspState
     public bool $allow_kickvotes = false;
     public bool $allow_admin_kick = false;
     public bool $allow_ignorevotes = false;
+    public bool $feature_ranks = true;
+    public bool $feature_stats = true;
     public string $tmxdir = '';
     public string $tmxtmpdir = '';
+    public int $minrank = 0;
     public int $num_laddervotes = 0;
     public int $replays_limit = 0;
     public int $replays_counter = 0;

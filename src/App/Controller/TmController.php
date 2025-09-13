@@ -24,12 +24,12 @@ class TmController
     private bool $changingmode = false;
 
     public function __construct(
-        protected Client $client,
-        protected ChallengeService $challengeService,
-        protected PlayerService $playerService,
-        protected RecordService $recordService,
-        protected PluginManager $pm,
-        protected Server $server,
+        private Client $client,
+        private ChallengeService $challengeService,
+        private PlayerService $playerService,
+        private RecordService $recordService,
+        private PluginManager $pm,
+        private Server $server,
     ) {
         $this->prevsecond = time();
     }
@@ -425,8 +425,8 @@ class TmController
 
     private function callBackDisconnect(TmContainer $call): void
     {
-        dd('Disconect', $call);
-        $this->playerDisconnect($call['chatType']);
+        $playerInfo = $this->playerService->getPlayerInfo($call['chatType']);
+        $this->playerDisconnect($playerInfo);
         $this->playerService->removePlayer($call['chatType']);
     }
 
