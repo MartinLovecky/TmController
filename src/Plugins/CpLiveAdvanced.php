@@ -59,13 +59,9 @@ class CpLiveAdvanced
             ->set('CPL.Time', 0)
             ->set('CPL.Spectator', $spectator);
 
-        $activePlayers = $this->playerService->getActivePlayers();
-
-        if (!empty($activePlayers) && count($activePlayers) >= self::MAX_DISPLAY_ROWS) {
-            $this->updateList($player->get('Login'));
-        } else {
-            $this->updateList();
-        }
+        // Modern approach: always queue the update.
+        // showListToAll() is throttled internally, so no spam.
+        $this->updateList();
 
         $this->bindToggleKey($player->get('Login'));
     }
@@ -208,13 +204,14 @@ class CpLiveAdvanced
         $activePlayers = $this->playerService->getActivePlayers();
 
         if (!empty($activePlayers)) {
-            usort($activePlayers, [$this, "compareCpNumbers"]);
+            // Spaceship operator
+            usort($activePlayers, fn($a, $b) => $b->get('CPL.CPNumber') <=> $a->get('CPL.CPNumber'));
         }
 
-        if (!isset($login)) {
-            $this->showListToAll();
-        } else {
+        if ($login) {
             $this->showListToLogin($login);
+        } else {
+            $this->showListToAll();
         }
     }
 

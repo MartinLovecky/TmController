@@ -49,9 +49,7 @@ class TmContainer extends ArrayObject implements ContainerInterface
             $lastKey = (int)$lastKey;
         }
 
-        if ($parent instanceof self) {
-            $parent[$lastKey] = $value;
-        } elseif (is_array($parent)) {
+        if ($parent instanceof self || is_array($parent)) {
             $parent[$lastKey] = $value;
         }
 
@@ -59,7 +57,23 @@ class TmContainer extends ArrayObject implements ContainerInterface
     }
 
     /**
-     * Get the value at $path, or return $default if not found.
+     * Set multiple key => value pairs at once.
+     *
+     * Supports dot-path keys and method chaining.
+     *
+     * @param array<string, mixed> $values
+     * @return static
+     */
+    public function setMultiple(array $values): static
+    {
+        foreach ($values as $path => $value) {
+            $this->set($path, $value);
+        }
+        return $this;
+    }
+
+    /**
+     * Get a value at a dot-path, with default.
      *
      * @param string $path
      * @param mixed $default
@@ -77,43 +91,15 @@ class TmContainer extends ArrayObject implements ContainerInterface
             $lastKey = (int)$lastKey;
         }
 
-        if ($parent instanceof self) {
-            return $parent->offsetExists($lastKey) ? $parent[$lastKey] : $default;
-        }
-
-        if (is_array($parent)) {
-            return array_key_exists($lastKey, $parent) ? $parent[$lastKey] : $default;
-        }
-
-        return $default;
+        return match (true) {
+            $parent instanceof self => $parent->offsetExists($lastKey) ? $parent[$lastKey] : $default,
+            is_array($parent) => array_key_exists($lastKey, $parent) ? $parent[$lastKey] : $default,
+            default => $default,
+        };
     }
 
     /**
-     * Get a value at the given dot-path and coerce it to a specific type.
-     *
-     * @param string $path Dot-path to the value.
-     * @param string $type Target type: 'string', 'int', 'float', 'bool', 'array'.
-     * @param mixed $default Default value if path does not exist or coercion fails (non-strict mode).
-     * @param bool $strict Whether to throw an exception if coercion fails.
-     *
-     * @return mixed The value coerced to $type, or $default in non-strict mode.
-     *
-     * @throws \UnexpectedValueException If strict and coercion fails.
-     * @throws \InvalidArgumentException If strict and unknown $type is requested.
-     */
-    public function getTyped(
-        string $path,
-        string $type,
-        mixed $default = null,
-        bool $strict = true
-    ): mixed {
-        $value = $this->get($path, $default);
-
-        return $this->coerceValue($value, $type, $default, $strict);
-    }
-
-    /**
-     * Check if a dotted path exists in the container.
+     * Check if a dotted path exists.
      *
      * @param string $path
      * @return bool
@@ -130,15 +116,36 @@ class TmContainer extends ArrayObject implements ContainerInterface
             $lastKey = (int)$lastKey;
         }
 
-        if ($parent instanceof self) {
-            return $parent->offsetExists($lastKey);
+        return match (true) {
+            $parent instanceof self => $parent->offsetExists($lastKey),
+            is_array($parent) => array_key_exists($lastKey, $parent),
+            default => false,
+        };
+    }
+
+    /**
+     * Delete a value at a dot-path.
+     *
+     * @param string $path
+     * @return static
+     */
+    public function delete(string $path): static
+    {
+        [$parent, $lastKey] = $this->navigateToParent($path, false);
+
+        if ($parent === null) {
+            return $this;
         }
 
-        if (is_array($parent)) {
-            return array_key_exists($lastKey, $parent);
+        if (ctype_digit((string)$lastKey)) {
+            $lastKey = (int)$lastKey;
         }
 
-        return false;
+        if ($parent instanceof self || is_array($parent)) {
+            unset($parent[$lastKey]);
+        }
+
+        return $this;
     }
 
     /**
@@ -179,33 +186,6 @@ class TmContainer extends ArrayObject implements ContainerInterface
             return $value;
         }
         return null;
-    }
-
-    /**
-     * Delete the value at $path.
-     *
-     * @param string $path
-     * @return static
-     */
-    public function delete(string $path): static
-    {
-        [$parent, $lastKey] = $this->navigateToParent($path, false);
-
-        if ($parent === null) {
-            return $this;
-        }
-
-        if (ctype_digit((string)$lastKey)) {
-            $lastKey = (int)$lastKey;
-        }
-
-        if ($parent instanceof self) {
-            unset($parent[$lastKey]);
-        } elseif (is_array($parent)) {
-            unset($parent[$lastKey]);
-        }
-
-        return $this;
     }
 
     /**
@@ -279,6 +259,20 @@ class TmContainer extends ArrayObject implements ContainerInterface
     }
 
     /**
+     * Recursively convert container to array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        $arr = [];
+        foreach ($this as $k => $v) {
+            $arr[$k] = ($v instanceof self) ? $v->toArray() : $v;
+        }
+        return $arr;
+    }
+
+    /**
      * Decode JSON string and convert to container.
      *
      * @param string $json JSON string to decode
@@ -331,9 +325,7 @@ class TmContainer extends ArrayObject implements ContainerInterface
             return false;
         }
 
-        $filePath = Server::$jsonDir . "{$file}.json";
-
-        return file_put_contents($filePath, $json) !== false;
+        return file_put_contents(Server::$jsonDir . "{$file}.json", $json) !== false;
     }
 
     /**
@@ -352,20 +344,6 @@ class TmContainer extends ArrayObject implements ContainerInterface
         $container->set($path, $value);
 
         return $container->saveToJsonFile($filePath);
-    }
-
-    /**
-     * Recursively convert container and nested containers to arrays.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $arr = [];
-        foreach ($this as $k => $v) {
-            $arr[$k] = ($v instanceof self) ? $v->toArray() : $v;
-        }
-        return $arr;
     }
 
     /**
@@ -410,66 +388,5 @@ class TmContainer extends ArrayObject implements ContainerInterface
     public function offsetUnset(mixed $key): void
     {
         parent::offsetUnset($key);
-    }
-
-    /**
-     * Unified type coercion for getters.
-     *
-     * Converts a value to the requested type if possible. Supports strict mode.
-     *
-     * @param mixed $value The value to coerce.
-     * @param string $type The target type: 'string', 'int', 'float', 'bool', 'array'.
-     * @param mixed $default The default value to return if coercion fails in non-strict mode.
-     * @param bool $strict Whether to throw exceptions if coercion fails.
-     *
-     * @return mixed The coerced value or $default if non-strict.
-     *
-     * @throws \UnexpectedValueException If strict and value cannot be coerced.
-     * @throws \InvalidArgumentException If strict and unknown $type is requested.
-     */
-    protected function coerceValue(
-        mixed $value,
-        string $type,
-        mixed $default = null,
-        bool $strict = true
-    ): mixed {
-        if ($value instanceof self && $type === 'array') {
-            return $value->toArray();
-        }
-
-        if ($value === null) {
-            if ($strict) {
-                throw new \UnexpectedValueException("Expected value of type '{$type}', got null");
-            }
-            return $default;
-        }
-
-        return match ($type) {
-            'string' => match (true) {
-                is_string($value) => $value,
-                is_scalar($value) && !(is_bool($value)) => (string)$value,
-                is_object($value) && method_exists($value, '__toString') => (string)$value,
-                default => $strict ? throw new \UnexpectedValueException("Expected string-compatible value") : $default
-            },
-            'int' => match (true) {
-                is_int($value) => $value,
-                is_numeric($value) && (string)(int)$value === (string)$value => (int)$value,
-                default => $strict ? throw new \UnexpectedValueException("Expected int-compatible value") : $default
-            },
-            'float' => match (true) {
-                is_float($value) => $value,
-                is_numeric($value) => (float)$value,
-                default => $strict ? throw new \UnexpectedValueException("Expected float-compatible value") : $default
-            },
-            'bool' => match (true) {
-                is_bool($value) => $value,
-                in_array($value, [0, 1, '0', '1', 'true', 'false'], true)
-                => filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE),
-                default => $strict ? throw new \UnexpectedValueException("Expected bool-compatible value") : $default
-            },
-            'array' => is_array($value) ? $value :
-            ($strict ? throw new \UnexpectedValueException("Expected array") : $default),
-            default => $strict ? throw new \InvalidArgumentException("Unknown type '{$type}'") : $default
-        };
     }
 }

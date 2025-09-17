@@ -427,7 +427,7 @@ class Aseco
         }
 
         if ($msg->has($message)) {
-            return $msg->getTyped($message, 'string');
+            return $msg->get($message);
         }
 
         self::console('[X8seco] Invalid message in getChatMessage [{1}]', $message);
