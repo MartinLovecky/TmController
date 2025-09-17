@@ -46,7 +46,7 @@ class Aseco
      */
     public static function validateUTF8(string $input, $invalidRepl = '?'): string
     {
-        $clean = iconv('UTF-8', 'UTF-8//IGNORE', $input);
+        $clean = \iconv('UTF-8', 'UTF-8//IGNORE', $input);
         return ($clean !== false && $clean !== '') ? $clean : $invalidRepl;
     }
 

@@ -4,3 +4,4 @@ vendor
 public/cache/*
 .plugins
 logs/*
+doctum.phar

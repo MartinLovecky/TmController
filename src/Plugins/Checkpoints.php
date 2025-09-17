@@ -53,9 +53,8 @@ class Checkpoints
         }
     }
 
-    public function onPlayerDisconnect(TmContainer $player): void
+    public function onPlayerDisconnect(string $login): void
     {
-        $login = $player->get('Login');
         $update = [
             'cps' => $this->checkpoints[$login]['loclrec'],
             'dedicps' => $this->checkpoints[$login]['dedirec'][0],

@@ -88,7 +88,7 @@ class Sender
 
     /**
      * Render template and send to all players
-     *
+     * TODO (yuha): formatting render is stupid 1st mod templates
      * @param string $template
      * @param array $context
      * @param array $formatArgs
@@ -101,7 +101,7 @@ class Sender
         string $template,
         array $context = [],
         array $formatArgs = [],
-        string $formatMode = self::FORMAT_BOTH,
+        string $formatMode = self::FORMAT_NONE,
         int $timeout = 0,
         bool $hideOnEsc = false
     ): void {
@@ -110,15 +110,16 @@ class Sender
     }
 
     /**
-     * Render template and send to a specific player by login
+     * Render a Twig XML HUD template and send it to a specific player.
+     * TODO (yuha): formatting render is stupid 1st mod templates
+     * @param string  $login      to send the HUD to.
+     * @param string  $template   The path or name to render (e.g. 'xml.twig').
+     * @param array   $context    Key-value pairs passed for rendering.
+     * @param array   $formatArgs Optional arguments for formatting placeholders in the XML.
+     * @param string  $formatMode Defines how formatting is applied (see self::FORMAT_* constants).
+     * @param int     $timeout    Time in milliseconds before the HUD disappears (0 = persistent).
+     * @param bool    $hideOnEsc  Whether the HUD should close when the player presses ESC.
      *
-     * @param string $login
-     * @param string $template
-     * @param array $context
-     * @param array $formatArgs
-     * @param string $formatMode
-     * @param integer $timeout
-     * @param boolean $hideOnEsc
      * @return void
      */
     public function sendRenderToLogin(
@@ -126,7 +127,7 @@ class Sender
         string $template,
         array $context = [],
         array $formatArgs = [],
-        string $formatMode = self::FORMAT_BOTH,
+        string $formatMode = self::FORMAT_NONE,
         int $timeout = 0,
         bool $hideOnEsc = false
     ): void {
@@ -191,10 +192,10 @@ class Sender
                 }
                 break;
             case self::FORMAT_BOTH:
-                $text = Aseco::formatColors($text);
                 if (!empty($args)) {
                     $text = Aseco::formatText($text, ...$args);
                 }
+                $text = Aseco::formatColors($text);
                 break;
             case self::FORMAT_NONE:
             default:

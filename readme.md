@@ -21,6 +21,7 @@ TmController is an upgraded and modified version of the original Xaseco, origina
    - `curl`
    - `openssl`
    - `pdo_mysql`
+   - `iconv`
 - MySQl database setup 
 
 ## Installation

@@ -411,35 +411,53 @@ class ManiaLinks
 
     private function buildData(TmContainer $player, int $tot): array
     {
-        $index   = $player->get('page.index');
-        $pages   = $player->get('page.data');
-        $config  = $player->get('page.config');
-        $style   = $player->get('style');
+        $index  = (int) $player->get('page.index', 0);
 
-        // current page lines (or empty if missing)
+        // Ensure arrays
+        $pages  = $player->get('page.data', []);
+        if (!is_array($pages)) {
+            $pages = [];
+        }
+
+        $config = $player->get('page.config', []);
+        if (!is_array($config)) {
+            $config = [];
+        }
+
+        // Ensure style container
+        $style = $player->get('style', TmContainer::fromArray([]));
+
+        // Current page lines (or empty if missing)
         $lines = $pages[$index] ?? [];
+        $lines = is_array($lines) ? $lines : [];
+
         $linesCount = count($lines);
 
-        // make sure multipage windows have consistent height
+        // For multipage consistency
         if ($tot > 1) {
             $linesCount = max($linesCount, count($pages[1] ?? []));
         }
 
+        // Provide defaults to avoid template errors
+        $header = $config['header'] ?? '';
+        $widths = $config['widths'] ?? [1.0]; // must have at least widths[0]
+        $icon   = $config['icon'] ?? '';
+
         return [
-            'id'         => 1,
-            'ptr'        => $index,
-            'tot'        => $tot,
-            'header'     => $config['header'],
-            'widths'     => $config['widths'],
-            'icon'       => $config['icon'],
-            'lines'      => $lines,
-            'linesCount' => $linesCount,
-            'hsize'      => $style->get('header.textsize'),
-            'bsize'      => $style->get('body.textsize'),
-            'style'      => $style,
-            'hasPrev'    => $index > 0,
-            'hasNext'    => $index < $tot,
-            'add5'       => $tot > 5,
+        'id'         => 1,
+        'ptr'        => $index,
+        'tot'        => $tot,
+        'header'     => $header,
+        'widths'     => $widths,
+        'icon'       => $icon,
+        'lines'      => $lines,
+        'linesCount' => $linesCount,
+        'hsize'      => $style->get('header.textsize', 1.0),
+        'bsize'      => $style->get('body.textsize', 0.8),
+        'style'      => $style,
+        'hasPrev'    => $index > 0,
+        'hasNext'    => $index < $tot,
+        'add5'       => $tot > 5,
         ];
     }
 }

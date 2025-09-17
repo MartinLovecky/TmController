@@ -36,7 +36,6 @@ class RaspVotes
 
     public function handleChatCommand(TmContainer $player): void
     {
-        Log::debug("handleChatCommand - skip", [RaspVoteType::SKIP->value, $player->get('command.name')], 'skip');
         match ($player->get('command.name')) {
             RaspVoteType::SKIP->value => $this->voteHandler->skip($player),
             RaspVoteType::HELP->value => $this->voteHandler->help($player),
@@ -74,9 +73,9 @@ class RaspVotes
         );
     }
 
-    public function onPlayerDisconnect(TmContainer $player): void
+    public function onPlayerDisconnect(string $login): void
     {
-        if ($this->raspState->chatvote?->login === $player->get('Login')) {
+        if ($this->raspState->chatvote?->login === $login) {
             $this->voteManager->resetVotes();
         }
     }

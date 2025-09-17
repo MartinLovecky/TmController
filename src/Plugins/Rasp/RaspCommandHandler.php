@@ -31,13 +31,14 @@ class RaspCommandHandler
     public function skip(TmContainer $player): void
     {
         $gamemode = $this->challengeService->getGameMode();
-        $login = $player->get('Login');
-        Log::debug('Hanlde', $player->toArray(), 'handle');
+
         if ($gamemode == 'cup') {
             $this->sender->query('NextChallenge', [true]);
         } else {
+            $login = $player->get('Login');
+            Aseco::console("Player [{$login}] skips challenge!");
             $this->sender->query('NextChallenge');
-            Aseco::console('Player [{2}] skips challenge!', $login);
+            Log::info('broken state ?', [$login], 'NextChallenge');
             $this->sender->sendChatMessageToLogin(
                 login: $login,
                 message:  '{#server}>> {#player}Player$z$s {#highlite}{2}$z$s{#player} skips challenge!',

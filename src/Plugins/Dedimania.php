@@ -92,7 +92,7 @@ class Dedimania
         }
     }
 
-    public function onPlayerDisconnect()
+    public function onPlayerDisconnect(string $login)
     {
     }
 

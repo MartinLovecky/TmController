@@ -1,0 +1,12 @@
+# Rewrite everything to index.php if needed
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [QSA,L]
+
+# Deny access to .env or other dotfiles
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+# Disable directory listing
+Options -Indexes

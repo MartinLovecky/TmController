@@ -8,6 +8,7 @@ use Yuhzel\TmController\App\Service\{Aseco, Log, Server};
 use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\Core\Enums\RestartMode;
 use Yuhzel\TmController\Infrastructure\Gbx\Client;
+use Yuhzel\TmController\Infrastructure\RemoteAdminClient;
 use Yuhzel\TmController\Plugins\Manager\PluginManager;
 use Yuhzel\TmController\Repository\{ChallengeService, PlayerService, RecordService};
 
@@ -28,6 +29,7 @@ class TmController
         private ChallengeService $challengeService,
         private PlayerService $playerService,
         private RecordService $recordService,
+        private RemoteAdminClient $remoteAdminClient,
         private PluginManager $pm,
         private Server $server,
     ) {
@@ -158,6 +160,10 @@ class TmController
         $this->playerService->syncFromServer();
         $this->pm->callFunctions('onSync');
 
+        // if you need adnmin for 3rd party
+        // $virtualAdmin = $this->remoteAdmin->createVirtualAdmin('login');
+        // $playerService->addPlayer($virtualAdmin->get('Login'), true);
+
         $masterAdmin = $this->playerService->getPlayerList(1)[0];
         $this->playerService->addPlayer($masterAdmin->get('Login'), true);
     }
@@ -199,17 +205,19 @@ class TmController
         $this->pm->callFunctions('onPlayerConnect', $player);
     }
 
-    private function playerDisconnect(TmContainer $player): void
+    private function playerDisconnect(string $login): void
     {
+        $player = $this->playerService->getPlayerByLogin($login);
         $playTime = time() - $player->get('created');
         Aseco::console(
             '>> player {1} left the game [{2} : {3}]',
-            $player->get('Login'),
+            $login,
             $player->get('NickName'),
             Aseco::formatTimeH($playTime * 1000, false)
         );
 
-        $this->pm->callFunctions('onPlayerDisconnect', $player);
+        $this->pm->callFunctions('onPlayerDisconnect', $login);
+        $this->playerService->removePlayer($player);
     }
 
     private function sendHeader(): void
@@ -377,7 +385,7 @@ class TmController
         while ($call = $this->client->popCBResponse()) {
             match ($call->get('methodName')) {
                 'TrackMania.PlayerConnect'    => $this->callBackConnect($call),
-                'TrackMania.PlayerDisconnect' => $this->callBackDisconnect($call),
+                'TrackMania.PlayerDisconnect' => $this->playerDisconnect($call['chatType']),
                 'TrackMania.PlayerChat'       => $this->playerChat($call),
                 // this->pm->callPluginFunction('rasp', 'messageAnswer', $call)
                 'TrackMania.PlayerServerMessageAnswer' => Log::debug('PlayerAnswer', $call->toArray(), 'PlayerAnswer'),
@@ -410,7 +418,7 @@ class TmController
                 'TrackMania.ManualFlowControlTransition' => Log::debug('FlowControl', $call->toArray(), 'FlowControl'),
                 // onVoteUpdated
                 'TrackMania.VoteUpdated' => Log::debug('VoteUpdated', $call->toArray(), 'VoteUpdated'),
-                default => Log::debug("Handle:? {$call->get('methodName')}")
+                default => null
             };
         }
     }
@@ -421,13 +429,6 @@ class TmController
         $this->playerService->addPlayer($playerInfo->get('Login'));
         $player = $this->playerService->getPlayerByLogin($playerInfo->get('Login'));
         $this->playerConnect($player);
-    }
-
-    private function callBackDisconnect(TmContainer $call): void
-    {
-        $playerInfo = $this->playerService->getPlayerInfo($call['chatType']);
-        $this->playerDisconnect($playerInfo);
-        $this->playerService->removePlayer($call['chatType']);
     }
 
     private function playerChat(TmContainer $call): void

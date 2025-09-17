@@ -36,7 +36,7 @@ class PluginManager
         public ChatCmd $chatCmd,
         public ChatDedimania $chatDedimania,
         public Checkpoints $checkpoints,
-        public ManiaKarma $maniaKarma,
+        //public ManiaKarma $maniaKarma,
         public ManiaLinks $maniaLinks,
         public Panels $panels,
         public RaspVotes $raspVotes,
