@@ -18,7 +18,6 @@ class CpLiveAdvanced
     private int $numberCps = 0;
     private float $lastUpdate = 0.0;
     private bool $needsUpdate = true;
-    private const int MAX_DISPLAY_ROWS = 12;
     private const int ANSWER_TOGGLE_HUD = 1928390;
     private const int ANSWER_SWITCH_COLOR = 1928396;
     private const int NICK_CHANGE = 0;
@@ -47,43 +46,45 @@ class CpLiveAdvanced
 
     public function onPlayerConnect(TmContainer $player): void
     {
-        $spectator = $player->get('IsSpectator');
-        $nickName = htmlspecialchars(string: $player->get('NickName'), encoding: 'UTF-8');
-        $player
-            ->set('CPL.White', preg_replace('/\$[0-9A-F]{3}/i', '', $nickName))
-            ->set('CPL.Colored', $nickName)
-            ->set('CPL.Manialink', true)
-            ->set('CPL.WhiteNick', false)
-            ->set('CPL.LastNickUpdate', 0)
-            ->set('CPL.CPNumber', 0)
-            ->set('CPL.Time', 0)
-            ->set('CPL.Spectator', $spectator);
+        $nickName = htmlspecialchars($player->get('NickName'), ENT_QUOTES, 'UTF-8');
+        $player->setMultiple([
+            'CPL.White' => preg_replace('/\$[0-9A-F]{3}/i', '', $nickName),
+            'CPL.Colored' => $nickName,
+            'CPL.Manialink' => true,
+            'CPL.WhiteNick' => false,
+            'CPL.LastNickUpdate' => 0,
+            'CPL.CPNumber' => 0,
+            'CPL.Time' => 0,
+            'CPL.Spectator' => $player->get('IsSpectator'),
+        ]);
 
-        // Modern approach: always queue the update.
-        // showListToAll() is throttled internally, so no spam.
+        // throttled internally, so no spam.
         $this->updateList();
-
         $this->bindToggleKey($player->get('Login'));
     }
 
     public function onPlayerLink(TmContainer $manialink): void
     {
-        $message = $manialink->get('message');
-        $login = $manialink->get('login');
-        $player = $this->playerService->getPlayerByLogin($login);
+        $player = $this->playerService->getPlayerByLogin($manialink->get('login'));
 
-        if ($message === self::ANSWER_TOGGLE_HUD) {
-            $player->set('CPL.Manialink', $player->has('CPL.Manialink'));
-            $this->showListToLogin($login);
-        } elseif ($message === self::ANSWER_SWITCH_COLOR) {
-            $this->changeNickDisplay($player);
+        if (!$player instanceof TmContainer) {
+            return;
         }
+
+        $message = $manialink->get('message');
+
+        match ($message) {
+            self::ANSWER_TOGGLE_HUD => $this->toggleHud($player),
+            self::ANSWER_SWITCH_COLOR => $this->changeNickDisplay($player),
+            default => null,
+        };
     }
 
     public function onPlayerCheckpoint(TmContainer $call): void
     {
         Log::debug('CpLiveAdvanced: onPlayerCheckpoint', $call->toArray(), 'CpLiveAdvanced');
         dd('onPlayerCheckpoint', $call->toArray());
+
         $login = $call->get('Login');
         $cpNumber = $call->get('CurrentCheckPoint');
         $time = $call->get('CurrentRaceTime');
@@ -139,10 +140,11 @@ class CpLiveAdvanced
 
     public function onBeginRound(): void
     {
-        $this->playerService->eachPlayer(function (TmContainer $player) {
-            $player->set('CPL.CPNumber', 0)->set('CPL.Time', 0)->set('CPL.Spectator', $player->get('IsSpectator'));
-            $this->showListToLogin($player->get('Login'));
-        });
+        $this->playerService->eachPlayer(fn(TmContainer $player) => $player->setMultiple([
+            'CPL.CPNumber' => 0,
+            'CPL.Time' => 0,
+            'CPL.Spectator' => $player->get('IsSpectator'),
+        ]));
 
         $this->getTrackInfo();
         $this->updateList();
@@ -155,21 +157,23 @@ class CpLiveAdvanced
 
     public function handleChatCommand(TmContainer $player): void
     {
-        $comandName = $player->get('command.name');
-
-        if ($comandName !== 'cpl') {
+        if ($player->get('command.name') !== 'cpl') {
             return;
         }
 
-        $params = $player->get('command.params');
         $login = $player->get('Login');
 
-        match ($params) {
+        match ($player->get('command.params')) {
             'color' => $this->changeNickDisplay($player),
             'toggle' => $this->showListToLogin($login),
-            'help' => $this->sendHelp($login),
             default => $this->sendHelp($login)
         };
+    }
+
+    private function toggleHud(TmContainer $player): void
+    {
+        $player->set('CPL.Manialink', !$player->has('CPL.Manialink'));
+        $this->showListToLogin($player->get('Login'));
     }
 
     private function bindToggleKey(string $login): void
@@ -187,8 +191,7 @@ class CpLiveAdvanced
         $login = $player->get('Login');
 
         if (time() - $lastNickUpdate >= self::NICK_CHANGE) {
-            $whiteNick = $player->get('CPL.WhiteNick');
-            $player->set('CPL.WhiteNick', !$whiteNick)->set('CPL.LastNickUpdate', time());
+            $player->set('CPL.WhiteNick', !$player->get('CPL.WhiteNick'))->set('CPL.LastNickUpdate', time());
             $this->showListToLogin($login);
         } else {
             $this->sender->sendChatMessageToLogin(
@@ -208,11 +211,7 @@ class CpLiveAdvanced
             usort($activePlayers, fn($a, $b) => $b->get('CPL.CPNumber') <=> $a->get('CPL.CPNumber'));
         }
 
-        if ($login) {
-            $this->showListToLogin($login);
-        } else {
-            $this->showListToAll();
-        }
+        $login ? $this->showListToLogin($login) : $this->showListToAll();
     }
 
     private function sendHelp(string $login): void
@@ -235,12 +234,8 @@ class CpLiveAdvanced
             return;
         }
 
-        $this->playerService->eachPlayer(function (TmContainer $player) {
-            if ($player->has('CPL.Manialink')) {
-                $this->showList($player->get('Login'));
-            }
-        });
-
+        $this->playerService->eachPlayer(fn(TmContainer $player) =>
+            $player->has('CPL.Manialink') && $this->showList($player->get('Login')));
         $this->lastUpdate = $time;
     }
 
@@ -248,21 +243,7 @@ class CpLiveAdvanced
     {
         $player = $this->playerService->getPlayerByLogin($login);
 
-        if ($player instanceof TmContainer) {
-            $this->showList($login);
-        } else {
-            $this->hideList($login);
-        }
-    }
-
-    private function displayTitleBar(string $login): void
-    {
-        $this->sender->sendRenderToLogin(
-            login: $login,
-            template: "{$this->file}titleBar",
-            context: ['numberCPs' => $this->numberCps],
-            formatMode: Sender::FORMAT_NONE
-        );
+        $player instanceof TmContainer ? $this->showList($login) : $this->hideList($login);
     }
 
     private function showList(string $login): void
@@ -277,6 +258,16 @@ class CpLiveAdvanced
                 "list" => $this->playerService->getActivePlayers(),
                 'numberCPs' => $this->numberCps
             ],
+            formatMode: Sender::FORMAT_NONE
+        );
+    }
+
+    private function displayTitleBar(string $login): void
+    {
+        $this->sender->sendRenderToLogin(
+            login: $login,
+            template: "{$this->file}titleBar",
+            context: ['numberCPs' => $this->numberCps],
             formatMode: Sender::FORMAT_NONE
         );
     }
@@ -303,18 +294,5 @@ class CpLiveAdvanced
     {
         $challenge = $this->challengeService->getChallenge();
         $this->numberCps = $challenge->get('NbCheckpoints') - 1;
-    }
-
-    private function compareCpNumbers(TmContainer $a, TmContainer $b): int
-    {
-        $cpA = $a->get('CPL.CPNumber');
-        $cpB = $b->get('CPL.CPNumber');
-
-        if ($cpA === $cpB) {
-            return 0;
-        }
-
-        // Higher CPNumber comes first
-        return ($cpA > $cpB) ? -1 : 1;
     }
 }
