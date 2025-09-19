@@ -7,8 +7,10 @@ namespace Yuhzel\TmController\Infrastructure\Xml;
 use DOMNode;
 use DOMElement;
 use DOMDocument;
-use Yuhzel\TmController\Core\TmContainer;
 use Yuhzel\TmController\App\Service\Arr;
+use Yuhzel\TmController\App\Service\Log;
+use Yuhzel\TmController\Core\TmContainer;
+use Yuhzel\TmController\Infrastructure\Xml\CallbackParamHelper;
 
 /**
  * This class handles parsing of XML-RPC responses.
@@ -72,23 +74,30 @@ class Response
         }
 
         $paramElements = $this->getDirectChildren($paramsElement, 'param');
+        // Ensure mapping exists or is temporarily filled
+        $paramNames = CallbackParamHelper::getNamedParams($methodName);
 
         foreach ($paramElements as $index => $param) {
             // index 3 is not usefull at all skip it
             if ($index === 3) {
                 continue;
+            } $valueElement = $this->getFirstDirectChild($param, 'value');
+
+            $value = $this->processValue($valueElement?->firstChild);
+
+            // Use friendly name if available, otherwise fallback to numeric index
+            $path = $paramNames[$index] ?? (string)$index;
+            $container->set($path, $value);
+            if (!isset($paramNames[$index])) { // Log to implemt it
+                Log::warning(
+                    "Discovered unknown callback parameter for $methodName at index $index",
+                    ['value' => $value],
+                    $methodName
+                );
+                $paramNames[$index] = "param$index";
+                CallbackParamHelper::setMapping($methodName, $paramNames);
             }
-            $valueElement = $this->getFirstDirectChild($param, 'value');
-            $path = match ($index) {
-                0 => 'chatType',
-                1 => 'login',
-                2 => 'message',
-                default => (string)$index
-            };
-            $container->set($path, $this->processValue($valueElement?->firstChild));
         }
-
-
         return $container;
     }
 

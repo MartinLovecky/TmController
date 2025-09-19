@@ -92,12 +92,10 @@ class Track
             return;
         }
 
-        $login = $player->get('Login');
-
-        match (strtolower($player->get('command.params'))) {
-            'playtime' => $this->playTime($login),
-            'time' => $this->showTime($login),
-            'track' => $this->sendTrackInfoToLogin($login),
+        match ($player->get('command.param')) {
+            'playtime' => $this->playTime($player->get('Login')),
+            'time' => $this->showTime($player->get('Login')),
+            'track' => $this->sendTrackInfoToLogin($player->get('Login')),
             default => null,
         };
     }

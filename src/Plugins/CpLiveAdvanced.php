@@ -161,12 +161,10 @@ class CpLiveAdvanced
             return;
         }
 
-        $login = $player->get('Login');
-
-        match ($player->get('command.params')) {
+        match ($player->get('command.param')) {
             'color' => $this->changeNickDisplay($player),
-            'toggle' => $this->showListToLogin($login),
-            default => $this->sendHelp($login)
+            'toggle' => $this->showListToLogin($player->get('Login')),
+            default => $this->sendHelp($player->get('Login'))
         };
     }
 

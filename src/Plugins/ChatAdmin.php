@@ -25,14 +25,13 @@ class ChatAdmin
     public function handleChatCommand(TmContainer $player): void
     {
         $login = $player->get('Login');
-        $commandName = $player->get('command.name');
-        $type  = $player->get('command.params');
 
-        if ($commandName !== '/' && !Aseco::isAnyAdmin($login)) {
+        // inspired by Trackman //admin commands TODO:: isAnyAdmin need be changed
+        if (str_starts_with($player->get('command.name'), '/') && !Aseco::isAnyAdmin($login)) {
             return;
         }
 
-        match ($type) {
+        match ($player->get('command.param')) {
             'kick' => null,
             'ban' => null,
             'restart' => null,

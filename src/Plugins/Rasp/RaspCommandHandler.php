@@ -107,7 +107,7 @@ class RaspCommandHandler
     public function handleKick(TmContainer $player): bool
     {
         $login = $player->get('Login');
-        $targetLogin = $player->get('command.params');
+        $targetLogin = $player->get('command.param');
 
         if (!$targetLogin) {
             return $this->sendError($login, '/kick needs player login');
@@ -176,8 +176,8 @@ class RaspCommandHandler
      */
     public function handleVoteCancel(TmContainer $player): bool
     {
-        $commandName = strtolower($player->get('command.name'));
-        $params      = strtolower($player->get('command.params'));
+        $commandName = $player->get('command.name');
+        $param      = $player->get('command.param');
         $login       = $player->get('Login');
 
         if (!$this->raspState->chatvote) {
@@ -188,7 +188,7 @@ class RaspCommandHandler
             return $this->sendError($login, 'You are not allowed to cancel this vote!');
         }
 
-        if (!$this->isCancelCommand($commandName, $params)) {
+        if (!$this->isCancelCommand($commandName, $param)) {
             return false;
         }
 

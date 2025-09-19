@@ -395,10 +395,12 @@ class ManiaLinks
         if (!$window) {
             $this->mainWindowOff($player->get('Login'));
         }
-
-        $parts = explode(' ', $command, 2);
-        $params = array_values(Arr::except($parts, [0]));
-        $player->set('command.name', $parts[0])->set('command.params', $params)->set('command.arg', '');
+        $cmd = preg_split('/\s+/', substr($command, 1), 3);
+        $player->setMultiple([
+            'command.name' => $cmd[0] ?? '',
+            'command.param' => $cmd[1] ?? '',
+            'command.arg' => $cmd[2] ?? ''
+        ]);
 
         $this->chatAdmin->handleChatCommand($player);
     }

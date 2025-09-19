@@ -65,16 +65,11 @@ class Tmxv
         if ($player->get('command.name') !== 'tmxv') {
             return;
         }
-        // name: tmxv?'' || params: gps?'' || args: list?''
-        $params = $player->get('command.params');
-        $args = $player->get('command.arg');
 
-        $login = $player->get('Login');
-
-        match ($params) {
-            'videos' => $this->showVideos($login),
-            'video', 'gps' => $this->handleArgs($login, $args),
-            default => $this->unknownArg($login),
+        match ($player->get('command.param')) {
+            'videos' => $this->showVideos($player->get('Login')),
+            'video', 'gps' => $this->handleArgs($player->get('Login'), $player->get('command.arg')),
+            default => $this->unknownArg($player->get('Login')),
         };
     }
 

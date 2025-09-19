@@ -55,6 +55,7 @@ class Aseco
         return self::$startupPhase;
     }
 
+    // FIXME: check for $player->isMasterAdmin
     public static function isAnyAdmin(string $login): bool
     {
         $admin = self::$adminOps->get('admins')->toArray();

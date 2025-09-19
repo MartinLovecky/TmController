@@ -55,11 +55,9 @@ class PlayerService
         $this->repository->insert(Table::PLAYERS_EXTRA, $this->extraPlayerData($login), $login);
     }
 
-    public function removePlayer(TmContainer $player, bool $fromDB = false): void
+    public function removePlayer(string $login, bool $fromDB = false): void
     {
-        $login = $player->get('Login');
-
-        if ($player->has('isMasterAdmin') || !$this->hasPlayer($login)) {
+        if (!$this->hasPlayer($login)) {
             return;
         }
 

@@ -41,19 +41,15 @@ class Styles
 
     public function handleChatCommand(TmContainer $player): void
     {
-        $command = $player->get('command.name');
-
-        if ($command !== 'style') {
+        if ($player->get('command.name') !== 'style') {
             return;
         }
 
-        $parms = $player->get('command.params');
-
-        if ($parms == 'help') {
-            $this->showHelp($player);
-        } elseif ($parms == 'list') {
-            $this->showStyleList($player);
-        }
+        match ($player->get('command.param')) {
+            'help' => $this->showHelp($player),
+            'list' => $this->showStyleList($player),
+            default => null
+        };
     }
 
     public function onPlayerConnect(TmContainer $player): void
@@ -68,14 +64,21 @@ class Styles
         if ($message >= 49 && $message <= 100) {
             $login = $manialink->get('login');
             $player = $this->playerService->getPlayerByLogin($login);
-            $style = 'DarkBlur';
 
-            Aseco::console('player {1} clicked command "/style {2}"', $login, $style);
-            $player->set('command.name', 'style')->set('command.params', $style)->set('command.arg', '');
+            Aseco::console("{$login} clicked command /style DarkBlur");
+            $player->setMultiple([
+                    'command.name' => 'style',
+                    'command.param' => 'DarkBlur',
+                    'command.arg' => ''
+            ]);
             $this->handleChatCommand($player);
 
-            Aseco::console('player {1} clicked command "/style list"', $login);
-            $player->set('command.params', 'list');
+            Aseco::console("{$login} clicked command /style list");
+            $player->setMultiple([
+                    'command.name' => 'style',
+                    'command.param' => 'list',
+                    'command.arg' => ''
+                ]);
             $this->handleChatCommand($player);
         }
     }
